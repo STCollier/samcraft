@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include "shader.h"
+#include "util.h"
 
 static void _checkCompileErrors(unsigned int shader, char* type) {
   int success;
@@ -82,6 +83,8 @@ struct Shader createShader(const char* vertexPath, const char* fragmentPath) {
   glAttachShader(self.ID, fragmentShader);
   glLinkProgram(self.ID);
   _checkCompileErrors(self.ID, "PROGRAM");
+
+  LOG("Shader compiled successfully!");
 
   //Delete shaders
   glDeleteShader(vertexShader);

@@ -1,5 +1,6 @@
 #include "window.h"
 #include "camera.h"
+#include "util.h"
 
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
@@ -43,7 +44,7 @@ void createWindow(const char* title, int width, int height) {
 
     window.self = glfwCreateWindow(window.width, window.height, window.title, NULL, NULL);
     if (window.self == NULL) {
-        printf("Failed to create GLFW window");
+        ERROR("Failed to create GLFW window!");
         glfwTerminate();
         exit(1);
     }
@@ -52,17 +53,18 @@ void createWindow(const char* title, int width, int height) {
 
     //Load all OpenGL function pointers with Glad
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        printf("Failed to initialize GLAD");
+        ERROR("Failed to initialize GLAD!");
         exit(1);
     }
 
-    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST); 
+    glfwSetInputMode(window.self, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     glfwSetFramebufferSizeCallback(window.self, _sizeCallback);
     glfwSetKeyCallback(window.self, _keyboardCallback);
     glfwSetCursorPosCallback(window.self, _mouseCallback);
 
-    glfwSetInputMode(window.self, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    LOG("Window succesfully initilized!");
 }
 
 void terminateWindow() {

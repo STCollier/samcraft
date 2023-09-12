@@ -7,6 +7,7 @@
 #include "window.h"
 #include "shader.h"
 #include "camera.h"
+#include "util.h"
 
 //Define globally
 struct Camera camera;
@@ -15,19 +16,24 @@ vec3 cameraPos = {0.0f, 3.0f, 0.0f};
 vec3 cameraFront = {0.0f, 0.0f, -1.0f};
 vec3 cameraUp = {0.0f, 1.0f, 0.0f};
 
-bool firstMouse = true;
 float yaw = -45.0f;
 float pitch = 0.0f;
-float lastX = 1200.0f / 2.0;
-float lastY = 800.0f / 2.0;
+float lastX = 0;
+float lastY = 0;
 
-void initCamera(float fov, float sensitivity) {
+void initCamera(float fov, float speed, float sensitivity) {
     camera.fov = fov;
+    camera.speed = speed;
     camera.sensitivity = sensitivity;
+
+    lastX = window.width / 2.0;
+    lastY = window.height / 2.0;
+
+    LOG("Camera successfully loaded!");
 }
 
 static void handleCameraKeyboard() {
-    float cameraSpeed = 5.0f * window.dt;
+    float cameraSpeed = camera.speed * window.dt;
 
     if (glfwGetKey(window.self, GLFW_KEY_W) == GLFW_PRESS) {
         vec3 forwardDir;
@@ -67,7 +73,7 @@ void useCamera(struct Shader shader) {
     useShader(shader);
 
     glm_mat4_identity(camera.projection);
-    glm_perspective(glm_rad(camera.fov), (float) window.width / (float) window.height, 0.1f, 100.0f, camera.projection); // Make sure to convert to floats for float division
+    glm_perspective(glm_rad(camera.fov), (float) window.width / (float) window.height, 0.1f, 500.0f, camera.projection); // Make sure to convert to floats for float division
     setShaderMat4(shader, "projection", camera.projection);
 
     glm_mat4_identity(camera.view);
@@ -82,6 +88,9 @@ void useCamera(struct Shader shader) {
 void cameraMouseCallback(double xposIn, double yposIn) {
     float xpos = xposIn;
     float ypos = yposIn;
+
+    /*printf("%f %f\n", window.width/2 - xpos, window.width/2 - ypos);
+    glfwSetCursorPos(window.self, window.width/2, window.height/2);*/
 
     float xoffset = xpos - lastX;
     float yoffset = lastY - ypos; // Reversed since y-coordinates go from bottom to top

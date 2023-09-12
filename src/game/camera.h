@@ -12,10 +12,11 @@ struct Camera {
     mat4 model;
 
     float sensitivity;
+    float speed;
     float fov;
 };
 
-void initCamera(float fov, float sensitivity);
+void initCamera(float fov, float speed, float sensitivity);
 void useCamera(struct Shader shader);
 void cameraMouseCallback();
 
