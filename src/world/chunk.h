@@ -12,7 +12,7 @@
 #define CHUNK_SIZE_Y 256
 #define CHUNK_SIZE_Z 16
 
-#define CHUNK_MEMORY_BUFFER 1048576 // 2^20
+#define CHUNK_MEMORY_BUFFER 1000000
 
 typedef enum {
     RIGHT,
@@ -39,7 +39,7 @@ struct Chunk {
 };
 
 void initChunk(struct Chunk *chunk, vec3 offset);
-void constructChunkMesh(struct Chunk *chunk);
+void constructChunkMesh(struct Chunk *chunk, struct Chunk *chunkNeighbors);
 void loadChunk(struct Chunk *chunk);
 void renderChunk(struct Chunk *chunk, struct Shader shader);
 void destroyChunk(struct Chunk *chunk);

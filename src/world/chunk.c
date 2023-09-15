@@ -6,6 +6,8 @@
 
 #include "chunk.h"
 
+#define RAND(min, max) (rand() % (max + 1 - min) + min)
+
 const float cubeVertices[] = {
     0, 0, 0, 0, 0, // BACK
     1, 0, 0, 1, 0,
@@ -110,35 +112,32 @@ void initChunk(struct Chunk *chunk, vec3 offset) {
     for (int x = 0; x < CHUNK_SIZE_X; x++) {
         for (int y = 0; y < CHUNK_SIZE_Y; y++) {
             for (int z = 0; z < CHUNK_SIZE_Z; z++) {
-                if (y < CHUNK_SIZE_Y-32) chunk->block[x][y][z].id = 1;
+                if (y < CHUNK_SIZE_Y-64) chunk->block[x][y][z].id = 1;
             }
         }
     }
 }
 
-void constructChunkMesh(struct Chunk *chunk) {
+void constructChunkMesh(struct Chunk *chunk, struct Chunk *chunkNeighbors) {
     // Loop through chunks, if block is NOT neighboring, check which side is not neighboring, and add mesh data for that cube face to array
     for (int x = 0; x < CHUNK_SIZE_X; x++) {
         for (int y = 0; y < CHUNK_SIZE_Y; y++) {
             for (int z = 0; z < CHUNK_SIZE_Z; z++) {
                 if (chunk->block[x][y][z].id != 0) {
-                    if (x-1 < 0) createMeshFace(LEFT,   chunk, (vec3){x, y, z}); // LEFT
-                    else if (chunk->block[x-1][y][z].id == 0) createMeshFace(LEFT,   chunk, (vec3){x, y, z}); // LEFT
+                    if ((x + 1 < CHUNK_SIZE_X && chunk->block[x + 1][y][z].id == 0) || (x + 1 == CHUNK_SIZE_X && chunkNeighbors[RIGHT].block[0][y][z].id == 0)) createMeshFace(RIGHT,  chunk, (vec3){x, y, z});
+                    if ((x > 0 && chunk->block[x - 1][y][z].id == 0) || (x == 0 && chunkNeighbors[LEFT].block[CHUNK_SIZE_X - 1][y][z].id == 0)) createMeshFace(LEFT,  chunk, (vec3){x, y, z});
+                    
+
+                    if ((z + 1 < CHUNK_SIZE_Z && chunk->block[x][y][z+1].id == 0) || (z + 1 == CHUNK_SIZE_Z && chunkNeighbors[FRONT].block[x][y][0].id == 0)) createMeshFace(FRONT,  chunk, (vec3){x, y, z}); // FRONT
+                   
+
+                    if ((z > 0 && chunk->block[x][y][z - 1].id == 0) || (z == 0 && chunkNeighbors[BACK].block[x][y][CHUNK_SIZE_Z - 1].id == 0)) createMeshFace(BACK,   chunk, (vec3){x, y, z}); // BACK
 
                     if (y-1 < 0) createMeshFace(BOTTOM, chunk, (vec3){x, y, z}); // BOTTOM
                     else if (chunk->block[x][y-1][z].id == 0) createMeshFace(BOTTOM, chunk, (vec3){x, y, z}); // BOTTOM
 
-                    if (z-1 < 0) createMeshFace(BACK,   chunk, (vec3){x, y, z}); // BACK
-                    else if (chunk->block[x][y][z-1].id == 0) createMeshFace(BACK,   chunk, (vec3){x, y, z}); // BACK
-
-                    if (x+1 > CHUNK_SIZE_X) createMeshFace(RIGHT,  chunk, (vec3){x, y, z}); // RIGHT
-                    else if (chunk->block[x+1][y][z].id == 0) createMeshFace(RIGHT,  chunk, (vec3){x, y, z}); // RIGHT
-
-                    if (y+1 > CHUNK_SIZE_Y) createMeshFace(TOP,    chunk, (vec3){x, y, z}); // TOP
+                    if (y+1 >= CHUNK_SIZE_Y) createMeshFace(TOP,    chunk, (vec3){x, y, z}); // TOP
                     else if (chunk->block[x][y+1][z].id == 0) createMeshFace(TOP,    chunk, (vec3){x, y, z}); // TOP
-
-                    if (z+1 > CHUNK_SIZE_Z) createMeshFace(FRONT,  chunk, (vec3){x, y, z}); // FRONT
-                    else if (chunk->block[x][y][z+1].id == 0) createMeshFace(FRONT,  chunk, (vec3){x, y, z}); // FRONT
                 }
             }
         }
