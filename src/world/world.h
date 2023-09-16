@@ -8,11 +8,11 @@
 #include "../game/camera.h"
 #include "chunk.h"
 
-#define WORLD_SIZE 16 // # of chunks
-#define RENDER_DISTANCE 16
+#define WORLD_SIZE 10 // # of chunks
+#define RENDER_DISTANCE 10
 
 struct World {
-    struct Chunk chunks[WORLD_SIZE][WORLD_SIZE];
+    struct Chunk *chunks;
 };
 
 void loadWorld();

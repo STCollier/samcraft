@@ -99,6 +99,10 @@ static void createMeshFace(Direction dir, struct Chunk *chunk, vec3 pos) {
     }
 }
 
+int blockIndex(int x, int y, int z) {
+   return (x + z*CHUNK_SIZE_X + y*CHUNK_SIZE_X*CHUNK_SIZE_Z);
+}
+
 void initChunk(struct Chunk *chunk, vec3 offset) {
     chunk->meshSize = 0;
     chunk->offset[0] = offset[0];
@@ -106,13 +110,13 @@ void initChunk(struct Chunk *chunk, vec3 offset) {
     chunk->offset[2] = offset[2];
 
     memset(chunk->meshData, 0, sizeof(chunk->meshData));
-    memset(chunk->block, 0, sizeof(chunk->block));
+    chunk->blocks = calloc(CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z, sizeof(struct Block));
 
     // Worldgen
     for (int x = 0; x < CHUNK_SIZE_X; x++) {
         for (int y = 0; y < CHUNK_SIZE_Y; y++) {
             for (int z = 0; z < CHUNK_SIZE_Z; z++) {
-                if (y < CHUNK_SIZE_Y-64) chunk->block[x][y][z].id = 1;
+                if (y < CHUNK_SIZE_Y-64) chunk->blocks[blockIndex(x, y, z)].id = 0b00000001;
             }
         }
     }
@@ -123,25 +127,24 @@ void constructChunkMesh(struct Chunk *chunk, struct Chunk *chunkNeighbors) {
     for (int x = 0; x < CHUNK_SIZE_X; x++) {
         for (int y = 0; y < CHUNK_SIZE_Y; y++) {
             for (int z = 0; z < CHUNK_SIZE_Z; z++) {
-                if (chunk->block[x][y][z].id != 0) {
-                    if ((x + 1 < CHUNK_SIZE_X && chunk->block[x + 1][y][z].id == 0) || (x + 1 == CHUNK_SIZE_X && chunkNeighbors[RIGHT].block[0][y][z].id == 0)) createMeshFace(RIGHT,  chunk, (vec3){x, y, z});
-                    if ((x > 0 && chunk->block[x - 1][y][z].id == 0) || (x == 0 && chunkNeighbors[LEFT].block[CHUNK_SIZE_X - 1][y][z].id == 0)) createMeshFace(LEFT,  chunk, (vec3){x, y, z});
-                    
+                if (chunk->blocks[blockIndex(x, y, z)].id != 0) {
+                    if ((x + 1 < CHUNK_SIZE_X && chunk->blocks[blockIndex(x + 1, y, z)].id == 0) || (x + 1 == CHUNK_SIZE_X && chunkNeighbors[RIGHT].blocks[blockIndex(0, y, z)].id == 0)) createMeshFace(RIGHT,  chunk, (vec3){x, y, z});
+                    if ((x > 0 && chunk->blocks[blockIndex(x - 1, y, z)].id == 0) || (x == 0 && chunkNeighbors[LEFT].blocks[blockIndex(CHUNK_SIZE_X - 1, y, z)].id == 0)) createMeshFace(LEFT,  chunk, (vec3){x, y, z});
 
-                    if ((z + 1 < CHUNK_SIZE_Z && chunk->block[x][y][z+1].id == 0) || (z + 1 == CHUNK_SIZE_Z && chunkNeighbors[FRONT].block[x][y][0].id == 0)) createMeshFace(FRONT,  chunk, (vec3){x, y, z}); // FRONT
-                   
-
-                    if ((z > 0 && chunk->block[x][y][z - 1].id == 0) || (z == 0 && chunkNeighbors[BACK].block[x][y][CHUNK_SIZE_Z - 1].id == 0)) createMeshFace(BACK,   chunk, (vec3){x, y, z}); // BACK
+                    if ((z + 1 < CHUNK_SIZE_Z && chunk->blocks[blockIndex(x, y, z + 1)].id == 0) || (z + 1 == CHUNK_SIZE_Z && chunkNeighbors[FRONT].blocks[blockIndex(x, y, 0)].id == 0)) createMeshFace(FRONT,  chunk, (vec3){x, y, z}); // FRONT
+                    if ((z > 0 && chunk->blocks[blockIndex(x, y, z - 1)].id == 0) || (z == 0 && chunkNeighbors[BACK].blocks[blockIndex(x, y, CHUNK_SIZE_Z - 1)].id == 0)) createMeshFace(BACK,   chunk, (vec3){x, y, z}); // BACK
 
                     if (y-1 < 0) createMeshFace(BOTTOM, chunk, (vec3){x, y, z}); // BOTTOM
-                    else if (chunk->block[x][y-1][z].id == 0) createMeshFace(BOTTOM, chunk, (vec3){x, y, z}); // BOTTOM
+                    else if (chunk->blocks[blockIndex(x, y - 1, z)].id == 0) createMeshFace(BOTTOM, chunk, (vec3){x, y, z}); // BOTTOM
 
                     if (y+1 >= CHUNK_SIZE_Y) createMeshFace(TOP,    chunk, (vec3){x, y, z}); // TOP
-                    else if (chunk->block[x][y+1][z].id == 0) createMeshFace(TOP,    chunk, (vec3){x, y, z}); // TOP
+                    else if (chunk->blocks[blockIndex(x, y + 1, z)].id == 0) createMeshFace(TOP,    chunk, (vec3){x, y, z}); // TOP
                 }
             }
         }
     }
+
+    free(chunk->blocks);
 }
 
 void loadChunk(struct Chunk *chunk) {

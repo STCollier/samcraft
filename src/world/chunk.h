@@ -25,14 +25,14 @@ typedef enum {
 
 
 struct Block {
-    int id;
+    unsigned char id;
 };
 
 struct Chunk {
     unsigned int blockTexture;
     unsigned int VBO, VAO;
 
-    struct Block block[CHUNK_SIZE_X][CHUNK_SIZE_Y][CHUNK_SIZE_Z];
+    struct Block *blocks;
     size_t meshSize;
     vec3 offset;
     float meshData[CHUNK_MEMORY_BUFFER];

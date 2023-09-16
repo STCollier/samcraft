@@ -48,6 +48,7 @@ int main() {
         glfwPollEvents();
     }
 
+    free(world.chunks);
     terminateWindow();
    
     return 0;
