@@ -25,6 +25,8 @@ int main() {
     struct Shader mainShader = createShader("res/shaders/main.vs", "res/shaders/main.fs");
     initCamera(30.0f, 25.0f, 0.1f);
 
+    loadBlocksFromFile();
+    loadArrayTexture();
     loadWorld();
 
     int tick = 0;

@@ -8,34 +8,25 @@
 #include "../game/camera.h"
 #include "../game/util.h"
 
+#include <stdbool.h>
+
+#include "block.h"
+
 #define CHUNK_SIZE_X 16
 #define CHUNK_SIZE_Y 256
 #define CHUNK_SIZE_Z 16
 
 #define CHUNK_MEMORY_BUFFER 1000000
 
-typedef enum {
-    RIGHT,
-    LEFT,
-    FRONT,
-    BACK,
-    TOP,
-    BOTTOM
-} Direction;
-
-
-struct Block {
-    unsigned char id;
-};
-
 struct Chunk {
-    unsigned int blockTexture;
+    unsigned int arrayTexture;
     unsigned int VBO, VAO;
 
     struct Block *blocks;
     size_t meshSize;
     vec3 offset;
     float meshData[CHUNK_MEMORY_BUFFER];
+    bool isNull;
 };
 
 void initChunk(struct Chunk *chunk, vec3 offset);

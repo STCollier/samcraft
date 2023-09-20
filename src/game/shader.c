@@ -50,7 +50,7 @@ static char* _getFileContent(const char* filename) {
 
     fclose(file);
   } else {
-    printf("Error finding shader file: %s\n", filename);
+    ERROR_MSG("Error finding shader file: ", filename);
     exit(1);
   }
 

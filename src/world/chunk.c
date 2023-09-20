@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "chunk.h"
+#include "block.h"
 
 #define RAND(min, max) (rand() % (max + 1 - min) + min)
 
@@ -99,11 +100,13 @@ static void createMeshFace(Direction dir, struct Chunk *chunk, vec3 pos) {
     }
 }
 
+
 int blockIndex(int x, int y, int z) {
    return (x + z*CHUNK_SIZE_X + y*CHUNK_SIZE_X*CHUNK_SIZE_Z);
 }
 
 void initChunk(struct Chunk *chunk, vec3 offset) {
+    chunk->isNull = false;
     chunk->meshSize = 0;
     chunk->offset[0] = offset[0];
     chunk->offset[1] = offset[1];
@@ -116,7 +119,7 @@ void initChunk(struct Chunk *chunk, vec3 offset) {
     for (int x = 0; x < CHUNK_SIZE_X; x++) {
         for (int y = 0; y < CHUNK_SIZE_Y; y++) {
             for (int z = 0; z < CHUNK_SIZE_Z; z++) {
-                if (y < CHUNK_SIZE_Y-64) chunk->blocks[blockIndex(x, y, z)].id = 0b00000001;
+                if (y < CHUNK_SIZE_Y-64) chunk->blocks[blockIndex(x, y, z)].id = 1;
             }
         }
     }
@@ -128,17 +131,17 @@ void constructChunkMesh(struct Chunk *chunk, struct Chunk *chunkNeighbors) {
         for (int y = 0; y < CHUNK_SIZE_Y; y++) {
             for (int z = 0; z < CHUNK_SIZE_Z; z++) {
                 if (chunk->blocks[blockIndex(x, y, z)].id != 0) {
-                    if ((x + 1 < CHUNK_SIZE_X && chunk->blocks[blockIndex(x + 1, y, z)].id == 0) || (x + 1 == CHUNK_SIZE_X && chunkNeighbors[RIGHT].blocks[blockIndex(0, y, z)].id == 0)) createMeshFace(RIGHT,  chunk, (vec3){x, y, z});
-                    if ((x > 0 && chunk->blocks[blockIndex(x - 1, y, z)].id == 0) || (x == 0 && chunkNeighbors[LEFT].blocks[blockIndex(CHUNK_SIZE_X - 1, y, z)].id == 0)) createMeshFace(LEFT,  chunk, (vec3){x, y, z});
+                    if ((x + 1 < CHUNK_SIZE_X && chunk->blocks[blockIndex(x + 1, y, z)].id == 0) || (x + 1 == CHUNK_SIZE_X && !chunkNeighbors[RIGHT].isNull && chunkNeighbors[RIGHT].blocks[blockIndex(0, y, z)].id == 0)) createMeshFace(RIGHT,  chunk, (vec3){x, y, z});
+                    if ((x > 0 && chunk->blocks[blockIndex(x - 1, y, z)].id == 0) || (x == 0 && !chunkNeighbors[LEFT].isNull && chunkNeighbors[LEFT].blocks[blockIndex(CHUNK_SIZE_X - 1, y, z)].id == 0)) createMeshFace(LEFT,  chunk, (vec3){x, y, z});
 
-                    if ((z + 1 < CHUNK_SIZE_Z && chunk->blocks[blockIndex(x, y, z + 1)].id == 0) || (z + 1 == CHUNK_SIZE_Z && chunkNeighbors[FRONT].blocks[blockIndex(x, y, 0)].id == 0)) createMeshFace(FRONT,  chunk, (vec3){x, y, z}); // FRONT
-                    if ((z > 0 && chunk->blocks[blockIndex(x, y, z - 1)].id == 0) || (z == 0 && chunkNeighbors[BACK].blocks[blockIndex(x, y, CHUNK_SIZE_Z - 1)].id == 0)) createMeshFace(BACK,   chunk, (vec3){x, y, z}); // BACK
+                    if ((z + 1 < CHUNK_SIZE_Z && chunk->blocks[blockIndex(x, y, z + 1)].id == 0) || (z + 1 == CHUNK_SIZE_Z && !chunkNeighbors[FRONT].isNull && chunkNeighbors[FRONT].blocks[blockIndex(x, y, 0)].id == 0)) createMeshFace(FRONT,  chunk, (vec3){x, y, z}); // FRONT
+                    if ((z > 0 && chunk->blocks[blockIndex(x, y, z - 1)].id == 0) || (z == 0 && !chunkNeighbors[BACK].isNull && chunkNeighbors[BACK].blocks[blockIndex(x, y, CHUNK_SIZE_Z - 1)].id == 0)) createMeshFace(BACK,   chunk, (vec3){x, y, z}); // BACK
 
                     if (y-1 < 0) createMeshFace(BOTTOM, chunk, (vec3){x, y, z}); // BOTTOM
                     else if (chunk->blocks[blockIndex(x, y - 1, z)].id == 0) createMeshFace(BOTTOM, chunk, (vec3){x, y, z}); // BOTTOM
 
-                    if (y+1 >= CHUNK_SIZE_Y) createMeshFace(TOP,    chunk, (vec3){x, y, z}); // TOP
-                    else if (chunk->blocks[blockIndex(x, y + 1, z)].id == 0) createMeshFace(TOP,    chunk, (vec3){x, y, z}); // TOP
+                    if (y+1 >= CHUNK_SIZE_Y) createMeshFace(TOP, chunk, (vec3){x, y, z}); // TOP
+                    else if (chunk->blocks[blockIndex(x, y + 1, z)].id == 0) createMeshFace(TOP, chunk, (vec3){x, y, z}); // TOP
                 }
             }
         }
@@ -162,37 +165,19 @@ void loadChunk(struct Chunk *chunk) {
     // texture coord attribute
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
-
-    glGenTextures(1, &chunk->blockTexture);
-    glBindTexture(GL_TEXTURE_2D, chunk->blockTexture);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    int width, height, nrChannels;
-    unsigned char *data = stbi_load("res/textures/grass.png", &width, &height, &nrChannels, 0);
-
-    if (data) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    } else {
-        fprintf(stderr, "Failed to load block texture!\n");
-    }
-
-    stbi_image_free(data);
 }
 
 void renderChunk(struct Chunk *chunk, struct Shader shader) {
     glBindVertexArray(chunk->VAO);
-
+    glActiveTexture(GL_TEXTURE0); // Use texture unit 0
+    glBindTexture(GL_TEXTURE_2D_ARRAY, getArrayTexture());
+    setShaderInt(shader, "arrayTexture", 0);
 
     glm_mat4_identity(camera.model);
     glm_translate(camera.model, (vec3){chunk->offset[0], chunk->offset[1], chunk->offset[2]});
     setShaderMat4(shader, "model", camera.model);
-    glBindTexture(GL_TEXTURE_2D, chunk->blockTexture);
+
+
     glDrawArrays(GL_TRIANGLES, 0, chunk->meshSize);
 }
 

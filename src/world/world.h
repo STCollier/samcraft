@@ -9,7 +9,7 @@
 #include "chunk.h"
 
 #define WORLD_SIZE 10 // # of chunks
-#define RENDER_DISTANCE 10
+#define RENDER_DISTANCE 6
 
 struct World {
     struct Chunk *chunks;
@@ -17,7 +17,6 @@ struct World {
 
 void loadWorld();
 void renderWorld(struct Shader shader);
-void destroyWorld();
 
 extern struct World world;
 

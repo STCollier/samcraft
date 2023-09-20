@@ -34,16 +34,16 @@ void loadWorld() {
 
     for (int x = 0; x < RENDER_DISTANCE; x++) {
         for (int z = 0; z < RENDER_DISTANCE; z++) {
-            if (x+1 >= RENDER_DISTANCE) chunkNeighbors[RIGHT] = world.chunks[chunkIndex(x, z)];
+            if (x+1 >= RENDER_DISTANCE) chunkNeighbors[RIGHT].isNull = true;
             else chunkNeighbors[RIGHT] = world.chunks[chunkIndex(x + 1, z)];
 
-            if (x-1 < 0) chunkNeighbors[LEFT] = world.chunks[chunkIndex(x, z)];
+            if (x-1 < 0) chunkNeighbors[LEFT].isNull = true;
             else chunkNeighbors[LEFT] = world.chunks[chunkIndex(x - 1, z)];
 
-            if (z+1 >= RENDER_DISTANCE) chunkNeighbors[FRONT] = world.chunks[chunkIndex(x, z)];
+            if (z+1 >= RENDER_DISTANCE) chunkNeighbors[FRONT].isNull = true;
             else chunkNeighbors[FRONT] = world.chunks[chunkIndex(x, z + 1)];
 
-            if (z-1 < 0) chunkNeighbors[BACK] = world.chunks[chunkIndex(x, z)];
+            if (z-1 < 0) chunkNeighbors[BACK].isNull = true;
             else chunkNeighbors[BACK] = world.chunks[chunkIndex(x, z - 1)];
 
             constructChunkMesh(&world.chunks[chunkIndex(x, z)], chunkNeighbors);
@@ -63,12 +63,4 @@ void renderWorld(struct Shader shader) {
             renderChunk(&world.chunks[chunkIndex(x, y)], shader);
         }
     }
-}
-
-void destroyWorld() {
-    /*for (int x = 0; x < RENDER_DISTANCE; x++) {
-        for (int y = 0; y < RENDER_DISTANCE; y++) {
-            destroyChunk(&world.chunks[x][y]);
-        }
-    }*/
 }
