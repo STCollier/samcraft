@@ -15,7 +15,7 @@ struct Camera camera;
 vec3 cameraFront = {0.0f, 0.0f, -1.0f};
 vec3 cameraUp = {0.0f, 1.0f, 0.0f};
 
-float yaw = -45.0f;
+float yaw = 45.0f;
 float pitch = 0.0f;
 float lastX = 0;
 float lastY = 0;
@@ -25,7 +25,7 @@ void initCamera(float fov, float speed, float sensitivity) {
     camera.speed = speed;
     camera.sensitivity = sensitivity;
 
-    glm_vec3_copy((vec3){0.0f, 3.0f, 0.0f}, camera.position);
+    glm_vec3_copy((vec3){0.0f, 200.0f, 0.0f}, camera.position);
 
     lastX = window.width / 2.0;
     lastY = window.height / 2.0;

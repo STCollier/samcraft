@@ -21,6 +21,7 @@
 int main() {
 
     createWindow("Minecraft", 1920, 1080);
+    stbi_set_flip_vertically_on_load(true);
 
     struct Shader mainShader = createShader("res/shaders/main.vs", "res/shaders/main.fs");
     initCamera(30.0f, 25.0f, 0.1f);
@@ -39,7 +40,6 @@ int main() {
             tick = 0;
         }
         
-
 
         useShader(mainShader);
         useCamera(mainShader);

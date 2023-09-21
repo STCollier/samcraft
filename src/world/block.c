@@ -7,6 +7,9 @@
 struct BlockData blockData[256];
 
 unsigned int arrayTexture;
+char texturePaths[6][512] = {0};
+char textureArray[6][512] = {0};
+int numTextures = 0;
 
 void loadBlocksFromFile() {
     const char* faces[6] = {"right", "left", "front", "back", "top", "bottom"};
@@ -99,8 +102,6 @@ void loadBlocksFromFile() {
 
 
 void loadArrayTexture() {
-    int numTextures = 0;
-    char texturePaths[6][512] = {0};
     
     glGenTextures(1, &arrayTexture);
     glBindTexture(GL_TEXTURE_2D_ARRAY, arrayTexture);
@@ -117,7 +118,8 @@ void loadArrayTexture() {
     if (d) {
         while ((dir = readdir(d)) != NULL) {
             if (strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0 || strcmp(strrchr(dir->d_name, '.') + 1, "png") != 0) continue;
-            
+
+            snprintf(textureArray[numTextures], sizeof(textureArray[numTextures]), "%s", dir->d_name);
             snprintf(texturePaths[numTextures], sizeof(texturePaths[numTextures]), "res/textures/%s", dir->d_name);
             numTextures++;
         }
@@ -143,4 +145,16 @@ void loadArrayTexture() {
 
 unsigned int getArrayTexture() {
     return arrayTexture;
+}
+
+int getBlockTextureIndex(int blockID, Direction dir) {
+    for (int i = 0; i < numTextures; i++) {
+        if (strcmp(blockData[blockID].textures[dir], textureArray[i]) != 0) {
+            continue;
+        } else {
+            return i;
+        }
+    }
+    ERROR("Could not locate texture index!");
+    exit(EXIT_FAILURE);
 }

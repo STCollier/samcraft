@@ -33,6 +33,7 @@ struct BlockData {
 void loadBlocksFromFile();
 void loadArrayTexture();
 unsigned int getArrayTexture();
+int getBlockTextureIndex(int blockID, Direction dir);
 
 extern struct BlockData blockData[256];
 

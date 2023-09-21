@@ -10,50 +10,51 @@
 #define RAND(min, max) (rand() % (max + 1 - min) + min)
 
 const float cubeVertices[] = {
-    0, 0, 0, 0, 0, // BACK
-    1, 0, 0, 1, 0,
-    1, 1, 0, 1, 1,
-    1, 1, 0, 1, 1,
-    0, 1, 0, 0, 1,
-    0, 0, 0, 0, 0,
+//  x  y  z  u  v  i
+    0, 0, 0, 0, 0, 0, // BACK
+    1, 0, 0, 1, 0, 0,
+    1, 1, 0, 1, 1, 0,
+    1, 1, 0, 1, 1, 0,
+    0, 1, 0, 0, 1, 0,
+    0, 0, 0, 0, 0, 0,
 
-    0, 0, 1, 0, 0, // FRONT
-    1, 0, 1, 1, 0,
-    1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1,
-    0, 1, 1, 0, 1,
-    0, 0, 1, 0, 0,
+    0, 0, 1, 0, 0, 0, // FRONT
+    1, 0, 1, 1, 0, 0,
+    1, 1, 1, 1, 1, 0,
+    1, 1, 1, 1, 1, 0,
+    0, 1, 1, 0, 1, 0,
+    0, 0, 1, 0, 0, 0,
 
-    0, 1, 1, 1, 0, // LEFT
-    0, 1, 0, 1, 1,
-    0, 0, 0, 0, 1,
-    0, 0, 0, 0, 1,
-    0, 0, 1, 0, 0,
-    0, 1, 1, 1, 0,
+    0, 1, 1, 0, 0, 0, // LEFT
+    0, 1, 0, -1, 0, 0,
+    0, 0, 0, -1, -1, 0,
+    0, 0, 0, -1, -1, 0,
+    0, 0, 1, 0, -1, 0,
+    0, 1, 1, 0, 0, 0,
 
-    1, 1, 1, 1, 0, // RIGHT
-    1, 1, 0, 1, 1,
-    1, 0, 0, 0, 1,
-    1, 0, 0, 0, 1,
-    1, 0, 1, 0, 0,
-    1, 1, 1, 1, 0,
+    1, 1, 1, 0, 0, 0, // RIGHT
+    1, 1, 0, -1, 0, 0,
+    1, 0, 0, -1, -1, 0,
+    1, 0, 0, -1, -1, 0,
+    1, 0, 1, 0, -1, 0,
+    1, 1, 1, 0, 0, 0,
 
-    0, 0, 0, 0, 1, // BOTTOM
-    1, 0, 0, 1, 1,
-    1, 0, 1, 1, 0,
-    1, 0, 1, 1, 0,
-    0, 0, 1, 0, 0,
-    0, 0, 0, 0, 1,
+    0, 0, 0, 0, 1, 0, // BOTTOM
+    1, 0, 0, 1, 1, 0,
+    1, 0, 1, 1, 0, 0,
+    1, 0, 1, 1, 0, 0,
+    0, 0, 1, 0, 0, 0,
+    0, 0, 0, 0, 1, 0,
 
-    0, 1, 0, 0, 1, // TOP
-    1, 1, 0, 1, 1,
-    1, 1, 1, 1, 0,
-    1, 1, 1, 1, 0,
-    0, 1, 1, 0, 0,
-    0, 1, 0, 0, 1
+    0, 1, 0, 0, 1, 0, // TOP
+    1, 1, 0, 1, 1, 0, 
+    1, 1, 1, 1, 0, 0,
+    1, 1, 1, 1, 0, 0,
+    0, 1, 1, 0, 0, 0,
+    0, 1, 0, 0, 1, 0
 };
 
-static void createMeshFace(Direction dir, struct Chunk *chunk, vec3 pos) {
+static void createMeshFace(Direction dir, struct Chunk *chunk, vec3 pos, int blockID) {
     int index = 0;
 
     switch(dir) {
@@ -61,19 +62,19 @@ static void createMeshFace(Direction dir, struct Chunk *chunk, vec3 pos) {
             index = 0;
             break;
         case FRONT:
-            index = 30;
+            index = 36;
             break;
         case LEFT:
-            index = 60;
+            index = 72;
             break;
         case RIGHT:
-            index = 90;
+            index = 108;
             break;
         case BOTTOM:
-            index = 120;
+            index = 144;
             break;
         case TOP:
-            index = 150;
+            index = 180;
             break;
         default:
             ERROR("Malformed face enumeration while creating chunk mesh!\n");
@@ -88,15 +89,19 @@ static void createMeshFace(Direction dir, struct Chunk *chunk, vec3 pos) {
         }
 
         // Positions
-        chunk->meshData[chunk->meshSize] = cubeVertices[(index + i*5)] + pos[0];
-        chunk->meshData[chunk->meshSize + 1] = cubeVertices[(index + i*5) + 1] + pos[1];
-        chunk->meshData[chunk->meshSize + 2] = cubeVertices[(index + i*5) + 2] + pos[2];
+        chunk->meshData[chunk->meshSize] = cubeVertices[(index + i*6)] + pos[0];
+        chunk->meshData[chunk->meshSize + 1] = cubeVertices[(index + i*6) + 1] + pos[1];
+        chunk->meshData[chunk->meshSize + 2] = cubeVertices[(index + i*6) + 2] + pos[2];
 
         // UVs
-        chunk->meshData[chunk->meshSize + 3] = cubeVertices[(index + i*5) + 3];
-        chunk->meshData[chunk->meshSize + 4] = cubeVertices[(index + i*5) + 4];
+        chunk->meshData[chunk->meshSize + 3] = cubeVertices[(index + i*6) + 3];
+        chunk->meshData[chunk->meshSize + 4] = cubeVertices[(index + i*6) + 4];
 
-        chunk->meshSize += 5;
+        if (blockID != 0) {
+            chunk->meshData[chunk->meshSize + 5] = cubeVertices[(index + i*6) + 5] + getBlockTextureIndex(blockID, dir);
+        }
+
+        chunk->meshSize += 6;
     }
 }
 
@@ -123,6 +128,10 @@ void initChunk(struct Chunk *chunk, vec3 offset) {
             }
         }
     }
+
+    chunk->blocks[blockIndex(8, CHUNK_SIZE_Y-64, 8)].id = 1;
+
+   // printf("ID: %s\n", blockData[chunk->blocks[blockIndex(0, 0, 0)].id].textures[0]);
 }
 
 void constructChunkMesh(struct Chunk *chunk, struct Chunk *chunkNeighbors) {
@@ -131,17 +140,17 @@ void constructChunkMesh(struct Chunk *chunk, struct Chunk *chunkNeighbors) {
         for (int y = 0; y < CHUNK_SIZE_Y; y++) {
             for (int z = 0; z < CHUNK_SIZE_Z; z++) {
                 if (chunk->blocks[blockIndex(x, y, z)].id != 0) {
-                    if ((x + 1 < CHUNK_SIZE_X && chunk->blocks[blockIndex(x + 1, y, z)].id == 0) || (x + 1 == CHUNK_SIZE_X && !chunkNeighbors[RIGHT].isNull && chunkNeighbors[RIGHT].blocks[blockIndex(0, y, z)].id == 0)) createMeshFace(RIGHT,  chunk, (vec3){x, y, z});
-                    if ((x > 0 && chunk->blocks[blockIndex(x - 1, y, z)].id == 0) || (x == 0 && !chunkNeighbors[LEFT].isNull && chunkNeighbors[LEFT].blocks[blockIndex(CHUNK_SIZE_X - 1, y, z)].id == 0)) createMeshFace(LEFT,  chunk, (vec3){x, y, z});
+                    if ((x + 1 < CHUNK_SIZE_X && chunk->blocks[blockIndex(x + 1, y, z)].id == 0) || (x + 1 == CHUNK_SIZE_X && chunkNeighbors[RIGHT].blocks[blockIndex(0, y, z)].id == 0)) createMeshFace(RIGHT,  chunk, (vec3){x, y, z}, chunk->blocks[blockIndex(x, y, z)].id);
+                    if ((x > 0 && chunk->blocks[blockIndex(x - 1, y, z)].id == 0) || (x == 0 && chunkNeighbors[LEFT].blocks[blockIndex(CHUNK_SIZE_X - 1, y, z)].id == 0)) createMeshFace(LEFT,  chunk, (vec3){x, y, z}, chunk->blocks[blockIndex(x, y, z)].id);
 
-                    if ((z + 1 < CHUNK_SIZE_Z && chunk->blocks[blockIndex(x, y, z + 1)].id == 0) || (z + 1 == CHUNK_SIZE_Z && !chunkNeighbors[FRONT].isNull && chunkNeighbors[FRONT].blocks[blockIndex(x, y, 0)].id == 0)) createMeshFace(FRONT,  chunk, (vec3){x, y, z}); // FRONT
-                    if ((z > 0 && chunk->blocks[blockIndex(x, y, z - 1)].id == 0) || (z == 0 && !chunkNeighbors[BACK].isNull && chunkNeighbors[BACK].blocks[blockIndex(x, y, CHUNK_SIZE_Z - 1)].id == 0)) createMeshFace(BACK,   chunk, (vec3){x, y, z}); // BACK
+                    if ((z + 1 < CHUNK_SIZE_Z && chunk->blocks[blockIndex(x, y, z + 1)].id == 0) || (z + 1 == CHUNK_SIZE_Z && chunkNeighbors[FRONT].blocks[blockIndex(x, y, 0)].id == 0)) createMeshFace(FRONT,  chunk, (vec3){x, y, z}, chunk->blocks[blockIndex(x, y, z)].id); // FRONT
+                    if ((z > 0 && chunk->blocks[blockIndex(x, y, z - 1)].id == 0) || (z == 0 && chunkNeighbors[BACK].blocks[blockIndex(x, y, CHUNK_SIZE_Z - 1)].id == 0)) createMeshFace(BACK,   chunk, (vec3){x, y, z}, chunk->blocks[blockIndex(x, y, z)].id); // BACK
 
-                    if (y-1 < 0) createMeshFace(BOTTOM, chunk, (vec3){x, y, z}); // BOTTOM
-                    else if (chunk->blocks[blockIndex(x, y - 1, z)].id == 0) createMeshFace(BOTTOM, chunk, (vec3){x, y, z}); // BOTTOM
+                    if (y-1 < 0) createMeshFace(BOTTOM, chunk, (vec3){x, y, z}, chunk->blocks[blockIndex(x, y, z)].id); // BOTTOM
+                    else if (chunk->blocks[blockIndex(x, y - 1, z)].id == 0) createMeshFace(BOTTOM, chunk, (vec3){x, y, z}, chunk->blocks[blockIndex(x, y, z)].id); // BOTTOM
 
-                    if (y+1 >= CHUNK_SIZE_Y) createMeshFace(TOP, chunk, (vec3){x, y, z}); // TOP
-                    else if (chunk->blocks[blockIndex(x, y + 1, z)].id == 0) createMeshFace(TOP, chunk, (vec3){x, y, z}); // TOP
+                    if (y+1 >= CHUNK_SIZE_Y) createMeshFace(TOP, chunk, (vec3){x, y, z}, chunk->blocks[blockIndex(x, y, z)].id); // TOP
+                    else if (chunk->blocks[blockIndex(x, y + 1, z)].id == 0) createMeshFace(TOP, chunk, (vec3){x, y, z}, chunk->blocks[blockIndex(x, y, z)].id); // TOP
                 }
             }
         }
@@ -159,12 +168,18 @@ void loadChunk(struct Chunk *chunk) {
     glBindBuffer(GL_ARRAY_BUFFER, chunk->VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(chunk->meshData), chunk->meshData, GL_STATIC_DRAW);
 
-    // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    // Position (x, y, z) attribute
+    
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    // texture coord attribute
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+
+    // Texture coords (u, v) attribute
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+
+    // Texture index (i) attribute
+    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(5 * sizeof(float)));
+    glEnableVertexAttribArray(2);
 }
 
 void renderChunk(struct Chunk *chunk, struct Shader shader) {

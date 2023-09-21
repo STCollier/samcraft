@@ -13,7 +13,7 @@ static int chunkIndex(int x, int y) {
 static void loadWorldChunk(int offsetX, int offsetZ) {
     struct Chunk *chunk = malloc(sizeof(struct Chunk));
 
-    initChunk(chunk, (vec3){(offsetX * CHUNK_SIZE_X) - RENDER_DISTANCE/2*CHUNK_SIZE_X, -CHUNK_SIZE_Y+64, (offsetZ * CHUNK_SIZE_Z) - RENDER_DISTANCE/2*CHUNK_SIZE_Z});
+    initChunk(chunk, (vec3){(offsetX * CHUNK_SIZE_X), 0, (offsetZ * CHUNK_SIZE_Z)});
 
     world.chunks[chunkIndex(offsetX, offsetZ)] = *chunk;
 
@@ -34,17 +34,25 @@ void loadWorld() {
 
     for (int x = 0; x < RENDER_DISTANCE; x++) {
         for (int z = 0; z < RENDER_DISTANCE; z++) {
-            if (x+1 >= RENDER_DISTANCE) chunkNeighbors[RIGHT].isNull = true;
+            if (x+1 >= RENDER_DISTANCE) chunkNeighbors[RIGHT] = world.chunks[chunkIndex(RENDER_DISTANCE - 1, z)];
             else chunkNeighbors[RIGHT] = world.chunks[chunkIndex(x + 1, z)];
 
-            if (x-1 < 0) chunkNeighbors[LEFT].isNull = true;
+            if (x-1 < 0) chunkNeighbors[LEFT] = world.chunks[chunkIndex(0, z)];
             else chunkNeighbors[LEFT] = world.chunks[chunkIndex(x - 1, z)];
 
-            if (z+1 >= RENDER_DISTANCE) chunkNeighbors[FRONT].isNull = true;
+            if (z+1 >= RENDER_DISTANCE) chunkNeighbors[FRONT] = world.chunks[chunkIndex(x, RENDER_DISTANCE-1)];
             else chunkNeighbors[FRONT] = world.chunks[chunkIndex(x, z + 1)];
 
-            if (z-1 < 0) chunkNeighbors[BACK].isNull = true;
+            if (z-1 < 0) chunkNeighbors[BACK] = world.chunks[chunkIndex(x, 0)];
             else chunkNeighbors[BACK] = world.chunks[chunkIndex(x, z - 1)];
+
+            if (x == 0 && z == 1) {
+                chunkNeighbors[LEFT] = world.chunks[chunkIndex(0, 1)];
+                chunkNeighbors[BACK] = world.chunks[chunkIndex(0, 1)];
+            } else if (x == 1 && z == 0) {
+                chunkNeighbors[LEFT] = world.chunks[chunkIndex(1, 0)];
+                chunkNeighbors[BACK] = world.chunks[chunkIndex(1, 0)];
+            }
 
             constructChunkMesh(&world.chunks[chunkIndex(x, z)], chunkNeighbors);
             loadChunk(&world.chunks[chunkIndex(x, z)]);

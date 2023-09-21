@@ -6,7 +6,7 @@ block = {
         left = "grass_side.png",
         front = "grass_side.png",
         back = "grass_side.png",
-        top = "grass.png",
+        top = "cobblestone.png",
         bottom = "dirt.png"
     } 
 }
