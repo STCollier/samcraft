@@ -4,8 +4,11 @@
 #include <GLFW/glfw3.h>
 #include <string.h>
 
+#include "worldgen.h"
+
 #include "chunk.h"
 #include "block.h"
+#include "../game/serialize.h"
 
 #define RAND(min, max) (rand() % (max + 1 - min) + min)
 
@@ -110,28 +113,37 @@ int blockIndex(int x, int y, int z) {
    return (x + z*CHUNK_SIZE_X + y*CHUNK_SIZE_X*CHUNK_SIZE_Z);
 }
 
-void initChunk(struct Chunk *chunk, vec3 offset) {
+void initChunk(struct Chunk *chunk, ivec2 offset) {
     chunk->isNull = false;
     chunk->meshSize = 0;
     chunk->offset[0] = offset[0];
     chunk->offset[1] = offset[1];
-    chunk->offset[2] = offset[2];
 
-    memset(chunk->meshData, 0, sizeof(chunk->meshData));
-    chunk->blocks = calloc(CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z, sizeof(struct Block));
+    chunk->meshData = calloc(CHUNK_MEMORY_BUFFER, sizeof(float));
+    chunk->blocks = calloc(CHUNK_AREA, sizeof(struct Block));
+    
 
     // Worldgen
-    for (int x = 0; x < CHUNK_SIZE_X; x++) {
-        for (int y = 0; y < CHUNK_SIZE_Y; y++) {
-            for (int z = 0; z < CHUNK_SIZE_Z; z++) {
-                if (y < CHUNK_SIZE_Y-64) chunk->blocks[blockIndex(x, y, z)].id = 1;
+    for (int z = 0; z < CHUNK_SIZE_Z; z++) {
+        for (int x = 0; x < CHUNK_SIZE_X; x++) {
+            int maxY = noiseHeight((ivec2){x, z}, (ivec2){offset[0], -offset[1]});
+
+            for (int y = 0; y < maxY; y++) {
+                if (y > randInRange(100, 110)) chunk->blocks[blockIndex(x, y, z)].id = 5;
+                else if (y > randInRange(80, 100)) chunk->blocks[blockIndex(x, y, z)].id = 3;
+                else if (y > randInRange(60, 80)) chunk->blocks[blockIndex(x, y, z)].id = 2;
+                else chunk->blocks[blockIndex(x, y, z)].id = 1;
             }
         }
     }
 
-    chunk->blocks[blockIndex(8, CHUNK_SIZE_Y-64, 8)].id = 1;
-
-   // printf("ID: %s\n", blockData[chunk->blocks[blockIndex(0, 0, 0)].id].textures[0]);
+    unsigned char *blockIDs = calloc(CHUNK_AREA, 1);
+    for (int i = 0; i < CHUNK_AREA; i++) {
+        blockIDs[i] = chunk->blocks[i].id;
+    }
+    serializeChunk((ivec2){offset[0], offset[1]}, blockIDs);
+    free(blockIDs);
+    //
 }
 
 void constructChunkMesh(struct Chunk *chunk, struct Chunk *chunkNeighbors) {
@@ -166,10 +178,9 @@ void loadChunk(struct Chunk *chunk) {
     glBindVertexArray(chunk->VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, chunk->VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(chunk->meshData), chunk->meshData, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, chunk->meshSize * sizeof(float), chunk->meshData, GL_STATIC_DRAW);
 
     // Position (x, y, z) attribute
-    
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
@@ -189,9 +200,8 @@ void renderChunk(struct Chunk *chunk, struct Shader shader) {
     setShaderInt(shader, "arrayTexture", 0);
 
     glm_mat4_identity(camera.model);
-    glm_translate(camera.model, (vec3){chunk->offset[0], chunk->offset[1], chunk->offset[2]});
+    glm_translate(camera.model, (vec3){chunk->offset[0], 0, chunk->offset[1]});
     setShaderMat4(shader, "model", camera.model);
-
 
     glDrawArrays(GL_TRIANGLES, 0, chunk->meshSize);
 }

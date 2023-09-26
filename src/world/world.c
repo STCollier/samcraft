@@ -6,21 +6,20 @@
 
 struct World world;
 
-static int chunkIndex(int x, int y) {
+int chunkIndex(int x, int y) {
    return (x + y * WORLD_SIZE);
 }
 
-static void loadWorldChunk(int offsetX, int offsetZ) {
+static void loadWorldChunk(ivec2 offset) {
     struct Chunk *chunk = malloc(sizeof(struct Chunk));
 
-    initChunk(chunk, (vec3){(offsetX * CHUNK_SIZE_X), 0, (offsetZ * CHUNK_SIZE_Z)});
+    initChunk(chunk, (ivec2){offset[0] * CHUNK_SIZE_X, offset[1] * CHUNK_SIZE_Z});
 
-    world.chunks[chunkIndex(offsetX, offsetZ)] = *chunk;
+    world.chunks[chunkIndex(offset[0], offset[1])] = *chunk;
 
     free(chunk);
 }
 
-// Called Once
 void loadWorld() {
     struct Chunk *chunkNeighbors = malloc(sizeof(struct Chunk) * 4);
 
@@ -28,7 +27,7 @@ void loadWorld() {
 
     for (int x = 0; x < RENDER_DISTANCE; x++) {
         for (int z = 0; z < RENDER_DISTANCE; z++) {
-            loadWorldChunk(x, z);
+            loadWorldChunk((ivec2){x, z});
         }
     }
 
@@ -67,8 +66,14 @@ void loadWorld() {
 // Called in update function
 void renderWorld(struct Shader shader) {
     for (int x = 0; x < RENDER_DISTANCE; x++) {
-        for (int y = 0; y < RENDER_DISTANCE; y++) {
-            renderChunk(&world.chunks[chunkIndex(x, y)], shader);
+        for (int z = 0; z < RENDER_DISTANCE; z++) {
+            renderChunk(&world.chunks[chunkIndex(x, z)], shader);
         }
     }
+}
+
+void destroyBlock(ivec2 chunkPos, ivec3 blockPos) {
+    world.chunks[chunkIndex(chunkPos[0], chunkPos[1])].blocks[blockIndex(blockPos[0], blockPos[1], blockPos[2])].id = 1;
+
+    loadWorld();
 }

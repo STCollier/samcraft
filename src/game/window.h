@@ -3,6 +3,7 @@
 
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
+#include <stdbool.h>
 
 struct Window {
     GLFWwindow* self;
@@ -12,6 +13,8 @@ struct Window {
 
     float dt; // Delta Time
     float lastFrame;
+    bool leftClicked;
+    bool rightClicked;
 };
 
 extern struct Window window;

@@ -8,8 +8,8 @@
 #include "../game/camera.h"
 #include "chunk.h"
 
-#define WORLD_SIZE 10 // # of chunks
-#define RENDER_DISTANCE 6
+#define WORLD_SIZE 18 // # of chunks
+#define RENDER_DISTANCE 18
 
 struct World {
     struct Chunk *chunks;
@@ -17,6 +17,7 @@ struct World {
 
 void loadWorld();
 void renderWorld(struct Shader shader);
+void destroyBlock(ivec2 chunkPos, ivec3 blockPos);
 
 extern struct World world;
 

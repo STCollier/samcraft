@@ -14,9 +14,14 @@
 #include "game/window.h"
 #include "game/shader.h"
 #include "game/camera.h"
+#include "game/serialize.h"
+#include "game/ray.h"
 
 #include "world/chunk.h"
 #include "world/world.h"
+#include "world/worldgen.h"
+
+#define SEED 35935903
 
 int main() {
 
@@ -26,20 +31,26 @@ int main() {
     struct Shader mainShader = createShader("res/shaders/main.vs", "res/shaders/main.fs");
     initCamera(30.0f, 25.0f, 0.1f);
 
+    worldgenInit(SEED);
+    initWorldDB(SEED);
+
     loadBlocksFromFile();
     loadArrayTexture();
     loadWorld();
 
+    struct Ray cameraRay = ray(camera.position, camera.front, 3.0f);
+
     int tick = 0;
     while (!glfwWindowShouldClose(window.self)) {
         updateWindow();
+
+        updateRay(&cameraRay, camera.position, camera.front);
 
         tick++;
         if (tick > 30) {
             printf("FPS: %f\n", 1/window.dt);
             tick = 0;
         }
-        
 
         useShader(mainShader);
         useCamera(mainShader);

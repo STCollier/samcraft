@@ -15,6 +15,7 @@
 #define CHUNK_SIZE_X 16
 #define CHUNK_SIZE_Y 256
 #define CHUNK_SIZE_Z 16
+#define CHUNK_AREA CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z
 
 #define CHUNK_MEMORY_BUFFER 1000000
 
@@ -24,15 +25,22 @@ struct Chunk {
 
     struct Block *blocks;
     size_t meshSize;
-    vec3 offset;
-    float meshData[CHUNK_MEMORY_BUFFER];
+    ivec2 offset;
+    float *meshData;
     bool isNull;
 };
 
-void initChunk(struct Chunk *chunk, vec3 offset);
+struct ChunkData {
+    int worldPosX;
+    int worldPosY;
+    unsigned char *data;
+};
+
+void initChunk(struct Chunk *chunk, ivec2 offset);
 void constructChunkMesh(struct Chunk *chunk, struct Chunk *chunkNeighbors);
 void loadChunk(struct Chunk *chunk);
 void renderChunk(struct Chunk *chunk, struct Shader shader);
 void destroyChunk(struct Chunk *chunk);
+int blockIndex(int x, int y, int z);
 
 #endif

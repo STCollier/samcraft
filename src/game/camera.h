@@ -12,6 +12,8 @@ struct Camera {
     mat4 model;
 
     vec3 position;
+    vec3 front;
+    vec3 up;
 
     float sensitivity;
     float speed;

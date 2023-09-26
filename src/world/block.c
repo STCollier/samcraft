@@ -7,8 +7,8 @@
 struct BlockData blockData[256];
 
 unsigned int arrayTexture;
-char texturePaths[6][512] = {0};
-char textureArray[6][512] = {0};
+char texturePaths[256*6][300] = {0};
+char textureArray[256*6][300] = {0};
 int numTextures = 0;
 
 void loadBlocksFromFile() {
@@ -118,7 +118,7 @@ void loadArrayTexture() {
     if (d) {
         while ((dir = readdir(d)) != NULL) {
             if (strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0 || strcmp(strrchr(dir->d_name, '.') + 1, "png") != 0) continue;
-
+    
             snprintf(textureArray[numTextures], sizeof(textureArray[numTextures]), "%s", dir->d_name);
             snprintf(texturePaths[numTextures], sizeof(texturePaths[numTextures]), "res/textures/%s", dir->d_name);
             numTextures++;

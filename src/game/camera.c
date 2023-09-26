@@ -12,9 +12,6 @@
 //Define globally
 struct Camera camera;
 
-vec3 cameraFront = {0.0f, 0.0f, -1.0f};
-vec3 cameraUp = {0.0f, 1.0f, 0.0f};
-
 float yaw = 45.0f;
 float pitch = 0.0f;
 float lastX = 0;
@@ -25,7 +22,9 @@ void initCamera(float fov, float speed, float sensitivity) {
     camera.speed = speed;
     camera.sensitivity = sensitivity;
 
-    glm_vec3_copy((vec3){0.0f, 200.0f, 0.0f}, camera.position);
+    glm_vec3_copy((vec3){0.0f, 140.0f, 0.0f}, camera.position);
+    glm_vec3_copy((vec3){0.0f, 0.0f, -1.0f}, camera.front);
+    glm_vec3_copy((vec3){0.0f, 1.0f, 0.0f}, camera.up);
 
     lastX = window.width / 2.0;
     lastY = window.height / 2.0;
@@ -38,19 +37,19 @@ static void handleCameraKeyboard() {
 
     if (glfwGetKey(window.self, GLFW_KEY_W) == GLFW_PRESS) {
         vec3 forwardDir;
-        glm_vec3_scale(cameraFront, cameraSpeed, forwardDir);
+        glm_vec3_scale(camera.front, cameraSpeed, forwardDir);
         glm_vec3_add(camera.position, forwardDir, camera.position);
     }
 
     if (glfwGetKey(window.self, GLFW_KEY_S) == GLFW_PRESS) {
         vec3 backwardsDir;
-        glm_vec3_scale(cameraFront, cameraSpeed, backwardsDir);
+        glm_vec3_scale(camera.front, cameraSpeed, backwardsDir);
         glm_vec3_sub(camera.position, backwardsDir, camera.position);
     }
 
     if (glfwGetKey(window.self, GLFW_KEY_A) == GLFW_PRESS) {
         vec3 leftDir;
-        glm_cross(cameraFront, cameraUp, leftDir);
+        glm_cross(camera.front, camera.up, leftDir);
         glm_normalize(leftDir);
 
         vec3 offset;
@@ -60,7 +59,7 @@ static void handleCameraKeyboard() {
 
     if (glfwGetKey(window.self, GLFW_KEY_D) == GLFW_PRESS) {
         vec3 rightDir;
-        glm_cross(cameraFront, cameraUp, rightDir);
+        glm_cross(camera.front, camera.up, rightDir);
         glm_normalize(rightDir);
 
         vec3 offset;
@@ -68,12 +67,16 @@ static void handleCameraKeyboard() {
 
         glm_vec3_add(camera.position, offset, camera.position);
     } 
+
+    if (glfwGetKey(window.self, GLFW_KEY_R) == GLFW_PRESS) {
+        camera.speed = 50.0f;
+    } else {
+        camera.speed = 25.0f;
+    }
 }
 
 void useCamera(struct Shader shader) {
     useShader(shader);
-
-    //printf("(%f, %f, %f)\n", camera.position[0], camera.position[1], camera.position[2]);
 
     glm_mat4_identity(camera.projection);
     glm_perspective(glm_rad(camera.fov), (float) window.width / (float) window.height, 0.1f, 500.0f, camera.projection); // Make sure to convert to floats for float division
@@ -81,19 +84,17 @@ void useCamera(struct Shader shader) {
 
     glm_mat4_identity(camera.view);
     vec3 result;
-    glm_vec3_add(camera.position, cameraFront, result);
-    glm_lookat(camera.position, result, cameraUp, camera.view);
+    glm_vec3_add(camera.position, camera.front, result);
+    glm_lookat(camera.position, result, camera.up, camera.view);
     setShaderMat4(shader, "view", camera.view);
 
     handleCameraKeyboard();
 }
 
 void cameraMouseCallback(double xposIn, double yposIn) {
+    
     float xpos = xposIn;
     float ypos = yposIn;
-
-    /*printf("%f %f\n", window.width/2 - xpos, window.width/2 - ypos);
-    glfwSetCursorPos(window.self, window.width/2, window.height/2);*/
 
     float xoffset = xpos - lastX;
     float yoffset = lastY - ypos; // Reversed since y-coordinates go from bottom to top
@@ -119,5 +120,5 @@ void cameraMouseCallback(double xposIn, double yposIn) {
 
     glm_vec3_normalize(front);
 
-    glm_vec3_copy(front, cameraFront);
+    glm_vec3_copy(front, camera.front);
 }

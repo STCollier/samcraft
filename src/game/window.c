@@ -25,6 +25,23 @@ static void _mouseCallback(GLFWwindow* _window, double xpos, double ypos) {
     cameraMouseCallback(xpos, ypos);
 }
 
+static void _mouseButtonCallback(GLFWwindow* _window, int button, int action, int mods) {
+    (void) _window;
+    (void) mods;
+    
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+       window.leftClicked = true;
+    } else {
+        window.leftClicked = false;
+    }
+
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
+       window.rightClicked = true;
+    } else {
+        window.rightClicked = false;
+    }
+}
+
 void createWindow(const char* title, int width, int height) {
     window.title = title;
     window.width = width;
@@ -64,6 +81,7 @@ void createWindow(const char* title, int width, int height) {
     glfwSetFramebufferSizeCallback(window.self, _sizeCallback);
     glfwSetKeyCallback(window.self, _keyboardCallback);
     glfwSetCursorPosCallback(window.self, _mouseCallback);
+    glfwSetMouseButtonCallback(window.self, _mouseButtonCallback);
 
     glfwSetInputMode(window.self, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
