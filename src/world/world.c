@@ -6,74 +6,72 @@
 
 struct World world;
 
-int chunkIndex(int x, int y) {
-   return (x + y * WORLD_SIZE);
-}
-
-static void loadWorldChunk(ivec2 offset) {
+static void loadWorldChunk(ivec2 offset, ivec2 arrayPos) {
     struct Chunk *chunk = malloc(sizeof(struct Chunk));
 
     initChunk(chunk, (ivec2){offset[0] * CHUNK_SIZE_X, offset[1] * CHUNK_SIZE_Z});
 
-    world.chunks[chunkIndex(offset[0], offset[1])] = *chunk;
+    setSWValue(world.data, arrayPos, chunk);
+}
 
-    free(chunk);
+void initWorld() {
+    world.data = malloc(sizeof(struct SlidingWindow)); // struct SlidingWindow *data;
+    world.data->chunks = malloc(sizeof(struct Chunk) * WINDOW_SIZE * WINDOW_SIZE);
+    glm_ivec2_copy((ivec2){0, 0}, world.data->minPosition);
+    glm_ivec2_copy((ivec2){0, 0}, world.data->indexOffset);
 }
 
 void loadWorld() {
-    struct Chunk *chunkNeighbors = malloc(sizeof(struct Chunk) * 4);
+    struct Chunk chunkNeighbors[4];
 
-    world.chunks = malloc(WORLD_SIZE * WORLD_SIZE * sizeof(struct Chunk));
-
-    for (int x = 0; x < RENDER_DISTANCE; x++) {
-        for (int z = 0; z < RENDER_DISTANCE; z++) {
-            loadWorldChunk((ivec2){x, z});
+    for (int x = 0; x < RENDER_SIZE; x++) {
+        for (int z = 0; z < RENDER_SIZE; z++) {
+            loadWorldChunk((ivec2){x - RENDER_DISTANCE, z - RENDER_DISTANCE}, (ivec2){x, z});
         }
     }
 
-    for (int x = 0; x < RENDER_DISTANCE; x++) {
-        for (int z = 0; z < RENDER_DISTANCE; z++) {
-            if (x+1 >= RENDER_DISTANCE) chunkNeighbors[RIGHT] = world.chunks[chunkIndex(RENDER_DISTANCE - 1, z)];
-            else chunkNeighbors[RIGHT] = world.chunks[chunkIndex(x + 1, z)];
+    for (int x = 0; x < RENDER_SIZE; x++) {
+        for (int z = 0; z < RENDER_SIZE; z++) {
+            if (x+1 >= RENDER_SIZE) chunkNeighbors[RIGHT] = *getSWValue(world.data, (ivec2){RENDER_SIZE - 1, z});
+            else chunkNeighbors[RIGHT] = *getSWValue(world.data, (ivec2){x + 1, z});
+            
+            if (x-1 < 0) chunkNeighbors[LEFT] = *getSWValue(world.data, (ivec2){0, z});
+            else chunkNeighbors[LEFT] = *getSWValue(world.data, (ivec2){x - 1, z});
 
-            if (x-1 < 0) chunkNeighbors[LEFT] = world.chunks[chunkIndex(0, z)];
-            else chunkNeighbors[LEFT] = world.chunks[chunkIndex(x - 1, z)];
+            if (z+1 >= RENDER_SIZE) chunkNeighbors[FRONT] = *getSWValue(world.data, (ivec2){x, RENDER_SIZE - 1});
+            else chunkNeighbors[FRONT] = *getSWValue(world.data, (ivec2){x, z + 1});
 
-            if (z+1 >= RENDER_DISTANCE) chunkNeighbors[FRONT] = world.chunks[chunkIndex(x, RENDER_DISTANCE-1)];
-            else chunkNeighbors[FRONT] = world.chunks[chunkIndex(x, z + 1)];
+            if (z-1 < 0) chunkNeighbors[BACK] = *getSWValue(world.data, (ivec2){x, 0});
+            else chunkNeighbors[BACK] = *getSWValue(world.data, (ivec2){x, z - 1});
 
-            if (z-1 < 0) chunkNeighbors[BACK] = world.chunks[chunkIndex(x, 0)];
-            else chunkNeighbors[BACK] = world.chunks[chunkIndex(x, z - 1)];
+            
 
-            if (x == 0 && z == 1) {
-                chunkNeighbors[LEFT] = world.chunks[chunkIndex(0, 1)];
-                chunkNeighbors[BACK] = world.chunks[chunkIndex(0, 1)];
-            } else if (x == 1 && z == 0) {
-                chunkNeighbors[LEFT] = world.chunks[chunkIndex(1, 0)];
-                chunkNeighbors[BACK] = world.chunks[chunkIndex(1, 0)];
-            }
-
-            constructChunkMesh(&world.chunks[chunkIndex(x, z)], chunkNeighbors);
-            loadChunk(&world.chunks[chunkIndex(x, z)]);
+            constructChunkMesh(getSWValue(world.data, (ivec2){x, z}), chunkNeighbors);
+            loadChunk(getSWValue(world.data, (ivec2){x, z}));
         }
     }
-
-    free(chunkNeighbors);
-
-    LOG("World loaded!");
 }
 
 // Called in update function
 void renderWorld(struct Shader shader) {
-    for (int x = 0; x < RENDER_DISTANCE; x++) {
-        for (int z = 0; z < RENDER_DISTANCE; z++) {
-            renderChunk(&world.chunks[chunkIndex(x, z)], shader);
+    for (int x = 0; x < RENDER_SIZE; x++) {
+        for (int z = 0; z < RENDER_SIZE; z++) {
+
+            renderChunk(getSWValue(world.data, (ivec2){x, z}), shader);
         }
     }
 }
 
-void destroyBlock(ivec2 chunkPos, ivec3 blockPos) {
-    world.chunks[chunkIndex(chunkPos[0], chunkPos[1])].blocks[blockIndex(blockPos[0], blockPos[1], blockPos[2])].id = 1;
+void destroyWorld() {
+    for (int x = 0; x < RENDER_SIZE; x++) {
+        for (int z = 0; z < RENDER_SIZE; z++) {
+            destroyChunk(getSWValue(world.data, (ivec2){x, z}));
+        }
+    }
 
-    loadWorld();
+    free(world.data);
 }
+
+/*void destroyBlock(ivec2 chunkPos, ivec3 blockPos) {
+    world.chunks[chunkIndex(chunkPos[0], chunkPos[1])].blocks[blockIndex(blockPos[0], blockPos[1], blockPos[2])].id = 1;
+}*/

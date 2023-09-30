@@ -76,7 +76,7 @@ void createWindow(const char* title, int width, int height) {
         exit(1);
     }
 
-    glEnable(GL_DEPTH_TEST); 
+    glEnable(GL_DEPTH_TEST);
 
     glfwSetFramebufferSizeCallback(window.self, _sizeCallback);
     glfwSetKeyCallback(window.self, _keyboardCallback);
@@ -84,6 +84,7 @@ void createWindow(const char* title, int width, int height) {
     glfwSetMouseButtonCallback(window.self, _mouseButtonCallback);
 
     glfwSetInputMode(window.self, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
 
     LOG("Window succesfully initilized!");
 }

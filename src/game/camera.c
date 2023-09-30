@@ -79,7 +79,7 @@ void useCamera(struct Shader shader) {
     useShader(shader);
 
     glm_mat4_identity(camera.projection);
-    glm_perspective(glm_rad(camera.fov), (float) window.width / (float) window.height, 0.1f, 500.0f, camera.projection); // Make sure to convert to floats for float division
+    glm_perspective(glm_rad(camera.fov), (float) window.width / (float) window.height, 0.1f, 2048.0f, camera.projection); // Make sure to convert to floats for float division
     setShaderMat4(shader, "projection", camera.projection);
 
     glm_mat4_identity(camera.view);
@@ -91,8 +91,8 @@ void useCamera(struct Shader shader) {
     handleCameraKeyboard();
 }
 
+
 void cameraMouseCallback(double xposIn, double yposIn) {
-    
     float xpos = xposIn;
     float ypos = yposIn;
 

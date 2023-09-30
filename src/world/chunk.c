@@ -137,28 +137,29 @@ void initChunk(struct Chunk *chunk, ivec2 offset) {
         }
     }
 
-    unsigned char *blockIDs = calloc(CHUNK_AREA, 1);
+    /*unsigned char *blockIDs = calloc(CHUNK_AREA, 1);
     for (int i = 0; i < CHUNK_AREA; i++) {
         blockIDs[i] = chunk->blocks[i].id;
     }
     serializeChunk((ivec2){offset[0], offset[1]}, blockIDs);
-    free(blockIDs);
-    //
+    free(blockIDs);*/
 }
 
 void constructChunkMesh(struct Chunk *chunk, struct Chunk *chunkNeighbors) {
     // Loop through chunks, if block is NOT neighboring, check which side is not neighboring, and add mesh data for that cube face to array
+
     for (int x = 0; x < CHUNK_SIZE_X; x++) {
         for (int y = 0; y < CHUNK_SIZE_Y; y++) {
             for (int z = 0; z < CHUNK_SIZE_Z; z++) {
                 if (chunk->blocks[blockIndex(x, y, z)].id != 0) {
+
                     if ((x + 1 < CHUNK_SIZE_X && chunk->blocks[blockIndex(x + 1, y, z)].id == 0) || (x + 1 == CHUNK_SIZE_X && chunkNeighbors[RIGHT].blocks[blockIndex(0, y, z)].id == 0)) createMeshFace(RIGHT,  chunk, (vec3){x, y, z}, chunk->blocks[blockIndex(x, y, z)].id);
                     if ((x > 0 && chunk->blocks[blockIndex(x - 1, y, z)].id == 0) || (x == 0 && chunkNeighbors[LEFT].blocks[blockIndex(CHUNK_SIZE_X - 1, y, z)].id == 0)) createMeshFace(LEFT,  chunk, (vec3){x, y, z}, chunk->blocks[blockIndex(x, y, z)].id);
 
                     if ((z + 1 < CHUNK_SIZE_Z && chunk->blocks[blockIndex(x, y, z + 1)].id == 0) || (z + 1 == CHUNK_SIZE_Z && chunkNeighbors[FRONT].blocks[blockIndex(x, y, 0)].id == 0)) createMeshFace(FRONT,  chunk, (vec3){x, y, z}, chunk->blocks[blockIndex(x, y, z)].id); // FRONT
                     if ((z > 0 && chunk->blocks[blockIndex(x, y, z - 1)].id == 0) || (z == 0 && chunkNeighbors[BACK].blocks[blockIndex(x, y, CHUNK_SIZE_Z - 1)].id == 0)) createMeshFace(BACK,   chunk, (vec3){x, y, z}, chunk->blocks[blockIndex(x, y, z)].id); // BACK
 
-                    if (y-1 < 0) createMeshFace(BOTTOM, chunk, (vec3){x, y, z}, chunk->blocks[blockIndex(x, y, z)].id); // BOTTOM
+                    if (y-1 < 0); /*createMeshFace(BOTTOM, chunk, (vec3){x, y, z}, chunk->blocks[blockIndex(x, y, z)].id); // BOTTOM*/
                     else if (chunk->blocks[blockIndex(x, y - 1, z)].id == 0) createMeshFace(BOTTOM, chunk, (vec3){x, y, z}, chunk->blocks[blockIndex(x, y, z)].id); // BOTTOM
 
                     if (y+1 >= CHUNK_SIZE_Y) createMeshFace(TOP, chunk, (vec3){x, y, z}, chunk->blocks[blockIndex(x, y, z)].id); // TOP
@@ -167,8 +168,6 @@ void constructChunkMesh(struct Chunk *chunk, struct Chunk *chunkNeighbors) {
             }
         }
     }
-
-    free(chunk->blocks);
 }
 
 void loadChunk(struct Chunk *chunk) {
@@ -194,6 +193,7 @@ void loadChunk(struct Chunk *chunk) {
 }
 
 void renderChunk(struct Chunk *chunk, struct Shader shader) {
+
     glBindVertexArray(chunk->VAO);
     glActiveTexture(GL_TEXTURE0); // Use texture unit 0
     glBindTexture(GL_TEXTURE_2D_ARRAY, getArrayTexture());
@@ -207,8 +207,8 @@ void renderChunk(struct Chunk *chunk, struct Shader shader) {
 }
 
 void destroyChunk(struct Chunk *chunk) {
+    free(chunk->meshData);
+
     glDeleteVertexArrays(1, &chunk->VAO);
     glDeleteBuffers(1, &chunk->VBO);
-
-    free(chunk);
 }
