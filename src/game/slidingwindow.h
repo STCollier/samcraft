@@ -12,6 +12,13 @@
 
 #define WINDOW_SIZE RENDER_DISTANCE * 2
 
+typedef enum {
+    POSITIVE_POSITIVE,
+    POSITIVE_NEGATIVE,
+    NEGATIVE_POSITIVE,
+    NEGATIVE_NEGATIVE
+} Vec2Direction;
+
 struct SlidingWindow {
     struct Chunk *chunks;
     ivec2 minPosition;

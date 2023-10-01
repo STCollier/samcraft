@@ -32,16 +32,16 @@ void loadWorld() {
 
     for (int x = 0; x < RENDER_SIZE; x++) {
         for (int z = 0; z < RENDER_SIZE; z++) {
-            if (x+1 >= RENDER_SIZE) chunkNeighbors[RIGHT] = *getSWValue(world.data, (ivec2){RENDER_SIZE - 1, z});
+            if (x+1 >= RENDER_SIZE) chunkNeighbors[RIGHT].isNull = true;
             else chunkNeighbors[RIGHT] = *getSWValue(world.data, (ivec2){x + 1, z});
             
-            if (x-1 < 0) chunkNeighbors[LEFT] = *getSWValue(world.data, (ivec2){0, z});
+            if (x-1 < 0) chunkNeighbors[LEFT].isNull = true;
             else chunkNeighbors[LEFT] = *getSWValue(world.data, (ivec2){x - 1, z});
 
-            if (z+1 >= RENDER_SIZE) chunkNeighbors[FRONT] = *getSWValue(world.data, (ivec2){x, RENDER_SIZE - 1});
+            if (z+1 >= RENDER_SIZE) chunkNeighbors[FRONT].isNull = true;
             else chunkNeighbors[FRONT] = *getSWValue(world.data, (ivec2){x, z + 1});
 
-            if (z-1 < 0) chunkNeighbors[BACK] = *getSWValue(world.data, (ivec2){x, 0});
+            if (z-1 < 0) chunkNeighbors[BACK].isNull = true;
             else chunkNeighbors[BACK] = *getSWValue(world.data, (ivec2){x, z - 1});
 
             
@@ -52,14 +52,20 @@ void loadWorld() {
     }
 }
 
+void moveWorld(ivec2 newPos) {
+    moveSW(world.data, (ivec2){1, 1});
+}
+
 // Called in update function
-void renderWorld(struct Shader shader) {
-    for (int x = 0; x < RENDER_SIZE; x++) {
-        for (int z = 0; z < RENDER_SIZE; z++) {
+void renderWorld(struct Shader shader, ivec2 newPos) {
+    for (int x = 1; x < RENDER_SIZE + 1; x++) {
+        for (int z = 1; z < RENDER_SIZE + 1; z++) {
 
             renderChunk(getSWValue(world.data, (ivec2){x, z}), shader);
         }
     }
+
+    printf("X: %d Y: %d\n", world.data->minPosition[0], world.data->minPosition[1]);
 }
 
 void destroyWorld() {

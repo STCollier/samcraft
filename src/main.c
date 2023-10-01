@@ -58,7 +58,7 @@ int main() {
         }
 
         if (player.movedBetweenChunks) {
-                //loadWorld(player.chunkPos);
+            moveWorld(player.chunkPos);
 
             player.movedBetweenChunks = false;
         }
@@ -72,7 +72,7 @@ int main() {
         glfwPollEvents();
     }
 
-    destroyWorld();
+    //  destroyWorld();
     terminateWindow();
    
     return 0;

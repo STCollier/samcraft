@@ -18,6 +18,7 @@ struct World {
 
 void initWorld();
 void loadWorld();
+void moveWorld(ivec2 newPos);
 void renderWorld(struct Shader shader);
 void destroyWorld();
 //void destroyBlock(ivec2 chunkPos, ivec3 blockPos);

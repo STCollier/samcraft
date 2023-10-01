@@ -1,4 +1,4 @@
-#include "slidingwindow.h"
+#include "slidingwindow.h"  
 
 static int chunkIndex(ivec2 pos) {
    return (pos[0] + pos[1] * RENDER_DISTANCE);
@@ -40,7 +40,10 @@ struct Chunk *getSWValue(struct SlidingWindow *self, ivec2 position) {
 }
 
 void moveSW(struct SlidingWindow *self, ivec2 newPosition) {
-    self->indexOffset[0] += self->minPosition[0] - newPosition[0];
+   /* if (self->minPosition[0] < 0 || self->minPosition[0] > WINDOW_SIZE) self->minPosition[0] = WINDOW_SIZE / 2;
+    if (self->minPosition[1] < 0 || self->minPosition[1] > WINDOW_SIZE) self->minPosition[1] = WINDOW_SIZE / 2;*/
+
+    self->indexOffset[0] += self->minPosition[0] - newPosition[0];  
     self->indexOffset[1] += self->minPosition[1] - newPosition[1];
 
     self->indexOffset[0] = self->indexOffset[0] < 0 ? (WINDOW_SIZE + 1 - ((-self->indexOffset[0]) % WINDOW_SIZE)) : (self->indexOffset[0] % WINDOW_SIZE);
