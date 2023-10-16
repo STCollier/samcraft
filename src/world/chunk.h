@@ -37,8 +37,9 @@ struct ChunkData {
 };
 
 void initChunk(struct Chunk *chunk, ivec2 offset);
-void constructChunkMesh(struct Chunk *chunk, struct Chunk *chunkNeighbors);
-void loadChunk(struct Chunk *chunk);
+void genChunk(struct Chunk *chunk);
+void meshChunk(struct Chunk *chunk, struct Chunk *chunkNeighbors);
+void bindChunk(struct Chunk *chunk);
 void renderChunk(struct Chunk *chunk, struct Shader shader);
 void destroyChunk(struct Chunk *chunk);
 int blockIndex(int x, int y, int z);

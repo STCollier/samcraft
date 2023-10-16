@@ -33,9 +33,9 @@ static void _checkCompileErrors(unsigned int shader, char* type) {
 }
 
 static char* _getFileContent(const char* filename) {
-  char *buffer = 0;
+  char* buffer = 0;
   long length;
-  FILE *file = fopen (filename, "rb");
+  FILE* file = fopen (filename, "rb");
 
   if (file) {
     fseek(file, 0, SEEK_END);

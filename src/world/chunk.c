@@ -12,7 +12,7 @@
 
 #define RAND(min, max) (rand() % (max + 1 - min) + min)
 
-const float cubeVertices[] = {
+const int cubeVertices[] = {
 //  x  y  z  u  v  i
     0, 0, 0, 0, 0, 0, // BACK
     1, 0, 0, 1, 0, 0,
@@ -121,21 +121,6 @@ void initChunk(struct Chunk *chunk, ivec2 offset) {
 
     chunk->meshData = calloc(CHUNK_MEMORY_BUFFER, sizeof(float));
     chunk->blocks = calloc(CHUNK_AREA, sizeof(struct Block));
-    
-
-    // Worldgen
-    for (int z = 0; z < CHUNK_SIZE_Z; z++) {
-        for (int x = 0; x < CHUNK_SIZE_X; x++) {
-            int maxY = noiseHeight((ivec2){x, z}, (ivec2){offset[0], -offset[1]});
-
-            for (int y = 0; y < maxY; y++) {
-                if (y > randInRange(100, 110)) chunk->blocks[blockIndex(x, y, z)].id = 5;
-                else if (y > randInRange(80, 100)) chunk->blocks[blockIndex(x, y, z)].id = 3;
-                else if (y > randInRange(60, 80)) chunk->blocks[blockIndex(x, y, z)].id = 2;
-                else chunk->blocks[blockIndex(x, y, z)].id = 1;
-            }
-        }
-    }
 
     /*unsigned char *blockIDs = calloc(CHUNK_AREA, 1);
     for (int i = 0; i < CHUNK_AREA; i++) {
@@ -145,18 +130,34 @@ void initChunk(struct Chunk *chunk, ivec2 offset) {
     free(blockIDs);*/
 }
 
-void constructChunkMesh(struct Chunk *chunk, struct Chunk *chunkNeighbors) {
-    // Loop through chunks, if block is NOT neighboring, check which side is not neighboring, and add mesh data for that cube face to array
+void genChunk(struct Chunk *chunk) {
+        // Worldgen
+    for (int z = 0; z < CHUNK_SIZE_Z; z++) {
+        for (int x = 0; x < CHUNK_SIZE_X; x++) {
+            int maxY = noiseHeight((ivec2){x, z}, (ivec2){chunk->offset[0], -chunk->offset[1]});
 
+            for (int y = 0; y < maxY; y++) {
+                if (y > randInRange(100, 110)) chunk->blocks[blockIndex(x, y, z)].id = 5;
+                else if (y > randInRange(80, 100)) chunk->blocks[blockIndex(x, y, z)].id = 3;
+                else if (y > randInRange(60, 80)) chunk->blocks[blockIndex(x, y, z)].id = 2;
+                else chunk->blocks[blockIndex(x, y, z)].id = 1;
+            }
+        }
+    }
+}
+
+void meshChunk(struct Chunk *chunk, struct Chunk *chunkNeighbors) {
+    // Loop through chunks, if block is NOT neighboring, check which side is not neighboring, and add mesh data for that cube face to array
     for (int x = 0; x < CHUNK_SIZE_X; x++) {
         for (int y = 0; y < CHUNK_SIZE_Y; y++) {
             for (int z = 0; z < CHUNK_SIZE_Z; z++) {
                 if (chunk->blocks[blockIndex(x, y, z)].id != 0) {
+                    
                     if (!chunkNeighbors[RIGHT].isNull) {
                         if ((x + 1 < CHUNK_SIZE_X && chunk->blocks[blockIndex(x + 1, y, z)].id == 0) || (x + 1 == CHUNK_SIZE_X && chunkNeighbors[RIGHT].blocks[blockIndex(0, y, z)].id == 0)) createMeshFace(RIGHT,  chunk, (vec3){x, y, z}, chunk->blocks[blockIndex(x, y, z)].id);
                     }
-                    
-                    if (!chunkNeighbors[LEFT].isNull) {
+
+                    if (!chunkNeighbors[LEFT].isNull) { 
                         if ((x > 0 && chunk->blocks[blockIndex(x - 1, y, z)].id == 0) || (x == 0 && chunkNeighbors[LEFT].blocks[blockIndex(CHUNK_SIZE_X - 1, y, z)].id == 0)) createMeshFace(LEFT,  chunk, (vec3){x, y, z}, chunk->blocks[blockIndex(x, y, z)].id);
                     }
 
@@ -168,7 +169,7 @@ void constructChunkMesh(struct Chunk *chunk, struct Chunk *chunkNeighbors) {
                         if ((z > 0 && chunk->blocks[blockIndex(x, y, z - 1)].id == 0) || (z == 0 && chunkNeighbors[BACK].blocks[blockIndex(x, y, CHUNK_SIZE_Z - 1)].id == 0)) createMeshFace(BACK,   chunk, (vec3){x, y, z}, chunk->blocks[blockIndex(x, y, z)].id); // BACK
                     }
                     
-                    if (y-1 < 0); /*createMeshFace(BOTTOM, chunk, (vec3){x, y, z}, chunk->blocks[blockIndex(x, y, z)].id); // BOTTOM*/
+                    if (y-1 < 0); //createMeshFace(BOTTOM, chunk, (vec3){x, y, z}, chunk->blocks[blockIndex(x, y, z)].id); // BOTTOM
                     else if (chunk->blocks[blockIndex(x, y - 1, z)].id == 0) createMeshFace(BOTTOM, chunk, (vec3){x, y, z}, chunk->blocks[blockIndex(x, y, z)].id); // BOTTOM
 
                     if (y+1 >= CHUNK_SIZE_Y) createMeshFace(TOP, chunk, (vec3){x, y, z}, chunk->blocks[blockIndex(x, y, z)].id); // TOP
@@ -179,30 +180,29 @@ void constructChunkMesh(struct Chunk *chunk, struct Chunk *chunkNeighbors) {
     }
 }
 
-void loadChunk(struct Chunk *chunk) {
+void bindChunk(struct Chunk *chunk) {
     glGenVertexArrays(1, &chunk->VAO);
     glGenBuffers(1, &chunk->VBO);
 
     glBindVertexArray(chunk->VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, chunk->VBO);
-    glBufferData(GL_ARRAY_BUFFER, chunk->meshSize * sizeof(float), chunk->meshData, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, chunk->meshSize * sizeof(int), chunk->meshData, GL_STATIC_DRAW);
 
     // Position (x, y, z) attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glVertexAttribIPointer(0, 3, GL_INT, 6 * sizeof(int), (void*)0);
     glEnableVertexAttribArray(0);
 
     // Texture coords (u, v) attribute
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribIPointer(1, 2, GL_INT, 6 * sizeof(int), (void*)(3 * sizeof(int)));
     glEnableVertexAttribArray(1);
 
     // Texture index (i) attribute
-    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(5 * sizeof(float)));
+    glVertexAttribIPointer(2, 1, GL_INT, 6 * sizeof(int), (void*)(5 * sizeof(int)));
     glEnableVertexAttribArray(2);
 }
 
 void renderChunk(struct Chunk *chunk, struct Shader shader) {
-
     glBindVertexArray(chunk->VAO);
     glActiveTexture(GL_TEXTURE0); // Use texture unit 0
     glBindTexture(GL_TEXTURE_2D_ARRAY, getArrayTexture());
@@ -216,8 +216,10 @@ void renderChunk(struct Chunk *chunk, struct Shader shader) {
 }
 
 void destroyChunk(struct Chunk *chunk) {
-    free(chunk->meshData);
-
     glDeleteVertexArrays(1, &chunk->VAO);
     glDeleteBuffers(1, &chunk->VBO);
+
+    free(chunk->meshData);
+    free(chunk->blocks);
+    free(chunk);
 }

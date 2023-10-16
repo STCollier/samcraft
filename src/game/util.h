@@ -11,5 +11,6 @@
 #define LOG_MSG(err, msg) fprintf(stdout, "\x1B[0m%s:%d: [LOG] %s %s\n", __FILE__, __LINE__, err, msg);
 
 #define STR(x) #x
+#define ALMOST_EQUAL(x, y) (fabs((x) - (y)) < (0.01))
 
 #endif

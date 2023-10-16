@@ -25,20 +25,19 @@
 #define SEED 123456789
 
 int main() {
+
     createWindow("Minecraft", 1920, 1080);
     stbi_set_flip_vertically_on_load(true);
 
     struct Shader mainShader = createShader("res/shaders/main.vs", "res/shaders/main.fs");
-    initCamera(30.0f, 25.0f, 0.1f);
-
-    initWorld();
+    initCamera(30.0f, 50.0f, 0.1f);
 
     worldgenInit(SEED);
     initWorldDB(SEED);
 
     loadBlocksFromFile();
     loadArrayTexture();
-    loadWorld();
+    initWorld();
 
     initPlayer();
 
@@ -51,16 +50,18 @@ int main() {
         updateRay(&cameraRay, camera.position, camera.front);
         updatePlayer();
 
+        if (player.movedBetweenChunks) {
+            moveWorld(player.chunkPos);
+
+            //printf("%d %d\n", player.chunkPos[0], player.chunkPos[1]);
+
+            player.movedBetweenChunks = false;
+        }
+
         tick++;
         if (tick > 30) {
             printf("FPS: %f\n", 1/window.dt);
             tick = 0;
-        }
-
-        if (player.movedBetweenChunks) {
-            moveWorld(player.chunkPos);
-
-            player.movedBetweenChunks = false;
         }
 
         useShader(mainShader);
@@ -72,7 +73,6 @@ int main() {
         glfwPollEvents();
     }
 
-    //  destroyWorld();
     terminateWindow();
    
     return 0;
