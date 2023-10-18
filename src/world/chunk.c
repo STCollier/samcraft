@@ -137,10 +137,10 @@ void genChunk(struct Chunk *chunk) {
             int maxY = noiseHeight((ivec2){x, z}, (ivec2){chunk->offset[0], -chunk->offset[1]});
 
             for (int y = 0; y < maxY; y++) {
-                if (y > randInRange(100, 110)) chunk->blocks[blockIndex(x, y, z)].id = 5;
+                /*if (y > randInRange(100, 110)) chunk->blocks[blockIndex(x, y, z)].id = 5;
                 else if (y > randInRange(80, 100)) chunk->blocks[blockIndex(x, y, z)].id = 3;
                 else if (y > randInRange(60, 80)) chunk->blocks[blockIndex(x, y, z)].id = 2;
-                else chunk->blocks[blockIndex(x, y, z)].id = 1;
+                else */chunk->blocks[blockIndex(x, y, z)].id = 1;
             }
         }
     }

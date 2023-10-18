@@ -1,6 +1,16 @@
 #ifndef UTIL_H
 #define UTIL_H
 
+#include "cglm/cglm.h"
+#include "cglm/call.h"
+
+// cglm has arrays for vectors which is quite annyoing since they can't be returned in a function, let alone being unintuitive with [0] and [1]
+typedef struct {
+    int x;
+    int y;
+} _ivec2;
+
+// Macros
 #define ERROR(x) fprintf(stderr, "\x1B[0m%s:%d: \x1B[0;31m[ERROR]\x1B[0m %s\n", __FILE__, __LINE__, x);
 #define WARN(x) fprintf(stdout, "\x1B[0m%s:%d: \x1B[0;35m[WARNING]\x1B[0m %s\n", __FILE__, __LINE__, x);
 #define LOG(x) fprintf(stdout, "\x1B[0m%s:%d: [LOG] %s\n", __FILE__, __LINE__, x);
@@ -12,5 +22,9 @@
 
 #define STR(x) #x
 #define ALMOST_EQUAL(x, y) (fabs((x) - (y)) < (0.01))
+
+// Functions
+int wrap(int x, int length);
+int _tod(_ivec2 pos, int arrayLen);
 
 #endif

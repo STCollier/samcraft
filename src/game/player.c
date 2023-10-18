@@ -1,4 +1,5 @@
 #include "player.h"
+#include "../world/world.h"
 
 struct Player player;
 
@@ -9,6 +10,9 @@ void initPlayer() {
 
     player.chunkPos[0] = (int) player.position[0] / CHUNK_SIZE_X;
     player.chunkPos[1] = (int) player.position[1] / CHUNK_SIZE_Z;
+
+    player.arrIndex[0] = 0;
+    player.arrIndex[1] = 0;
 
     glm_ivec2_copy(prevChunkPos, player.chunkPos);
     player.movedBetweenChunks = false;

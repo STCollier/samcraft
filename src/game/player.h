@@ -11,6 +11,7 @@
 struct Player {
     vec3 position;
     ivec2 chunkPos;
+    ivec2 arrIndex;
     bool movedBetweenChunks;
 };
 

@@ -26,6 +26,7 @@ struct Chunk {
     struct Block *blocks;
     size_t meshSize;
     ivec2 offset;
+    ivec2 worldPos;
     float *meshData;
     bool isNull;
 };
