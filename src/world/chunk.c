@@ -119,6 +119,9 @@ void initChunk(struct Chunk *chunk, ivec2 offset) {
     chunk->offset[0] = offset[0];
     chunk->offset[1] = offset[1];
 
+    chunk->worldPos[0] = offset[0] / CHUNK_SIZE_X;
+    chunk->worldPos[1] = offset[1] / CHUNK_SIZE_Z;
+
     chunk->meshData = calloc(CHUNK_MEMORY_BUFFER, sizeof(float));
     chunk->blocks = calloc(CHUNK_AREA, sizeof(struct Block));
 
