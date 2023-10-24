@@ -55,7 +55,7 @@ static void debug() {
 static void genWorldChunk(ivec2 chunkPos, int arrayIndex) {
     struct Chunk *chunk = malloc(sizeof(struct Chunk));
 
-    initChunk(chunk, (ivec2){(chunkPos[0] - RENDER_DISTANCE) * CHUNK_SIZE_X, (chunkPos[1] - RENDER_DISTANCE) * CHUNK_SIZE_Z});
+    initChunk(chunk, (ivec2){(chunkPos[0]) * CHUNK_SIZE_X, (chunkPos[1]) * CHUNK_SIZE_Z});
     genChunk(chunk);
 
     if (arrayIndex > GEN_AREA) {
@@ -146,14 +146,16 @@ void moveWorld(ivec2 newPosition) {
         player.arrIndex[0] = wrap(player.arrIndex[0] - 1, WINDOW_SIZE);
         
         // calculate which world position to load
-        for (int y = -player.chunkPos[0] - world.distToLeft; y <= player.chunkPos[1] + world.distToRight; y++) {
+         for (int y = player.chunkPos[1] - world.distToLeft; y <= player.chunkPos[1] + world.distToRight; y++) {
             ivec2 worldPos;
             worldPos[0] = player.chunkPos[0] - world.distToLeft;
             worldPos[1] = y;
             glm_ivec2_copy(worldPos, positionsToLoad[getArrayIndexForWorldPos(worldPos).y]);
         }
 
-        for (int y = -player.chunkPos[0] - world.distToLeft + 1; y <= player.chunkPos[1] + world.distToRight - 1; y++) {
+        for (int y = player.chunkPos[1] - world.distToLeft; y <= player.chunkPos[1] + world.distToRight; y++) {
+            printf("%d\n", y);
+
             ivec2 worldPos;
             worldPos[0] = player.chunkPos[0] - world.distToLeft + 1;
             worldPos[1] = y;
@@ -162,7 +164,9 @@ void moveWorld(ivec2 newPosition) {
         
         // perform load and unload
         for (int i = 0; i < GEN_LENGTH; i++) {
-            genWorldChunk(positionsToLoad[i], indicesToSwap[i]);
+            printf("POSITION: (%d %d)\n", positionsToLoad[i][0], positionsToLoad[i][1]);
+
+           genWorldChunk(positionsToLoad[i], indicesToSwap[i]);
 
         }
 
