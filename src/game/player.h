@@ -9,9 +9,8 @@
 #include <stdbool.h>
 
 struct Player {
-    vec3 position;
-    ivec2 chunkPos;
-    ivec2 arrIndex;
+    vec3 position; // Floating point number representing position in [x, y, z] space
+    ivec2 chunkPos; // Player's position in chunks, represented as a 2D integer vector [x, z]
     bool movedBetweenChunks;
 };
 

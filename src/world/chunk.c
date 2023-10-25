@@ -10,8 +10,6 @@
 #include "block.h"
 #include "../game/serialize.h"
 
-#define RAND(min, max) (rand() % (max + 1 - min) + min)
-
 const int cubeVertices[] = {
 //  x  y  z  u  v  i
     0, 0, 0, 0, 0, 0, // BACK
@@ -113,14 +111,14 @@ int blockIndex(int x, int y, int z) {
    return (x + z*CHUNK_SIZE_X + y*CHUNK_SIZE_X*CHUNK_SIZE_Z);
 }
 
-void initChunk(struct Chunk *chunk, ivec2 offset) {
+void initChunk(struct Chunk *chunk, ivec2 position) {
     chunk->isNull = false;
     chunk->meshSize = 0;
-    chunk->offset[0] = offset[0];
-    chunk->offset[1] = offset[1];
+    chunk->offset[0] = position[0] * CHUNK_SIZE_X;
+    chunk->offset[1] = position[1] * CHUNK_SIZE_Z;
 
-    chunk->worldPos[0] = offset[0] / CHUNK_SIZE_X;
-    chunk->worldPos[1] = offset[1] / CHUNK_SIZE_Z;
+    chunk->worldPos[0] = position[0];
+    chunk->worldPos[1] = position[1];
 
     chunk->meshData = calloc(CHUNK_MEMORY_BUFFER, sizeof(float));
     chunk->blocks = calloc(CHUNK_AREA, sizeof(struct Block));

@@ -7,107 +7,195 @@
 
 struct World world;
 
-int chunkIndex(int x, int y) {
-   return (x + y * (GEN_LENGTH));
-}
+#define IDX(x, y) ((x) + (y) * GEN_LENGTH) // Use parentheses!
 
-static _ivec2 getArrayIndexForWorldPos(ivec2 worldPos) {
-    return (_ivec2) {
-        wrap(player.arrIndex[0] + worldPos[0] - player.chunkPos[0], WINDOW_SIZE),
-        wrap(player.arrIndex[1] + worldPos[1] - player.chunkPos[1], WINDOW_SIZE)
-    };
-}
+typedef enum {
+    N,
+    E,
+    S,
+    W,
+    NE,
+    SE,
+    SW,
+    NW
+} dir8_t;
 
-static void debug() {
-    printf("================================\n");
-    printf("player index = (%d, %d)\n", player.arrIndex[0], player.arrIndex[1]);
-    printf("player pos   = (%d, %d)\n", player.chunkPos[0], player.chunkPos[1]);
-    printf("array in memory:\n");
-    for (int y = 0; y < WINDOW_SIZE; y++) {
-        for (int x = 0; x < WINDOW_SIZE; x++) {
-
-            _ivec2 index = (_ivec2){x, y};
-            int x = world.chunks[_tod(index, WINDOW_SIZE)].worldPos[0];
-            int y = world.chunks[_tod(index, WINDOW_SIZE)].worldPos[1];
-
-            printf("(%d, %d) ", x, y);
-        }
-        puts("");
-    }
-
-    printf("chunks rendered:\n");
-    for (int y = 0; y < WINDOW_SIZE; y++) {
-        for (int x = 0; x < WINDOW_SIZE; x++) {
-            ivec2 index;
-            index[0] = x;
-            index[1] = y;
-
-            int x = world.chunks[_tod(getArrayIndexForWorldPos(index), WINDOW_SIZE)].worldPos[0];
-            int y = world.chunks[_tod(getArrayIndexForWorldPos(index), WINDOW_SIZE)].worldPos[1];
-
-            printf("(%d, %d) ", x, y);
-        }
-        puts("");
-    }
-    printf("================================\n");
-}
-
-static void genWorldChunk(ivec2 chunkPos, int arrayIndex) {
+static void addChunk(int id, ivec2 worldPos) {
     struct Chunk *chunk = malloc(sizeof(struct Chunk));
+    
+    HASH_FIND_INT(world.chunks, &id, chunk);
 
-    initChunk(chunk, (ivec2){(chunkPos[0]) * CHUNK_SIZE_X, (chunkPos[1]) * CHUNK_SIZE_Z});
-    genChunk(chunk);
+    if (chunk == NULL) {
+        chunk = malloc(sizeof(struct Chunk));
 
-    if (arrayIndex > GEN_AREA) {
-        ERROR_IMSG("world.chunks array overflow at index", arrayIndex);
+        chunk->id = id;
+
+        HASH_ADD_INT(world.chunks, id, chunk);
     }
 
-    world.chunks[arrayIndex] = *chunk;
+    initChunk(chunk, (ivec2){worldPos[0], worldPos[1]}); // In terms of chunks, not blocks!
+    genChunk(chunk);
+}
 
+static void deleteChunk(struct Chunk *chunk) {
+    HASH_DEL(world.chunks, chunk);
     free(chunk);
 }
 
+static struct Chunk *getChunk(int id) {
+    struct Chunk *chunk;
 
-static void meshWorldChunk(ivec2 arrayPos) {
-    struct Chunk *chunkNeighbors = malloc(sizeof(struct Chunk) * 4);
+    HASH_FIND_INT(world.chunks, &id, chunk);  // chunk is output pointer
 
-    chunkNeighbors[RIGHT] = world.chunks[_tod(getArrayIndexForWorldPos((ivec2){arrayPos[0] + 1, arrayPos[1]}), WINDOW_SIZE)];
-    chunkNeighbors[LEFT] = world.chunks[_tod(getArrayIndexForWorldPos((ivec2){arrayPos[0] - 1, arrayPos[1]}), WINDOW_SIZE)];
-    chunkNeighbors[FRONT] = world.chunks[_tod(getArrayIndexForWorldPos((ivec2){arrayPos[0], arrayPos[1] + 1}), WINDOW_SIZE)];
-    chunkNeighbors[BACK] = world.chunks[_tod(getArrayIndexForWorldPos((ivec2){arrayPos[0], arrayPos[1] - 1}), WINDOW_SIZE)];
+    if (chunk == NULL) {
+        ERROR_IMSG("Could not locate chunk at id", id);
+        exit(EXIT_FAILURE);
+    }
+
+    return chunk;
+}
+
+static void debugChunk(struct Chunk* chunk) {
+    printf("CHUNK: id(%d), worldPos(%d,%d) ", chunk->id, chunk->worldPos[0], chunk->worldPos[1]);
+}
+
+static void printChunkPos(struct Chunk* chunk) {
+    printf("(%d, %d) ", chunk->worldPos[0], chunk->worldPos[1]);
+}
+
+void printChunkTable() {
+    for (int y = player.chunkPos[1]; y < GEN_LENGTH + player.chunkPos[1]; y++) {
+        for (int x = player.chunkPos[0]; x < GEN_LENGTH + player.chunkPos[0]; x++) {
+            printChunkPos(getChunk(IDX(x, y)));
+        }
+        puts("");
+    }
+
+    puts("");
+}
+
+
+static void meshWorldChunk(int x, int y) {
+    struct Chunk chunkNeighbors[4];
+
+    chunkNeighbors[RIGHT] = *getChunk(IDX(x + 1, y));
+    chunkNeighbors[LEFT]  = *getChunk(IDX(x - 1 , y));
+    chunkNeighbors[FRONT] = *getChunk(IDX(x, y + 1));
+    chunkNeighbors[BACK]  = *getChunk(IDX(x, y - 1));
 
     //for (int i = 0; i < 4; i++) chunkNeighbors[i].isNull = true;
 
-    meshChunk(&world.chunks[_tod(getArrayIndexForWorldPos(arrayPos), WINDOW_SIZE)], chunkNeighbors);
-    bindChunk(&world.chunks[_tod(getArrayIndexForWorldPos(arrayPos), WINDOW_SIZE)]);
-
-    //free(chunkNeighbors);
+    meshChunk(getChunk(IDX(x, y)), chunkNeighbors);
+    bindChunk(getChunk(IDX(x, y)));
 }
 
 void initWorld() {
-    world.chunks = malloc(GEN_AREA * sizeof(struct Chunk));
-    world.distToLeft = GEN_LENGTH / 2;
-    world.distToRight = GEN_LENGTH - world.distToLeft - 1;
+    world.chunks = NULL; // Initilize to NULL for hashtable
 
     glm_ivec2_copy((ivec2){0, 0}, world.oldPosition);
 
-    for (int y = player.chunkPos[1] - world.distToLeft; y <= player.chunkPos[1] + world.distToRight; y++) {
-        for (int x = player.chunkPos[0] - world.distToLeft; x <= player.chunkPos[0] + world.distToRight; x++) {
-            ivec2 arrayPos = {x, y};
-            int arrayIndex = _tod(getArrayIndexForWorldPos(arrayPos), WINDOW_SIZE);
-
-            genWorldChunk((ivec2){x, y}, arrayIndex);
+    for (int y = 0; y < GEN_LENGTH; y++) {
+        for (int x = 0; x < GEN_LENGTH; x++) {
+            addChunk(IDX(x, y), (ivec2){x, y});
         }
     }
 
     // Meshing chunks surrounded by other chunks; see world.h:18
-    for (int y = player.chunkPos[1] - world.distToLeft; y <= player.chunkPos[1] + world.distToRight; y++) {
-        for (int x = player.chunkPos[0] - world.distToLeft; x <= player.chunkPos[0] + world.distToRight; x++) {
-            meshWorldChunk((ivec2){x, y});
+     for (int y = 1; y < GEN_LENGTH - 1; y++) {
+        for (int x = 1; x < GEN_LENGTH - 1; x++) {
+            meshWorldChunk(x, y);
         }
     }
-    debug();
+
     LOG("World loaded!");
+}
+
+static void moveRight() {
+    for (int y = player.chunkPos[1]; y < GEN_LENGTH + player.chunkPos[1]; y++) {
+            int x = GEN_LENGTH + player.chunkPos[0];
+
+            deleteChunk(getChunk(IDX(x, y)));
+        }
+
+        for (int y = player.chunkPos[1]; y < GEN_LENGTH + player.chunkPos[1]; y++) {
+            int x = player.chunkPos[0];
+
+            addChunk(IDX(x, y), (ivec2){x, y});
+
+            if (y > 0 && y <= RENDER_LENGTH) {
+                int meshX = x + 1; // Remember, we are always generating 1 extra row of chunks to account for chunk neighbors; we must get the row of chunks previous with (x + 1)
+
+                meshWorldChunk(meshX, y);
+            }
+        }
+
+        printf("Moved right to (%d, %d)\n", player.chunkPos[0], player.chunkPos[1]);
+}
+
+static void moveLeft() {
+      for (int y = player.chunkPos[1]; y < GEN_LENGTH + player.chunkPos[1]; y++) {
+            int x = player.chunkPos[0] - 1;
+
+            deleteChunk(getChunk(IDX(x, y)));
+        }
+
+       for (int y = player.chunkPos[1]; y < GEN_LENGTH + player.chunkPos[1]; y++) {
+            int x = GEN_LENGTH + player.chunkPos[0] - 1;
+
+            addChunk(IDX(x, y), (ivec2){x, y});
+
+            if (y > 0 && y <= RENDER_LENGTH) {
+                int meshX = x - 1; // Remember, we are always generating 1 extra row of chunks to account for chunk neighbors; we must get the row of chunks previous with (x - 1)
+
+                meshWorldChunk(meshX, y);
+            }
+        }
+
+       printf("Moved left to (%d, %d)\n", player.chunkPos[0], player.chunkPos[1]);
+}
+
+static void moveForward() {
+ for (int x = player.chunkPos[0]; x < GEN_LENGTH + player.chunkPos[0]; x++) {
+            int y = player.chunkPos[1] - 1;
+
+            deleteChunk(getChunk(IDX(x, y)));
+        }
+
+       for (int x = player.chunkPos[0]; x < GEN_LENGTH + player.chunkPos[0]; x++) {
+            int y = GEN_LENGTH + player.chunkPos[1] - 1;
+
+            addChunk(IDX(x, y), (ivec2){x, y});
+
+            if (x > 0 && x <= RENDER_LENGTH) {
+                int meshY = y - 1; // Remember, we are always generating 1 extra row of chunks to account for chunk neighbors; we must get the row of chunks previous with (y - 1)
+
+                meshWorldChunk(x, meshY);
+            }
+        }
+
+        printf("Moved forward to (%d, %d)\n", player.chunkPos[0], player.chunkPos[1]);
+}
+
+static void moveBackward() {
+  for (int x = player.chunkPos[0]; x < GEN_LENGTH + player.chunkPos[0]; x++) {
+            int y = GEN_LENGTH + player.chunkPos[1];
+
+            deleteChunk(getChunk(IDX(x, y)));
+        }
+
+        for (int x = player.chunkPos[0]; x < GEN_LENGTH + player.chunkPos[0]; x++) {
+            int y = player.chunkPos[1];
+
+            addChunk(IDX(x, y), (ivec2){x, y});
+
+            if (x > 0 && x <= RENDER_LENGTH) {
+                int meshY = y + 1; // Remember, we are always generating 1 extra row of chunks to account for chunk neighbors; we must get the row of chunks previous with (x + 1)
+
+                meshWorldChunk(x, meshY);
+            }
+        }
+
+        printf("Moved backward to (%d, %d)\n", player.chunkPos[0], player.chunkPos[1]); 
 }
 
 void moveWorld(ivec2 newPosition) {
@@ -115,87 +203,81 @@ void moveWorld(ivec2 newPosition) {
     glm_ivec2_sub(newPosition, world.oldPosition, result);
     glm_ivec2_copy(newPosition, world.oldPosition);
 
+   /* dir8_t direction;
     
-    if (result[0] == -1 && result[1] == 0) { // (-1, 0) Move left
-        // calculate the index in memory where you need to unload the old chunk and load the new one
-        int indicesToSwap[GEN_LENGTH];
-        ivec2 positionsToLoad[GEN_LENGTH];
-        
+    if (result[0] == 1 && result[1] == 1) {
+        direction = NW;
+    } if (result[0] == -1 && result[1] == 1) {
+        direction = NE;
+    }  if (result[0] == 1 && result[1] == -1) {
+        direction = SW;
+    }  if (result[0] == -1 && result[1] == -1) {
+        direction = SE;
+    }   if (result[0] == -1 && result[1] == 0) { // right
+        direction = E;
+    }  if (result[0] == 1 && result[1] == 0) { // left
+        direction = W;
+    }  if (result[0] == 0 && result[1] == 1) { // front
+        direction = N;
+    }  if (result[0] == 0 && result[1] == -1) { // back
+        direction = S;
+    }
 
-        for (int i = 0; i < GEN_LENGTH; i++) {
-            indicesToSwap[i] = _tod((_ivec2){
-                wrap(player.arrIndex[0] + world.distToRight, WINDOW_SIZE),
-                i
-            }, WINDOW_SIZE);
-        }
+    switch(direction) {
+        case N:
+            moveForward();
+            break;
+        case E:
+            moveRight();
+            break;
+        case S:
+            moveBackward();
+            break;
+        case W:
+            moveLeft();
+            break;
+        case NE:
+            moveForward();
+            moveRight();
+            break;
+        case SE:
+            moveBackward();
+            moveRight();
+            break;
+        case SW:
+            moveBackward();
+            moveLeft();
+            break;
+        case NW:
+            moveForward();
+            moveLeft();
+            break;
+    }*/
 
-        int indicesToMesh[GEN_LENGTH];
-        ivec2 positionsToMesh[GEN_LENGTH];
-
-        // we could just store an array of size RENDER_LENGTH, but we're
-        // going to use size GEN_LENGTH and ignore the first and last indices
-        // so i lines up with position in the array
-        for (int i = 1; i < GEN_LENGTH-1; i++) {
-            indicesToMesh[i] = _tod((_ivec2){
-                wrap(player.arrIndex[0] - world.distToLeft + 1, WINDOW_SIZE),
-                i
-            }, WINDOW_SIZE);
-        }
-
-        // subtract one from position and index, wrapping if necessary
-        player.arrIndex[0] = wrap(player.arrIndex[0] - 1, WINDOW_SIZE);
-        
-        // calculate which world position to load
-         for (int y = player.chunkPos[1] - world.distToLeft; y <= player.chunkPos[1] + world.distToRight; y++) {
-            ivec2 worldPos;
-            worldPos[0] = player.chunkPos[0] - world.distToLeft;
-            worldPos[1] = y;
-            glm_ivec2_copy(worldPos, positionsToLoad[getArrayIndexForWorldPos(worldPos).y]);
-        }
-
-        for (int y = player.chunkPos[1] - world.distToLeft; y <= player.chunkPos[1] + world.distToRight; y++) {
-            printf("%d\n", y);
-
-            ivec2 worldPos;
-            worldPos[0] = player.chunkPos[0] - world.distToLeft + 1;
-            worldPos[1] = y;
-            glm_ivec2_copy(worldPos, positionsToMesh[getArrayIndexForWorldPos(worldPos).y]);
-        }
-        
-        // perform load and unload
-        for (int i = 0; i < GEN_LENGTH; i++) {
-            printf("POSITION: (%d %d)\n", positionsToLoad[i][0], positionsToLoad[i][1]);
-
-           genWorldChunk(positionsToLoad[i], indicesToSwap[i]);
-
-        }
-
-        for (int i = 1; i < GEN_LENGTH - 1; i++) {
-            meshWorldChunk(positionsToMesh[i]);
-        }
-
-        debug();
+    if (result[0] == -1 && result[1] == 0) { // right
+        moveRight();
+    }
+    if (result[0] == 1 && result[1] == 0) { // left
+        moveLeft();
+    }
+    if (result[0] == 0 && result[1] == 1) { // front
+        moveForward();
+    } 
+    if (result[0] == 0 && result[1] == -1) { // back
+        moveBackward();
     }
 }
 
 
 // Called in update function
 void renderWorld(struct Shader shader) {
-    for (int y = player.chunkPos[1] - world.distToLeft; y <= player.chunkPos[1] + world.distToRight; y++) {
-        for (int x = player.chunkPos[0] - world.distToLeft; x <= player.chunkPos[0] + world.distToRight; x++) {
-            renderChunk(&world.chunks[_tod(getArrayIndexForWorldPos((ivec2){x, y}), WINDOW_SIZE)], shader);
+    for (int y = 1 + player.chunkPos[1]; y < GEN_LENGTH - 1 + player.chunkPos[1]; y++) {
+        for (int x = 1 + player.chunkPos[0]; x < GEN_LENGTH - 1 + player.chunkPos[0]; x++) {
+            renderChunk(getChunk(IDX(x, y)), shader);
         }
     }
 }
 
-void destroyWorld() {
-    for (int x = 0; x < GEN_LENGTH; x++) {
-        for (int z = 0; z < GEN_LENGTH; z++) {
-            destroyChunk(&world.chunks[chunkIndex(x, z)]);
-        }
-    }
-}
-
-void destroyBlock(ivec2 chunkPos, ivec3 blockPos) {
+/*void destroyBlock(ivec2 chunkPos, ivec3 blockPos) {
     world.chunks[chunkIndex(chunkPos[0], chunkPos[1])].blocks[blockIndex(blockPos[0], blockPos[1], blockPos[2])].id = 1;
-}
+}*/

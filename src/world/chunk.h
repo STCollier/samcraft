@@ -1,15 +1,15 @@
 #ifndef CHUNK_H
 #define CHUNK_H
 
+#include <stdbool.h>
+
 #include "cglm/cglm.h"
 #include "cglm/call.h"
+#include "uthash.h"
 
 #include "../game/shader.h"
 #include "../game/camera.h"
 #include "../game/util.h"
-
-#include <stdbool.h>
-
 #include "block.h"
 
 #define CHUNK_SIZE_X 16
@@ -25,10 +25,13 @@ struct Chunk {
 
     struct Block *blocks;
     size_t meshSize;
-    ivec2 offset;
-    ivec2 worldPos;
+    ivec2 offset; // Offset in blocks (16, 32, 48, etc.)
+    ivec2 worldPos; // Offset in chunks (1, 2, 3, etc.)
     float *meshData;
     bool isNull;
+
+    int id; // Key, represented as a 1D index in a 2D array
+    UT_hash_handle hh; // Makes this structure hashable
 };
 
 struct ChunkData {
@@ -37,7 +40,7 @@ struct ChunkData {
     unsigned char *data;
 };
 
-void initChunk(struct Chunk *chunk, ivec2 offset);
+void initChunk(struct Chunk *chunk, ivec2 position);
 void genChunk(struct Chunk *chunk);
 void meshChunk(struct Chunk *chunk, struct Chunk *chunkNeighbors);
 void bindChunk(struct Chunk *chunk);

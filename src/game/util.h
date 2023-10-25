@@ -22,6 +22,9 @@ typedef struct {
 
 #define STR(x) #x
 #define ALMOST_EQUAL(x, y) (fabs((x) - (y)) < (0.01))
+#define RAND(min, max) (rand() % (max + 1 - min) + min)
+
+#define force_inline __attribute__((always_inline))
 
 // Functions
 int wrap(int x, int length);

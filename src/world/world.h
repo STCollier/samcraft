@@ -9,7 +9,7 @@
 #include "chunk.h"
 
 // How many chunks will be rendered
-#define RENDER_DISTANCE 2
+#define RENDER_DISTANCE 8
 #define RENDER_LENGTH (RENDER_DISTANCE * 2)
 #define RENDER_AREA RENDER_LENGTH * RENDER_LENGTH // render length ^ 2
 
@@ -31,16 +31,13 @@ How many chunks will be generated (render distance + 2, accounting for chunk bor
 
 struct World {
     struct Chunk *chunks;
-    int distToRight;
-    int distToLeft;
     ivec2 oldPosition;
 };
 
 void initWorld();
 void moveWorld(ivec2 newPosition);
 void renderWorld(struct Shader shader);
-void destroyBlock(ivec2 chunkPos, ivec3 blockPos);
-void destroyWorld();
+//void destroyBlock(ivec2 chunkPos, ivec3 blockPos);
 
 extern struct World world;
 
