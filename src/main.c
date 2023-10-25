@@ -44,6 +44,7 @@ int main() {
     struct Ray cameraRay = ray(camera.position, camera.front, 3.0f);
 
     int tick = 0;
+
     while (!glfwWindowShouldClose(window.self)) {
         updateWindow();
 

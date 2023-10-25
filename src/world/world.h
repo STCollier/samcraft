@@ -9,7 +9,7 @@
 #include "chunk.h"
 
 // How many chunks will be rendered
-#define RENDER_DISTANCE 8
+#define RENDER_DISTANCE 4
 #define RENDER_LENGTH (RENDER_DISTANCE * 2)
 #define RENDER_AREA RENDER_LENGTH * RENDER_LENGTH // render length ^ 2
 
@@ -28,6 +28,17 @@ How many chunks will be generated (render distance + 2, accounting for chunk bor
 
 // Size of sliding window, equivalent to the generation length
 #define WINDOW_SIZE GEN_LENGTH
+
+typedef enum {
+    N,
+    E,
+    S,
+    W,
+    NE,
+    SE,
+    SW,
+    NW
+} dir8_t;
 
 struct World {
     struct Chunk *chunks;

@@ -9,17 +9,6 @@ struct World world;
 
 #define IDX(x, y) ((x) + (y) * GEN_LENGTH) // Use parentheses!
 
-typedef enum {
-    N,
-    E,
-    S,
-    W,
-    NE,
-    SE,
-    SW,
-    NW
-} dir8_t;
-
 static void addChunk(int id, ivec2 worldPos) {
     struct Chunk *chunk = malloc(sizeof(struct Chunk));
     
@@ -33,7 +22,7 @@ static void addChunk(int id, ivec2 worldPos) {
         HASH_ADD_INT(world.chunks, id, chunk);
     }
 
-    initChunk(chunk, (ivec2){worldPos[0], worldPos[1]}); // In terms of chunks, not blocks!
+    initChunk(chunk, (ivec2){worldPos[0] - RENDER_DISTANCE, worldPos[1] - RENDER_DISTANCE}); // In terms of chunks, not blocks!
     genChunk(chunk);
 }
 
@@ -49,7 +38,7 @@ static struct Chunk *getChunk(int id) {
 
     if (chunk == NULL) {
         ERROR_IMSG("Could not locate chunk at id", id);
-        exit(EXIT_FAILURE);
+        //exit(EXIT_FAILURE);
     }
 
     return chunk;
@@ -122,14 +111,12 @@ static void moveRight() {
 
             addChunk(IDX(x, y), (ivec2){x, y});
 
-            if (y > 0 && y <= RENDER_LENGTH) {
+            if (y > player.chunkPos[1] && y <= RENDER_LENGTH + player.chunkPos[1]) {
                 int meshX = x + 1; // Remember, we are always generating 1 extra row of chunks to account for chunk neighbors; we must get the row of chunks previous with (x + 1)
 
                 meshWorldChunk(meshX, y);
             }
         }
-
-        printf("Moved right to (%d, %d)\n", player.chunkPos[0], player.chunkPos[1]);
 }
 
 static void moveLeft() {
@@ -144,14 +131,12 @@ static void moveLeft() {
 
             addChunk(IDX(x, y), (ivec2){x, y});
 
-            if (y > 0 && y <= RENDER_LENGTH) {
+            if (y > player.chunkPos[1] && y <= RENDER_LENGTH + player.chunkPos[1]) {
                 int meshX = x - 1; // Remember, we are always generating 1 extra row of chunks to account for chunk neighbors; we must get the row of chunks previous with (x - 1)
 
                 meshWorldChunk(meshX, y);
             }
         }
-
-       printf("Moved left to (%d, %d)\n", player.chunkPos[0], player.chunkPos[1]);
 }
 
 static void moveForward() {
@@ -166,14 +151,12 @@ static void moveForward() {
 
             addChunk(IDX(x, y), (ivec2){x, y});
 
-            if (x > 0 && x <= RENDER_LENGTH) {
+            if (x > player.chunkPos[0] && x <= RENDER_LENGTH + player.chunkPos[0]) {
                 int meshY = y - 1; // Remember, we are always generating 1 extra row of chunks to account for chunk neighbors; we must get the row of chunks previous with (y - 1)
 
                 meshWorldChunk(x, meshY);
             }
         }
-
-        printf("Moved forward to (%d, %d)\n", player.chunkPos[0], player.chunkPos[1]);
 }
 
 static void moveBackward() {
@@ -188,84 +171,43 @@ static void moveBackward() {
 
             addChunk(IDX(x, y), (ivec2){x, y});
 
-            if (x > 0 && x <= RENDER_LENGTH) {
+            if (x > player.chunkPos[0] && x <= RENDER_LENGTH + player.chunkPos[0]) {
                 int meshY = y + 1; // Remember, we are always generating 1 extra row of chunks to account for chunk neighbors; we must get the row of chunks previous with (x + 1)
 
                 meshWorldChunk(x, meshY);
             }
         }
-
-        printf("Moved backward to (%d, %d)\n", player.chunkPos[0], player.chunkPos[1]); 
 }
 
+// This function is run only once, when the player moves between chunks
 void moveWorld(ivec2 newPosition) {
     ivec2 result;
     glm_ivec2_sub(newPosition, world.oldPosition, result);
     glm_ivec2_copy(newPosition, world.oldPosition);
 
-   /* dir8_t direction;
-    
-    if (result[0] == 1 && result[1] == 1) {
-        direction = NW;
-    } if (result[0] == -1 && result[1] == 1) {
-        direction = NE;
-    }  if (result[0] == 1 && result[1] == -1) {
-        direction = SW;
-    }  if (result[0] == -1 && result[1] == -1) {
-        direction = SE;
-    }   if (result[0] == -1 && result[1] == 0) { // right
-        direction = E;
-    }  if (result[0] == 1 && result[1] == 0) { // left
-        direction = W;
-    }  if (result[0] == 0 && result[1] == 1) { // front
-        direction = N;
-    }  if (result[0] == 0 && result[1] == -1) { // back
-        direction = S;
-    }
-
-    switch(direction) {
-        case N:
-            moveForward();
-            break;
-        case E:
-            moveRight();
-            break;
-        case S:
-            moveBackward();
-            break;
-        case W:
-            moveLeft();
-            break;
-        case NE:
-            moveForward();
-            moveRight();
-            break;
-        case SE:
-            moveBackward();
-            moveRight();
-            break;
-        case SW:
-            moveBackward();
-            moveLeft();
-            break;
-        case NW:
-            moveForward();
-            moveLeft();
-            break;
-    }*/
-
     if (result[0] == -1 && result[1] == 0) { // right
         moveRight();
-    }
-    if (result[0] == 1 && result[1] == 0) { // left
+
+        printf("Moved right to (%d, %d)\n", player.chunkPos[0], player.chunkPos[1]);
+    } else if (result[0] == 1 && result[1] == 0) { // left
         moveLeft();
+
+        printf("Moved left to (%d, %d)\n", player.chunkPos[0], player.chunkPos[1]);
     }
+
     if (result[0] == 0 && result[1] == 1) { // front
         moveForward();
-    } 
-    if (result[0] == 0 && result[1] == -1) { // back
+
+        printf("Moved forward to (%d, %d)\n", player.chunkPos[0], player.chunkPos[1]);
+    } else if (result[0] == 0 && result[1] == -1) { // back
         moveBackward();
+
+        printf("Moved backward to (%d, %d)\n", player.chunkPos[0], player.chunkPos[1]); 
     }
+
+
+
+    //printChunkTable();
 }
 
 
