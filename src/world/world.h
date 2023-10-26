@@ -9,7 +9,7 @@
 #include "chunk.h"
 
 // How many chunks will be rendered
-#define RENDER_DISTANCE 4
+#define RENDER_DISTANCE 12
 #define RENDER_LENGTH (RENDER_DISTANCE * 2)
 #define RENDER_AREA RENDER_LENGTH * RENDER_LENGTH // render length ^ 2
 

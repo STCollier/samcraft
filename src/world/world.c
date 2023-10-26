@@ -100,83 +100,91 @@ void initWorld() {
 }
 
 static void moveRight() {
-    for (int y = player.chunkPos[1]; y < GEN_LENGTH + player.chunkPos[1]; y++) {
-            int x = GEN_LENGTH + player.chunkPos[0];
+    player.prevPos[0]--;
 
-            deleteChunk(getChunk(IDX(x, y)));
+    for (int y = player.prevPos[1]; y < GEN_LENGTH + player.prevPos[1]; y++) {
+        int x = GEN_LENGTH + player.prevPos[0];
+
+        deleteChunk(getChunk(IDX(x, y)));
+    }
+
+    for (int y = player.prevPos[1]; y < GEN_LENGTH + player.prevPos[1]; y++) {
+        int x = player.prevPos[0];
+
+        addChunk(IDX(x, y), (ivec2){x, y});
+
+        if (y > player.prevPos[1] && y <= RENDER_LENGTH + player.prevPos[1]) {
+            int meshX = x + 1; // Remember, we are always generating 1 extra row of chunks to account for chunk neighbors; we must get the row of chunks previous with (x + 1)
+
+            meshWorldChunk(meshX, y);
         }
-
-        for (int y = player.chunkPos[1]; y < GEN_LENGTH + player.chunkPos[1]; y++) {
-            int x = player.chunkPos[0];
-
-            addChunk(IDX(x, y), (ivec2){x, y});
-
-            if (y > player.chunkPos[1] && y <= RENDER_LENGTH + player.chunkPos[1]) {
-                int meshX = x + 1; // Remember, we are always generating 1 extra row of chunks to account for chunk neighbors; we must get the row of chunks previous with (x + 1)
-
-                meshWorldChunk(meshX, y);
-            }
-        }
+    }
 }
 
 static void moveLeft() {
-      for (int y = player.chunkPos[1]; y < GEN_LENGTH + player.chunkPos[1]; y++) {
-            int x = player.chunkPos[0] - 1;
+     player.prevPos[0]++;
 
-            deleteChunk(getChunk(IDX(x, y)));
+    for (int y = player.prevPos[1]; y < GEN_LENGTH + player.prevPos[1]; y++) {
+        int x = player.prevPos[0] - 1;
+
+        deleteChunk(getChunk(IDX(x, y)));
+    }
+
+    for (int y = player.prevPos[1]; y < GEN_LENGTH + player.prevPos[1]; y++) {
+        int x = GEN_LENGTH + player.prevPos[0] - 1;
+
+        addChunk(IDX(x, y), (ivec2){x, y});
+
+        if (y > player.prevPos[1] && y <= RENDER_LENGTH + player.prevPos[1]) {
+            int meshX = x - 1; // Remember, we are always generating 1 extra row of chunks to account for chunk neighbors; we must get the row of chunks previous with (x - 1)
+
+            meshWorldChunk(meshX, y);
         }
-
-       for (int y = player.chunkPos[1]; y < GEN_LENGTH + player.chunkPos[1]; y++) {
-            int x = GEN_LENGTH + player.chunkPos[0] - 1;
-
-            addChunk(IDX(x, y), (ivec2){x, y});
-
-            if (y > player.chunkPos[1] && y <= RENDER_LENGTH + player.chunkPos[1]) {
-                int meshX = x - 1; // Remember, we are always generating 1 extra row of chunks to account for chunk neighbors; we must get the row of chunks previous with (x - 1)
-
-                meshWorldChunk(meshX, y);
-            }
-        }
+    }
 }
 
 static void moveForward() {
- for (int x = player.chunkPos[0]; x < GEN_LENGTH + player.chunkPos[0]; x++) {
-            int y = player.chunkPos[1] - 1;
+     player.prevPos[1]++;
+
+    for (int x = player.prevPos[0]; x < GEN_LENGTH + player.prevPos[0]; x++) {
+        int y = player.prevPos[1] - 1;
 
             deleteChunk(getChunk(IDX(x, y)));
         }
 
-       for (int x = player.chunkPos[0]; x < GEN_LENGTH + player.chunkPos[0]; x++) {
-            int y = GEN_LENGTH + player.chunkPos[1] - 1;
+    for (int x = player.prevPos[0]; x < GEN_LENGTH + player.prevPos[0]; x++) {
+        int y = GEN_LENGTH + player.prevPos[1] - 1;
 
-            addChunk(IDX(x, y), (ivec2){x, y});
+        addChunk(IDX(x, y), (ivec2){x, y});
 
-            if (x > player.chunkPos[0] && x <= RENDER_LENGTH + player.chunkPos[0]) {
-                int meshY = y - 1; // Remember, we are always generating 1 extra row of chunks to account for chunk neighbors; we must get the row of chunks previous with (y - 1)
+        if (x > player.prevPos[0] && x <= RENDER_LENGTH + player.prevPos[0]) {
+            int meshY = y - 1; // Remember, we are always generating 1 extra row of chunks to account for chunk neighbors; we must get the row of chunks previous with (y - 1)
 
-                meshWorldChunk(x, meshY);
-            }
+            meshWorldChunk(x, meshY);
         }
+    }
 }
 
 static void moveBackward() {
-  for (int x = player.chunkPos[0]; x < GEN_LENGTH + player.chunkPos[0]; x++) {
-            int y = GEN_LENGTH + player.chunkPos[1];
+    player.prevPos[1]--;
 
-            deleteChunk(getChunk(IDX(x, y)));
+    for (int x = player.prevPos[0]; x < GEN_LENGTH + player.prevPos[0]; x++) {
+        int y = GEN_LENGTH + player.prevPos[1];
+
+        deleteChunk(getChunk(IDX(x, y)));
+    }
+
+    for (int x = player.prevPos[0]; x < GEN_LENGTH + player.prevPos[0]; x++) {
+        int y = player.prevPos[1];
+
+        addChunk(IDX(x, y), (ivec2){x, y});
+
+        if (x > player.prevPos[0] && x <= RENDER_LENGTH + player.prevPos[0]) {
+            int meshY = y + 1; // Remember, we are always generating 1 extra row of chunks to account for chunk neighbors; we must get the row of chunks previous with (x + 1)
+
+            meshWorldChunk(x, meshY);
         }
-
-        for (int x = player.chunkPos[0]; x < GEN_LENGTH + player.chunkPos[0]; x++) {
-            int y = player.chunkPos[1];
-
-            addChunk(IDX(x, y), (ivec2){x, y});
-
-            if (x > player.chunkPos[0] && x <= RENDER_LENGTH + player.chunkPos[0]) {
-                int meshY = y + 1; // Remember, we are always generating 1 extra row of chunks to account for chunk neighbors; we must get the row of chunks previous with (x + 1)
-
-                meshWorldChunk(x, meshY);
-            }
-        }
+    }
 }
 
 // This function is run only once, when the player moves between chunks
@@ -185,21 +193,21 @@ void moveWorld(ivec2 newPosition) {
     glm_ivec2_sub(newPosition, world.oldPosition, result);
     glm_ivec2_copy(newPosition, world.oldPosition);
 
-    if (result[0] == -1 && result[1] == 0) { // right
+    if (result[0] == -1) { // right
         moveRight();
 
         printf("Moved right to (%d, %d)\n", player.chunkPos[0], player.chunkPos[1]);
-    } else if (result[0] == 1 && result[1] == 0) { // left
+    } else if (result[0] == 1) { // left
         moveLeft();
 
         printf("Moved left to (%d, %d)\n", player.chunkPos[0], player.chunkPos[1]);
     }
 
-    if (result[0] == 0 && result[1] == 1) { // front
+    if (result[1] == 1) { // front
         moveForward();
 
         printf("Moved forward to (%d, %d)\n", player.chunkPos[0], player.chunkPos[1]);
-    } else if (result[0] == 0 && result[1] == -1) { // back
+    } else if (result[1] == -1) { // back
         moveBackward();
 
         printf("Moved backward to (%d, %d)\n", player.chunkPos[0], player.chunkPos[1]); 
