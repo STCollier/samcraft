@@ -27,7 +27,7 @@ struct Chunk {
     size_t meshSize;
     ivec2 offset; // Offset in blocks (16, 32, 48, etc.)
     ivec2 worldPos; // Offset in chunks (1, 2, 3, etc.)
-    float *meshData;
+    uint32_t *meshData;
     bool isNull;
 
     int id; // Key, represented as a 1D index in a 2D array
