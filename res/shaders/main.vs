@@ -5,6 +5,8 @@ layout (location = 0) in uint vertexData;
 out vec2 TexCoord;
 out float TexIndex;
 out vec3 Normal;
+flat out uint NormalIndex;
+out vec3 FragPos;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -41,7 +43,9 @@ void main() {
 	vec3 aNormal = normals[n];
 
 	gl_Position = projection * view * model * vec4(aPos, 1.0f);
+	FragPos = vec3(model * vec4(aPos, 1.0f));
 	TexCoord = aTexCoord;
 	TexIndex = aTexIndex;
 	Normal = aNormal;
+	NormalIndex = n;
 }
