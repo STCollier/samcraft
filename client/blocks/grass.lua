@@ -1,5 +1,4 @@
 block = {
-    id = 1,
     name = "grass",
     textures = {
         right = "grass_side.png",
@@ -7,6 +6,6 @@ block = {
         front = "grass_side.png",
         back = "grass_side.png",
         top = "grass.png",
-        bottom = "dirt.png"
+        bottom = "dirtt.png"
     } 
 }

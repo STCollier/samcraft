@@ -1,14 +1,33 @@
 #ifndef UTIL_H
 #define UTIL_H
 
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+#include <lua/lua.h>
+#include <lua/lauxlib.h>
+#include <lua/lualib.h>
+
 #include "cglm/cglm.h"
 #include "cglm/call.h"
 
-// cglm has arrays for vectors which is quite annyoing since they can't be returned in a function, let alone being unintuitive with [0] and [1]
-typedef struct {
-    int x;
-    int y;
-} _ivec2;
+#define _DEBUG true
+
+#ifdef _DEBUG
+    #define GL_CHECK(stmt) do { \
+        stmt; \
+            checkOpenGLErr(#stmt, __FILE__, __LINE__); \
+        } while (0)
+#else
+    #define GL_CHECK(stmt) stmt
+#endif
+
+void checkOpenGLErr(const char* stmt, const char* fname, int line);
+uint8_t hash8(const char* h);
+
+int lua_getInt(lua_State *L, const char* field, const char* err, const char* msg);
+const char* lua_getString(lua_State *L, const char* field, const char* err, const char* msg);
+void lua_getField(lua_State *L, const char* field, const char* err, const char* msg);
+void lua_getGlobal(lua_State *L, const char* field, const char* err, const char* msg);
 
 // Macros
 #define ERROR(x) fprintf(stderr, "\x1B[0m%s:%d: \x1B[0;31m[ERROR]\x1B[0m %s\n", __FILE__, __LINE__, x);
@@ -18,6 +37,7 @@ typedef struct {
 #define ERROR_MSG(err, msg) fprintf(stderr, "\x1B[0m%s:%d: \x1B[0;31m[ERROR]\x1B[0m %s %s\n", __FILE__, __LINE__, err, msg);
 #define ERROR_IMSG(err, msg) fprintf(stderr, "\x1B[0m%s:%d: \x1B[0;31m[ERROR]\x1B[0m %s %d\n", __FILE__, __LINE__, err, msg);
 #define WARN_MSG(err, msg) fprintf(stdout, "\x1B[0m%s:%d: \x1B[0;35m[WARNING]\x1B[0m %s %s\n", __FILE__, __LINE__, err, msg);
+#define WARN_MSG2(err, msg, msg2) fprintf(stdout, "\x1B[0m%s:%d: \x1B[0;35m[WARNING]\x1B[0m %s %s. %s\n", __FILE__, __LINE__, err, msg, msg2);
 #define LOG_MSG(err, msg) fprintf(stdout, "\x1B[0m%s:%d: [LOG] %s %s\n", __FILE__, __LINE__, err, msg);
 
 #define STR(x) #x

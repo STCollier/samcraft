@@ -13,6 +13,7 @@
 #include "../engine/shader.h"
 #include "../engine/camera.h"
 #include "../engine/util.h"
+#include "../engine/types.h"
 #include "block.h"
 
 #define CHUNK_SIZE_X 16
