@@ -46,7 +46,7 @@ struct Chunk *world_getChunk(int id) {
 
     if (chunk == NULL) {
         fprintf(stderr, "\x1B[0m%s:%d: \x1B[0;31m[ERROR]\x1B[0m %s %d (x: %d, y: %d)\n", __FILE__, __LINE__, "Could not locate chunk with ID", id, world_unhashChunk(id).x, world_unhashChunk(id).y);
-        exit(EXIT_FAILURE);
+        //exit(EXIT_FAILURE);
     }
 
     return chunk;
@@ -59,7 +59,7 @@ void world_meshChunk(ivec2s position) {
         (ivec2s){position.x + 1, position.y}, // Right
         (ivec2s){position.x - 1, position.y}, // Left
         (ivec2s){position.x, position.y + 1}, // Front
-        (ivec2s){position.x, position.y + 1}  // Back
+        (ivec2s){position.x, position.y - 1}  // Back
     };
 
     for (int faces = 0; faces < 4; faces++) {
@@ -71,28 +71,48 @@ void world_meshChunk(ivec2s position) {
 }
 
 
-void world_init() {
+void world_init(int renderRadius) {
     world.chunks = NULL; // Initilize to NULL for hashtable
+    world.renderRadius = renderRadius;
 
-    for (int y = -1; y < 11; y++) {
-        for (int x = -1; x < 11; x++) {
-            world_addChunk((ivec2s){x, y});
+    for (int y = -renderRadius; y <= renderRadius; y++) {
+        for (int x = -renderRadius; x <= renderRadius; x++) {
+            ivec2s origin = (ivec2s){0, 0};
+            ivec2s currentPoint = (ivec2s){x, y};
+
+            if (idist(currentPoint, origin) <= renderRadius) {
+                world_addChunk(currentPoint);
+            }
         }
     }
 
-    for (int y = 0; y < 10; y++) {
-        for (int x = 0; x < 10; x++) {
-            world_meshChunk((ivec2s){x, y});
+    int chunkCount = 0;
+
+    for (int y = -renderRadius; y < renderRadius; y++) {
+        for (int x = -renderRadius; x < renderRadius; x++) {
+            ivec2s origin = (ivec2s){0, 0};
+            ivec2s currentPoint = (ivec2s){x, y};
+
+            if (idist(currentPoint, origin) < renderRadius) {
+                world_meshChunk(currentPoint);
+                chunkCount++;
+            }
         }
     }
 
-    LOG("World loaded!");
+    LOG_IMSG("World loaded! Chunk count:", chunkCount);
 }
 
 void world_render(shader_t shader) {
-    for (int y = 0; y < 10; y++) {
-        for (int x = 0; x < 10; x++) {
-            chunk_render(world_getChunk(world_hashChunk((ivec2s){x, y})), shader);
+
+    for (int y = -world.renderRadius; y < world.renderRadius; y++) {
+        for (int x = -world.renderRadius; x < world.renderRadius; x++) {
+            ivec2s origin = (ivec2s){0, 0};
+            ivec2s currentPoint = (ivec2s){x, y};
+
+            if (idist(currentPoint, origin) < world.renderRadius) {
+                chunk_render(world_getChunk(world_hashChunk(currentPoint)), shader);
+            }
         }
     }
 }

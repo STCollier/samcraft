@@ -22,7 +22,7 @@ void camera_init(float fov, float speed, float sensitivity) {
     camera.speed = speed;
     camera.sensitivity = sensitivity;
 
-    glm_vec3_copy((vec3){0.0f, 8.0f, 0.0f}, camera.position);
+    glm_vec3_copy((vec3){0.0f, 36.0f, 0.0f}, camera.position);
     glm_vec3_copy((vec3){0.0f, 0.0f, 0.0f}, camera.front);
     glm_vec3_copy((vec3){0.0f, 1.0f, 0.0f}, camera.up);
 

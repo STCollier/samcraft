@@ -112,8 +112,17 @@ void chunk_generate(struct Chunk *chunk) {
     // Worldgen
     for (int z = 0; z < CHUNK_SIZE_Z; z++) {
         for (int x = 0; x < CHUNK_SIZE_X; x++) {
-            int y = 8;
-            chunk->blocks[blockIndex(x, y, z)].id = block_getID("grass");
+            int maxY = 32;
+
+            for (int y = 0; y < maxY; y++) {
+                if (y == maxY - 1) {
+                    chunk->blocks[blockIndex(x, y, z)].id = block_getID("grass");
+                } else if (y < maxY - 1 && y > maxY - 6){
+                    chunk->blocks[blockIndex(x, y, z)].id = block_getID("dirt");
+                } else {
+                    chunk->blocks[blockIndex(x, y, z)].id = block_getID("stone");
+                }
+            }
         }
     }
     //chunk->blocks[blockIndex(5, 5, 5)].id = block_getID("notablock");

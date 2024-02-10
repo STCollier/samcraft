@@ -4,7 +4,7 @@ struct Ray ray_cast(vec3 startPosition, vec3 rayDirection) {
     struct Ray ray;
 
     ray.blockFound = false;
-    ray.maxDistance = 100.0f;
+    ray.maxDistance = 128.0f;
 
     const vec3 rayUnitStepSize = {
         sqrt(1 + (rayDirection[1] / rayDirection[0]) * (rayDirection[1] / rayDirection[0]) + (rayDirection[2] / rayDirection[0]) * (rayDirection[2] / rayDirection[0])),
@@ -35,15 +35,32 @@ struct Ray ray_cast(vec3 startPosition, vec3 rayDirection) {
         currentDistance = rayLength1D[axis];
         rayLength1D[axis] += rayUnitStepSize[axis];
 
-        ivec2s chunkPos = (ivec2s){check[0] / CHUNK_SIZE_X, check[2] / CHUNK_SIZE_Z};
-        ivec3 blockPos = (ivec3){check[0] % CHUNK_SIZE_X, check[1], check[2] % CHUNK_SIZE_Z};
+        ivec3 chunkPos = (ivec3) {
+            floor(check[0] / 16.0f),
+            check[1],
+            floor(check[2] / 16.0f)
+        };
 
-        struct Chunk *chunkToModify = world_getChunk(world_hashChunk(chunkPos));
+        ivec3 blockPos = (ivec3) {
+            check[0] % 16,
+            check[1],
+            check[2] % 16
+        };
 
-        if (chunkToModify->blocks[blockIndex(blockPos[0], blockPos[1], blockPos[2])].id != BLOCK_AIR) {
-            glm_vec3_copy((vec3){blockPos[0], blockPos[1], blockPos[2]}, ray.blockFoundPosition);
-            ray.chunkToModify = chunkToModify;
-            ray.blockFound = true;
+        if (blockPos[0] < 0) blockPos[0] += 16;
+        if (blockPos[2] < 0) blockPos[2] += 16;
+
+
+        struct Chunk *chunkToModify = world_getChunk(world_hashChunk((ivec2s){chunkPos[0], chunkPos[2]}));
+
+        //printf("CHECK: %d %d %d CHUNK: %d %d\n", check[0], check[1], check[2], chunkPos.x, chunkPos.y);
+
+        if (blockPos[1] > 0) {
+            if (chunkToModify->blocks[blockIndex(blockPos[0], blockPos[1], blockPos[2])].id != BLOCK_AIR) {
+                glm_vec3_copy((vec3){blockPos[0], blockPos[1], blockPos[2]}, ray.blockFoundPosition);
+                ray.chunkToModify = chunkToModify;
+                ray.blockFound = true;
+            }
         }
     }
 
