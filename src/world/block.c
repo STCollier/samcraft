@@ -149,9 +149,9 @@ int block_getID(const char* name) {
     if (!noBlockErr[hash8(name)]) {
         WARN_MSG2("Failed to find block under name", name, "Using null block replacement");
         noBlockErr[hash8(name)] = true;
-
-        return BLOCK_NULL;
     }
+
+    return BLOCK_NULL;
 }
 
 static bool noTextureErr[256];

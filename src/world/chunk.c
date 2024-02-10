@@ -97,14 +97,12 @@ int blockIndex(int x, int y, int z) {
    return (x + z*CHUNK_SIZE_X + y*CHUNK_SIZE_X*CHUNK_SIZE_Z);
 }
 
-void chunk_init(struct Chunk *chunk, ivec2 position) {
+void chunk_init(struct Chunk *chunk, ivec2 pos) {
     chunk->isNull = false;
     chunk->meshSize = 0;
-    chunk->offset[0] = position[0] * CHUNK_SIZE_X;
-    chunk->offset[1] = position[1] * CHUNK_SIZE_Z;
 
-    chunk->worldPos[0] = position[0];
-    chunk->worldPos[1] = position[1];
+    chunk->position[0] = pos[0];
+    chunk->position[1] = pos[1];
 
     chunk->meshData = calloc(CHUNK_MEMORY_BUFFER, sizeof(float));
     chunk->blocks = calloc(CHUNK_AREA, sizeof(struct Block));
@@ -114,11 +112,11 @@ void chunk_generate(struct Chunk *chunk) {
     // Worldgen
     for (int z = 0; z < CHUNK_SIZE_Z; z++) {
         for (int x = 0; x < CHUNK_SIZE_X; x++) {
-            chunk->blocks[blockIndex(x, 1, z)].id = block_getID("grass");
+            int y = 8;
+            chunk->blocks[blockIndex(x, y, z)].id = block_getID("grass");
         }
     }
-    chunk->blocks[blockIndex(5, 5, 5)].id = block_getID("notablock");
-    chunk->blocks[blockIndex(8, 3, 8)].id = block_getID("foobar");
+    //chunk->blocks[blockIndex(5, 5, 5)].id = block_getID("notablock");
 }
 
 void chunk_mesh(struct Chunk *chunk, struct Chunk *chunkNeighbors) {
@@ -186,7 +184,7 @@ void chunk_render(struct Chunk *chunk, shader_t shader) {
     shader_setInt(shader, "arrayTexture", 0);
 
     glm_mat4_identity(camera.model);
-    glm_translate(camera.model, (vec3){chunk->offset[0], 0, chunk->offset[1]});
+    glm_translate(camera.model, (vec3){chunk->position[0] * CHUNK_SIZE_X, 0, chunk->position[1] * CHUNK_SIZE_Z}); // Multiplying due to the fact that we need to translate/offset the chunk position * chunk size
     shader_setMat4(shader, "model", camera.model);
 
     glDrawArrays(GL_TRIANGLES, 0, chunk->meshSize);

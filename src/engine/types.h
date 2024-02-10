@@ -5,7 +5,7 @@
 typedef struct {
     int x;
     int y;
-} _ivec2;
+} ivec2s;
 
 typedef enum {
     RIGHT,
@@ -22,7 +22,5 @@ typedef enum {
     SOUTH,
     WEST
 } CardinalDirection;
-
-
 
 #endif

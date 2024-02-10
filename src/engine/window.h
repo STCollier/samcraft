@@ -20,6 +20,9 @@ struct Window {
     float lastFrame;
     bool leftClicked;
     bool rightClicked;
+
+    double mouseX;
+    double mouseY;
 };
 
 extern struct Window window;

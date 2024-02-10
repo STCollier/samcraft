@@ -68,7 +68,7 @@ static void camera_handleKeyboard() {
         glm_vec3_add(camera.position, offset, camera.position);
     } 
 
-    if (glfwGetKey(window.self, GLFW_KEY_R) == GLFW_PRESS) {
+    if (glfwGetKey(window.self, GLFW_KEY_E) == GLFW_PRESS) {
         camera.speed = 100.0f;
     } else {
         camera.speed = 50.0f;
@@ -121,3 +121,26 @@ void camera_mouseCallback(double xposIn, double yposIn) {
 
     glm_vec3_copy(front, camera.front);
 }
+
+/*float x = (2.0f * window.mouseX) / window.width - 1.0f;
+float y = 1.0f - (2.0f * window.mouseY) / window.height;
+float z = 1.0f;
+vec3 rayNDS = {x, y, z}; // Normalized device coordinate space
+vec4 rayClip = {rayNDS[0], rayNDS[1], -1.0, 1.0};
+
+mat4 inverseProjection;
+glm_mat4_inv(camera.projection, inverseProjection);
+
+vec4 rayEye;
+glm_mat4_mulv(inverseProjection, rayClip, rayEye);
+glm_vec4_copy((vec4){rayEye[0], rayEye[1], -1.0, 0.0}, rayEye);
+
+mat4 inverseView;
+glm_mat4_inv(camera.view, inverseView);
+
+vec4 rayW;
+glm_mat4_mulv(inverseView, rayEye, rayW);
+vec3 rayWorld;
+glm_vec3_normalize_to((vec3){rayW[0], rayW[1], rayW[2]}, rayWorld);
+
+printf("%f %f %f\n", rayWorld[0], rayWorld[1], rayWorld[2]);*/

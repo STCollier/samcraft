@@ -28,10 +28,9 @@ struct Chunk {
     unsigned int VBO, VAO;
 
     struct Block *blocks;
-    size_t meshSize;
-    ivec2 offset; // Offset in blocks (16, 32, 48, etc.)
-    ivec2 worldPos; // Offset in chunks (1, 2, 3, etc.)
     uint32_t *meshData;
+    size_t meshSize;
+    ivec2 position; // chunk location relative to to other chunks e.g (0, 0) origin
     bool isNull;
 
     int id; // Key, represented as a 1D index in a 2D array
@@ -44,7 +43,7 @@ struct ChunkData {
     unsigned char *data;
 };
 
-void chunk_init(struct Chunk *chunk, ivec2 position);
+void chunk_init(struct Chunk *chunk, ivec2 pos);
 void chunk_generate(struct Chunk *chunk);
 void chunk_mesh(struct Chunk *chunk, struct Chunk *chunkNeighbors);
 void chunk_bind(struct Chunk *chunk);

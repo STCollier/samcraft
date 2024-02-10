@@ -20,6 +20,10 @@ uint8_t hash8(const char* h) {
     return hash;
 }
 
+int idist(ivec2s a, ivec2s b) {
+    return sqrt((b.x - a.x)*(b.x - a.x) + (b.y - a.y)*(b.y - a.y));
+}
+
 int lua_getInt(lua_State *L, const char* field, const char* err, const char* msg) {
     lua_getfield(L, -1, field);
     if (!lua_isnumber(L, -1)) {

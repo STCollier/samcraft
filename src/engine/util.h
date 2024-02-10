@@ -10,6 +10,8 @@
 #include "cglm/cglm.h"
 #include "cglm/call.h"
 
+#include "types.h"
+
 #define _DEBUG true
 
 #ifdef _DEBUG
@@ -21,8 +23,11 @@
     #define GL_CHECK(stmt) stmt
 #endif
 
+#define ARR_SIZE(arr) (sizeof((arr)) / sizeof((arr[0])))
+
 void checkOpenGLErr(const char* stmt, const char* fname, int line);
 uint8_t hash8(const char* h);
+int idist(ivec2s a, ivec2s b);
 
 int lua_getInt(lua_State *L, const char* field, const char* err, const char* msg);
 const char* lua_getString(lua_State *L, const char* field, const char* err, const char* msg);

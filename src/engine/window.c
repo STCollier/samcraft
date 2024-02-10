@@ -22,6 +22,8 @@ static void _keyboardCallback() {
 
 static void _mouseCallback(GLFWwindow*, double xpos, double ypos) {
     camera_mouseCallback(xpos, ypos);
+
+    glfwGetCursorPos(window.self, &window.mouseX, &window.mouseY);
 }
 
 static void _mouseButtonCallback(GLFWwindow*, int button, int action, int) {
