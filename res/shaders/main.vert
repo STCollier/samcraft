@@ -23,19 +23,19 @@ vec3 normals[6] = vec3[6](
 
 void main() {
 	// Positions
-	uint x = (vertexData >> 0) & 31u;
-	uint y = (vertexData >> 5) & 511u;
-	uint z = (vertexData >> 14) & 31u;
+	uint x = (vertexData >> 0) & 63u;
+	uint y = (vertexData >> 6) & 63u;
+	uint z = (vertexData >> 12) & 63u;
 
 	// Texture Coords
-	uint u = (vertexData >> 19) & 1u;
-	uint v = (vertexData >> 20) & 1u;
+	uint u = (vertexData >> 18) & 1u;
+	uint v = (vertexData >> 19) & 1u;
 
 	// Array Texture Index
-	uint i = (vertexData >> 21) & 255u;
+	uint i = (vertexData >> 20) & 255u;
 
 	// Normal Index	
-	uint n = (vertexData >> 29) & 7u;
+	uint n = (vertexData >> 28) & 15u;
 
 	vec3 aPos = vec3(x, y, z);
 	vec2 aTexCoord = vec2(u, v);

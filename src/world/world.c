@@ -104,7 +104,6 @@ void world_init(int renderRadius) {
 }
 
 void world_render(shader_t shader) {
-
     for (int y = -world.renderRadius; y < world.renderRadius; y++) {
         for (int x = -world.renderRadius; x < world.renderRadius; x++) {
             ivec2s origin = (ivec2s){0, 0};

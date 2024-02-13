@@ -24,6 +24,7 @@
 #endif
 
 #define ARR_SIZE(arr) (sizeof((arr)) / sizeof((arr[0])))
+#define UNUSED(x) ((void) x)
 
 void checkOpenGLErr(const char* stmt, const char* fname, int line);
 uint8_t hash8(const char* h);

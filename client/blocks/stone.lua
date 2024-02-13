@@ -1,6 +1,6 @@
 block = {
     name = "stone",
     textures = {
-        all = "stone.png"
+        all = "cobblestone.png"
     } 
 }

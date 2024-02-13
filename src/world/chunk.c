@@ -81,12 +81,12 @@ static void chunk_createMeshFace(Direction dir, struct Chunk *chunk, ivec3 pos, 
 
     for (int i = 0; i < 6; i++) {
         uint32_t vertex = (cubeVertices[(index + i*7)] + pos[0]) |
-                          ((cubeVertices[(index + i*7) + 1] + pos[1]) << 5) |
-                          ((cubeVertices[(index + i*7) + 2] + pos[2]) << 14) |
-                          (cubeVertices[(index + i*7) + 3] << 19) |
-                          (cubeVertices[(index + i*7) + 4] << 20) |
-                          ((cubeVertices[(index + i*7) + 5] + block_getTextureIndex(blockID, dir)) << 21) | 
-                          (cubeVertices[(index + i*7) + 6] << 29);
+                          ((cubeVertices[(index + i*7) + 1] + pos[1]) << 6) |
+                          ((cubeVertices[(index + i*7) + 2] + pos[2]) << 12) |
+                          (cubeVertices[(index + i*7) + 3] << 18) |
+                          (cubeVertices[(index + i*7) + 4] << 19) |
+                          ((cubeVertices[(index + i*7) + 5] + block_getTextureIndex(blockID, dir)) << 20) | 
+                          (cubeVertices[(index + i*7) + 6] << 28);
 
         chunk->meshData[chunk->meshSize++] = vertex;
     }
@@ -94,7 +94,7 @@ static void chunk_createMeshFace(Direction dir, struct Chunk *chunk, ivec3 pos, 
 
 
 int blockIndex(int x, int y, int z) {
-   return (x + z*CHUNK_SIZE_X + y*CHUNK_SIZE_X*CHUNK_SIZE_Z);
+   return (x + z*CHUNK_SIZE + y*CHUNK_SIZE*CHUNK_SIZE);
 }
 
 void chunk_init(struct Chunk *chunk, ivec2 pos) {
@@ -110,8 +110,8 @@ void chunk_init(struct Chunk *chunk, ivec2 pos) {
 
 void chunk_generate(struct Chunk *chunk) {
     // Worldgen
-    for (int z = 0; z < CHUNK_SIZE_Z; z++) {
-        for (int x = 0; x < CHUNK_SIZE_X; x++) {
+    for (int z = 0; z < CHUNK_SIZE; z++) {
+        for (int x = 0; x < CHUNK_SIZE; x++) {
             int maxY = 32;
 
             for (int y = 0; y < maxY; y++) {
@@ -130,32 +130,32 @@ void chunk_generate(struct Chunk *chunk) {
 
 void chunk_mesh(struct Chunk *chunk, struct Chunk *chunkNeighbors) {
     // Loop through chunks, if block is NOT neighboring, check which side is not neighboring, and add mesh data for that cube face to array
-    for (int x = 0; x < CHUNK_SIZE_X; x++) {
-        for (int y = 0; y < CHUNK_SIZE_Y; y++) {
-            for (int z = 0; z < CHUNK_SIZE_Z; z++) {
+    for (int x = 0; x < CHUNK_SIZE; x++) {
+        for (int y = 0; y < CHUNK_SIZE; y++) {
+            for (int z = 0; z < CHUNK_SIZE; z++) {
                 if (chunk->blocks[blockIndex(x, y, z)].id != BLOCK_AIR) {
                     
                     if (!chunkNeighbors[RIGHT].isNull) {
-                        if ((x + 1 < CHUNK_SIZE_X && chunk->blocks[blockIndex(x + 1, y, z)].id == BLOCK_AIR) || 
-                            (x + 1 == CHUNK_SIZE_X && chunkNeighbors[RIGHT].blocks[blockIndex(0, y, z)].id == BLOCK_AIR)) 
+                        if ((x + 1 < CHUNK_SIZE && chunk->blocks[blockIndex(x + 1, y, z)].id == BLOCK_AIR) || 
+                            (x + 1 == CHUNK_SIZE && chunkNeighbors[RIGHT].blocks[blockIndex(0, y, z)].id == BLOCK_AIR)) 
                                 chunk_createMeshFace(RIGHT,  chunk, (ivec3){x, y, z}, chunk->blocks[blockIndex(x, y, z)].id);
                     }
 
                     if (!chunkNeighbors[LEFT].isNull) { 
                         if ((x > 0 && chunk->blocks[blockIndex(x - 1, y, z)].id == BLOCK_AIR) || 
-                            (x == 0 && chunkNeighbors[LEFT].blocks[blockIndex(CHUNK_SIZE_X - 1, y, z)].id == BLOCK_AIR)) 
+                            (x == 0 && chunkNeighbors[LEFT].blocks[blockIndex(CHUNK_SIZE - 1, y, z)].id == BLOCK_AIR)) 
                                 chunk_createMeshFace(LEFT,  chunk, (ivec3){x, y, z}, chunk->blocks[blockIndex(x, y, z)].id);
                     }
 
                     if (!chunkNeighbors[FRONT].isNull) {
-                        if ((z + 1 < CHUNK_SIZE_Z && chunk->blocks[blockIndex(x, y, z + 1)].id == BLOCK_AIR) || 
-                            (z + 1 == CHUNK_SIZE_Z && chunkNeighbors[FRONT].blocks[blockIndex(x, y, 0)].id == BLOCK_AIR)) 
+                        if ((z + 1 < CHUNK_SIZE && chunk->blocks[blockIndex(x, y, z + 1)].id == BLOCK_AIR) || 
+                            (z + 1 == CHUNK_SIZE && chunkNeighbors[FRONT].blocks[blockIndex(x, y, 0)].id == BLOCK_AIR)) 
                                 chunk_createMeshFace(FRONT,  chunk, (ivec3){x, y, z}, chunk->blocks[blockIndex(x, y, z)].id); // FRONT
                     }
 
                     if (!chunkNeighbors[BACK].isNull) {
                         if ((z > 0 && chunk->blocks[blockIndex(x, y, z - 1)].id == BLOCK_AIR) || 
-                            (z == 0 && chunkNeighbors[BACK].blocks[blockIndex(x, y, CHUNK_SIZE_Z - 1)].id == BLOCK_AIR)) 
+                            (z == 0 && chunkNeighbors[BACK].blocks[blockIndex(x, y, CHUNK_SIZE - 1)].id == BLOCK_AIR)) 
                                 chunk_createMeshFace(BACK,   chunk, (ivec3){x, y, z}, chunk->blocks[blockIndex(x, y, z)].id); // BACK
                     }
                     
@@ -163,7 +163,7 @@ void chunk_mesh(struct Chunk *chunk, struct Chunk *chunkNeighbors) {
                     else if (chunk->blocks[blockIndex(x, y - 1, z)].id == BLOCK_AIR) 
                         chunk_createMeshFace(BOTTOM, chunk, (ivec3){x, y, z}, chunk->blocks[blockIndex(x, y, z)].id); // BOTTOM
 
-                    if (y+1 >= CHUNK_SIZE_Y) 
+                    if (y+1 >= CHUNK_SIZE) 
                         chunk_createMeshFace(TOP, chunk, (ivec3){x, y, z}, chunk->blocks[blockIndex(x, y, z)].id); // TOP
                     else if (chunk->blocks[blockIndex(x, y + 1, z)].id == BLOCK_AIR) 
                         chunk_createMeshFace(TOP, chunk, (ivec3){x, y, z}, chunk->blocks[blockIndex(x, y, z)].id); // TOP
@@ -193,7 +193,7 @@ void chunk_render(struct Chunk *chunk, shader_t shader) {
     shader_setInt(shader, "arrayTexture", 0);
 
     glm_mat4_identity(camera.model);
-    glm_translate(camera.model, (vec3){chunk->position[0] * CHUNK_SIZE_X, 0, chunk->position[1] * CHUNK_SIZE_Z}); // Multiplying due to the fact that we need to translate/offset the chunk position * chunk size
+    glm_translate(camera.model, (vec3){chunk->position[0] * CHUNK_SIZE, 0, chunk->position[1] * CHUNK_SIZE}); // Multiplying due to the fact that we need to translate/offset the chunk position * chunk size
     shader_setMat4(shader, "model", camera.model);
 
     glDrawArrays(GL_TRIANGLES, 0, chunk->meshSize);

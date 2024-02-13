@@ -9,7 +9,7 @@ static void _sizeCallback() {
     glViewport(0, 0, width, height);
 }
 
-static void _keyboardCallback() {
+static void _keyboardCallback(GLFWwindow* w, int key, int scancode, int action, int mods) {
     if (glfwGetKey(window.self, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window.self, 1);
 
@@ -18,15 +18,21 @@ static void _keyboardCallback() {
     } else {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
+
+    if (action == GLFW_PRESS) {
+        window.keyPressed[key] = true;
+    } else if (action == GLFW_RELEASE) {
+        window.keyPressed[key] = false;
+    }
 }
 
-static void _mouseCallback(GLFWwindow*, double xpos, double ypos) {
+static void _mouseCallback(GLFWwindow* w, double xpos, double ypos) {
     camera_mouseCallback(xpos, ypos);
 
     glfwGetCursorPos(window.self, &window.mouseX, &window.mouseY);
 }
 
-static void _mouseButtonCallback(GLFWwindow*, int button, int action, int) {
+static void _mouseButtonCallback(GLFWwindow* w, int button, int action, int mods) {
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
        window.leftClicked = true;
     } else {
@@ -38,6 +44,9 @@ static void _mouseButtonCallback(GLFWwindow*, int button, int action, int) {
     } else {
         window.rightClicked = false;
     }
+
+    if (action == GLFW_RELEASE) window.onMouseRelease = true;
+    else window.onMouseRelease = false;
 }
 
 void window_create(const char* title, int width, int height) {
@@ -47,6 +56,10 @@ void window_create(const char* title, int width, int height) {
 
     window.dt = 0.0f;
     window.lastFrame = 0.0f;
+
+    window.leftClicked = false;
+    window.rightClicked = false;
+    window.onMouseRelease = true;
   
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);

@@ -9,6 +9,7 @@
 #include <stdbool.h>
 
 #include "camera.h"
+#include "util.h"
 
 struct Window {
     GLFWwindow* self;
@@ -20,6 +21,9 @@ struct Window {
     float lastFrame;
     bool leftClicked;
     bool rightClicked;
+    bool onMouseRelease;
+
+    int keyPressed[256];
 
     double mouseX;
     double mouseY;

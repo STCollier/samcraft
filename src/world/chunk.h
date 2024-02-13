@@ -16,10 +16,8 @@
 #include "../engine/types.h"
 #include "block.h"
 
-#define CHUNK_SIZE_X 16
-#define CHUNK_SIZE_Y 256
-#define CHUNK_SIZE_Z 16
-#define CHUNK_AREA CHUNK_SIZE_X * CHUNK_SIZE_Y * CHUNK_SIZE_Z
+#define CHUNK_SIZE 60
+#define CHUNK_AREA CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE
 
 #define CHUNK_MEMORY_BUFFER 36000
 
@@ -40,7 +38,7 @@ struct Chunk {
 struct ChunkData {
     int worldPosX;
     int worldPosY;
-    unsigned char *data;
+    uint8_t *data;
 };
 
 void chunk_init(struct Chunk *chunk, ivec2 pos);
