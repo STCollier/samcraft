@@ -7,19 +7,23 @@
 #include "engine/shader.h"
 #include "engine/camera.h"
 #include "engine/player.h"
+#include "engine/mesher.h"
 #include "world/world.h"
 #include "world/chunk.h"
 
+// Chunk blocks are from 1 through CS_P - 1
+
 int main() {
-    window_create("samcraft", 1000, 800);
+    window_create("samcraft", 1200, 800); // 1920 1080
     shader_t mainShader = shader_new("res/shaders/main.vert", "res/shaders/main.frag");
 
     stbi_set_flip_vertically_on_load(true);
     blockdata_loadLuaData();
     blockdata_loadArrayTexture();
 
-    world_init(8);
+    world_init(5);
     player_init();
+    
 
     bool clicked = false;
     while (!glfwWindowShouldClose(window.self)) {
@@ -27,6 +31,7 @@ int main() {
         player_update();
         shader_use(mainShader);
         camera_use(mainShader);
+
         world_render(mainShader);
 
         if (window.leftClicked && !clicked) {

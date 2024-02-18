@@ -6,6 +6,7 @@
 #include <lua/lua.h>
 #include <lua/lauxlib.h>
 #include <lua/lualib.h>
+#include <limits.h>
 
 #include "cglm/cglm.h"
 #include "cglm/call.h"
@@ -28,7 +29,9 @@
 
 void checkOpenGLErr(const char* stmt, const char* fname, int line);
 uint8_t hash8(const char* h);
-int idist(ivec2s a, ivec2s b);
+int idist2d(ivec2 a, ivec2 b);
+int idist3d(ivec3 a, ivec3 b);
+int randInt(int min, int max);
 
 int lua_getInt(lua_State *L, const char* field, const char* err, const char* msg);
 const char* lua_getString(lua_State *L, const char* field, const char* err, const char* msg);

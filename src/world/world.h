@@ -20,12 +20,15 @@
 struct World {
     struct Chunk *chunks;
     int renderRadius;
+    int chunkRenderDepth;
 };
 
 int world_hashChunk(ivec2s position);
 ivec2s world_unhashChunk(int hash);
-struct Chunk *world_getChunk(int id);
-void world_meshChunk(ivec2s position);
+
+void world_addChunk(ivec3 position);
+struct Chunk *world_getChunk(ivec3 position);
+void world_meshChunk(ivec3 position);
 
 void world_init(int renderRadius);
 void world_render(shader_t shader);

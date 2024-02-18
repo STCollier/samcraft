@@ -14,39 +14,39 @@
 #include "../engine/camera.h"
 #include "../engine/util.h"
 #include "../engine/types.h"
+#include "../engine/mesher.h"
 #include "block.h"
 
-#define CHUNK_SIZE 60
+#define CHUNK_SIZE 50
 #define CHUNK_AREA CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE
 
-#define CHUNK_MEMORY_BUFFER 36000
+typedef struct {
+    int x;
+    int y;
+    int z;
+} chunk_key_t;
 
 struct Chunk {
+    bool isNull;
     unsigned int arrayTexture;
     unsigned int VBO, VAO;
 
-    struct Block *blocks;
-    uint32_t *meshData;
-    size_t meshSize;
-    ivec2 position; // chunk location relative to to other chunks e.g (0, 0) origin
-    bool isNull;
+    uint8_t *voxels;
+    uint8_t *light_map;
+    vertices_t *vertexList;
 
-    int id; // Key, represented as a 1D index in a 2D array
-    UT_hash_handle hh; // Makes this structure hashable
+    ivec3 position; // chunk location relative to to other chunks e.g (0, 0, 0) origin
+
+    chunk_key_t key; // Key, represented as a 1D index in a 2D array
+    UT_hash_handle hh; // Makes this structure hashable s
 };
 
-struct ChunkData {
-    int worldPosX;
-    int worldPosY;
-    uint8_t *data;
-};
+int blockIndex(int x, int y, int z);
 
-void chunk_init(struct Chunk *chunk, ivec2 pos);
+void chunk_init(struct Chunk *chunk, ivec3 pos);
 void chunk_generate(struct Chunk *chunk);
-void chunk_mesh(struct Chunk *chunk, struct Chunk *chunkNeighbors);
+void chunk_mesh(struct Chunk *chunk, struct Chunk* cn_right, struct Chunk* cn_left, struct Chunk* cn_front, struct Chunk* cn_back, struct Chunk* cn_top, struct Chunk* cn_bottom);
 void chunk_bind(struct Chunk *chunk);
 void chunk_render(struct Chunk *chunk, shader_t shader);
-void chunk_destroy(struct Chunk *chunk);
-int blockIndex(int x, int y, int z);
 
 #endif

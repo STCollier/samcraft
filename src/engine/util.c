@@ -20,8 +20,16 @@ uint8_t hash8(const char* h) {
     return hash;
 }
 
-int idist(ivec2s a, ivec2s b) {
-    return sqrt((b.x - a.x)*(b.x - a.x) + (b.y - a.y)*(b.y - a.y));
+int idist2d(ivec2 a, ivec2 b) {
+    return sqrt((b[0] - a[0])*(b[0] - a[0]) + (b[1] - a[1])*(b[1] - a[1]));
+}
+
+int idist3d(ivec3 a, ivec3 b) {
+    return sqrt((b[0] - a[0])*(b[0] - a[0]) + (b[1] - a[1])*(b[1] - a[1]) + (b[2] - a[2])*(b[2] - a[2]));
+}
+
+int randInt(int min, int max) {
+   return min + rand() / (RAND_MAX / (max - min + 1) + 1);
 }
 
 int lua_getInt(lua_State *L, const char* field, const char* err, const char* msg) {

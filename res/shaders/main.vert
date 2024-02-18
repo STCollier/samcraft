@@ -1,51 +1,43 @@
 #version 410 core
 
-layout (location = 0) in uint vertexData;
-
-out vec2 TexCoord;
-out float TexIndex;
-out vec3 Normal;
-flat out uint NormalIndex;
-out vec3 FragPos;
+layout (location = 0) in uint data;
 
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
-vec3 normals[6] = vec3[6](
-	vec3(0.0f, 0.0f, -1.0f), // Back
-	vec3(0.0f, 0.0f, 1.0f),  // Front
-	vec3(1.0f, 0.0f, 0.0f),  // Left
-	vec3(-1.0f, 0.0f, 0.0f), // Right
-	vec3(0.0f, -1.0f, 0.0f), // Bottom
-	vec3(0.0f, 1.0f, 0.0f)   // Top
+out vec4 frag_viewspace;
+out vec3 frag_pos;
+out vec3 frag_normal;
+out float frag_ao;
+flat out float frag_light;
+flat out uint frag_type;
+
+vec3 NORMALS[6] = vec3[6](
+  vec3( 0, 1, 0 ),
+  vec3(0, -1, 0 ),
+  vec3( 1, 0, 0 ),
+  vec3( -1, 0, 0 ),
+  vec3( 0, 0, 1 ),
+  vec3( 0, 0, -1 )
 );
 
 void main() {
-	// Positions
-	uint x = (vertexData >> 0) & 63u;
-	uint y = (vertexData >> 6) & 63u;
-	uint z = (vertexData >> 12) & 63u;
+  float x = float(data & 63u);
+  float y = float((data >> 6) & 63u);
+  float z = float((data >> 12) & 63u);
+  uint type = (data >> 18) & 31u;
+  uint light = (data >> 23) & 15u;
+  uint norm = (data >> 27) & 7u;
+  uint ao = (data >> 30) & 3u;
+  
+  frag_ao = clamp(float(ao) / 3.0, 0.5, 1.0);
 
-	// Texture Coords
-	uint u = (vertexData >> 18) & 1u;
-	uint v = (vertexData >> 19) & 1u;
-
-	// Array Texture Index
-	uint i = (vertexData >> 20) & 255u;
-
-	// Normal Index	
-	uint n = (vertexData >> 28) & 15u;
-
-	vec3 aPos = vec3(x, y, z);
-	vec2 aTexCoord = vec2(u, v);
-	uint aTexIndex = i;
-	vec3 aNormal = normals[n];
-
-	gl_Position = projection * view * model * vec4(aPos, 1.0f);
-	FragPos = vec3(model * vec4(aPos, 1.0f));
-	TexCoord = aTexCoord;
-	TexIndex = aTexIndex;
-	Normal = aNormal;
-	NormalIndex = n;
+  frag_pos = vec3(x, y, z) - vec3(0.5);
+  frag_viewspace = view * model * vec4(frag_pos, 1);
+  frag_normal = NORMALS[norm];
+  frag_light = float(light) / 16.0;
+  frag_type = type;
+  
+  gl_Position = projection * frag_viewspace;
 }

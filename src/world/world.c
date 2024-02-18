@@ -1,36 +1,24 @@
 #include "world.h"
 
-#define WORLD_APOTHEM 1000
-#define WORLD_LENGTH (WORLD_APOTHEM * 2)
-
 struct World world;
 
-int world_hashChunk(ivec2s position) {
-    return (position.x + WORLD_APOTHEM) + (position.y + WORLD_APOTHEM) * WORLD_LENGTH;
-}
-
-ivec2s world_unhashChunk(int hash) {
-    return (ivec2s){
-        (hash % WORLD_LENGTH) - WORLD_APOTHEM,
-        (hash / WORLD_LENGTH) - WORLD_APOTHEM
-    };
-}
-
-static void world_addChunk(ivec2s position) {
+void world_addChunk(ivec3 position) {
     struct Chunk *chunk = malloc(sizeof(struct Chunk));
-    int c_hash = world_hashChunk(position);
-
-    HASH_FIND_INT(world.chunks, &c_hash, chunk);
 
     if (chunk == NULL) {
-        chunk = malloc(sizeof(struct Chunk));
-
-        chunk->id = c_hash;
-
-        HASH_ADD_INT(world.chunks, id, chunk);
+        ERROR("Failed to allocate memory for chunk\n");
+        exit(EXIT_FAILURE);
     }
 
-    chunk_init(chunk, (ivec2){position.x, position.y});
+    memset(chunk, 0, sizeof(struct Chunk));
+    glm_ivec3_copy(position, chunk->position);
+    chunk->key.x = position[0];
+    chunk->key.y = position[1];
+    chunk->key.z = position[2];
+
+    HASH_ADD(hh, world.chunks, key, sizeof(chunk_key_t), chunk);
+
+    chunk_init(chunk, position);
     chunk_generate(chunk);
 }
 
@@ -39,62 +27,69 @@ static void world_deleteChunk(struct Chunk *chunk) {
     free(chunk);
 }
 
-struct Chunk *world_getChunk(int id) {
-    struct Chunk *chunk;
+struct Chunk *world_getChunk(ivec3 position) {
+    struct Chunk *chunk = NULL;
 
-    HASH_FIND_INT(world.chunks, &id, chunk);  // chunk is output pointer
+    // Create a temporary key to use for searching
+    chunk_key_t temp_key;
+    temp_key.x = position[0];
+    temp_key.y = position[1];
+    temp_key.z = position[2];
+
+    // Search for the chunk with the given position
+    HASH_FIND(hh, world.chunks, &temp_key, sizeof(chunk_key_t), chunk);
 
     if (chunk == NULL) {
-        fprintf(stderr, "\x1B[0m%s:%d: \x1B[0;31m[ERROR]\x1B[0m %s %d (x: %d, y: %d)\n", __FILE__, __LINE__, "Could not locate chunk with ID", id, world_unhashChunk(id).x, world_unhashChunk(id).y);
-        //exit(EXIT_FAILURE);
+        fprintf(stderr, "Failed to find chunk at (%d %d %d)\n", position[0], position[1], position[2]);
+        exit(EXIT_FAILURE);
     }
 
     return chunk;
 }
 
-void world_meshChunk(ivec2s position) {
-    struct Chunk chunkNeighbors[4];
-
-    ivec2s positions[4] = {
-        (ivec2s){position.x + 1, position.y}, // Right
-        (ivec2s){position.x - 1, position.y}, // Left
-        (ivec2s){position.x, position.y + 1}, // Front
-        (ivec2s){position.x, position.y - 1}  // Back
+void world_meshChunk(ivec3 position) {
+    ivec3 positions[6] = {
+        {position[0] + 1, position[1], position[2]}, // Right
+        {position[0] - 1, position[1], position[2]}, // Left
+        {position[0], position[1], position[2] - 1}, // Front
+        {position[0], position[1], position[2] + 1}, // Back
+        {position[0], position[1] + 1, position[2]}, // Top
+        {position[0], position[1] - 1, position[2]}, // Bottom
     };
 
-    for (int faces = 0; faces < 4; faces++) {
-        chunkNeighbors[faces] = *world_getChunk(world_hashChunk(positions[faces]));
-    }
+    chunk_mesh(world_getChunk(position), 
+        world_getChunk(positions[RIGHT]),
+        world_getChunk(positions[LEFT]),
+        world_getChunk(positions[FRONT]),
+        world_getChunk(positions[BACK]),
+        world_getChunk(positions[TOP]),
+        world_getChunk(positions[BOTTOM])
+    );
 
-    chunk_mesh(world_getChunk(world_hashChunk(position)), chunkNeighbors);
-    chunk_bind(world_getChunk(world_hashChunk(position)));
+    chunk_bind(world_getChunk(position));
 }
 
 
 void world_init(int renderRadius) {
     world.chunks = NULL; // Initilize to NULL for hashtable
     world.renderRadius = renderRadius;
+    world.chunkRenderDepth = 1;
 
-    for (int y = -renderRadius; y <= renderRadius; y++) {
-        for (int x = -renderRadius; x <= renderRadius; x++) {
-            ivec2s origin = (ivec2s){0, 0};
-            ivec2s currentPoint = (ivec2s){x, y};
+    int generationRadius = renderRadius + 1;
 
-            if (idist(currentPoint, origin) <= renderRadius) {
-                world_addChunk(currentPoint);
+    for (int z = -generationRadius; z < generationRadius; z++) {
+        for (int y = -1; y <= world.chunkRenderDepth; y++) {
+            for (int x = -generationRadius; x < generationRadius; x++) {
+                world_addChunk((ivec3){x, y, z});
             }
         }
     }
 
     int chunkCount = 0;
-
-    for (int y = -renderRadius; y < renderRadius; y++) {
-        for (int x = -renderRadius; x < renderRadius; x++) {
-            ivec2s origin = (ivec2s){0, 0};
-            ivec2s currentPoint = (ivec2s){x, y};
-
-            if (idist(currentPoint, origin) < renderRadius) {
-                world_meshChunk(currentPoint);
+    for (int z = -world.renderRadius; z < world.renderRadius; z++) {
+        for (int y = 0; y < world.chunkRenderDepth; y++) {
+            for (int x = -world.renderRadius; x < world.renderRadius; x++) {
+                world_meshChunk((ivec3){x, y, z});
                 chunkCount++;
             }
         }
@@ -104,13 +99,10 @@ void world_init(int renderRadius) {
 }
 
 void world_render(shader_t shader) {
-    for (int y = -world.renderRadius; y < world.renderRadius; y++) {
-        for (int x = -world.renderRadius; x < world.renderRadius; x++) {
-            ivec2s origin = (ivec2s){0, 0};
-            ivec2s currentPoint = (ivec2s){x, y};
-
-            if (idist(currentPoint, origin) < world.renderRadius) {
-                chunk_render(world_getChunk(world_hashChunk(currentPoint)), shader);
+    for (int z = -world.renderRadius; z < world.renderRadius; z++) {
+        for (int y = 0; y < world.chunkRenderDepth; y++) {
+            for (int x = -world.renderRadius; x < world.renderRadius; x++) {
+                chunk_render(world_getChunk((ivec3){x, y, z}), shader);
             }
         }
     }

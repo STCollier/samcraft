@@ -94,6 +94,8 @@ void window_create(const char* title, int width, int height) {
     glfwSetMouseButtonCallback(window.self, _mouseButtonCallback);
 
     glfwSetInputMode(window.self, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+    glfwSwapInterval(1);
 }
 
 void window_destroy() {
@@ -102,6 +104,7 @@ void window_destroy() {
 }
 
 void window_update() {
+
     float currentFrame = glfwGetTime();
     window.dt = currentFrame - window.lastFrame;
     window.lastFrame = currentFrame;

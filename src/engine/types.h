@@ -7,6 +7,12 @@ typedef struct {
     int y;
 } ivec2s;
 
+typedef struct {
+    int x;
+    int y;
+    int z;
+} ivec3s;
+
 typedef enum {
     RIGHT,
     LEFT,
