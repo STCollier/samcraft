@@ -69,9 +69,11 @@ static void camera_handleKeyboard() {
     } 
 
     if (glfwGetKey(window.self, GLFW_KEY_E) == GLFW_PRESS) {
-        camera.speed = 100.0f;
+        camera.speed = 90.0f;
+    } else if (glfwGetKey(window.self, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+        camera.speed = 30.0f;
     } else {
-        camera.speed = 50.0f;
+        camera.speed = 60.0f;
     }
 }
 

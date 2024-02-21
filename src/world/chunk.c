@@ -26,15 +26,16 @@ void chunk_generate(struct Chunk *chunk) {
     for (int x = 1; x < CS_P - 1; x++) {
         for (int y = 1; y < CS_P - 1; y++) {
             for (int z = 1; z < CS_P - 1; z++) {
-                chunk->voxels[blockIndex(x, 25, z)] = 4;
+                if ((x + z) % 2) chunk->voxels[blockIndex(x, 2, z)] = 4;
+                else chunk->voxels[blockIndex(x, 2, z)] = 7;
             }
         }
     }
 
-    chunk->voxels[blockIndex(1, 25, 1)] = 1;
-    chunk->voxels[blockIndex(50, 25, 1)] = 2;
-    chunk->voxels[blockIndex(50, 25, 50)] = 3;
-    chunk->voxels[blockIndex(1, 25, 50)] = 5;
+    chunk->voxels[blockIndex(1, 2, 1)] = 1;
+    chunk->voxels[blockIndex(CHUNK_SIZE, 2, 1)] = 2;
+    chunk->voxels[blockIndex(CHUNK_SIZE, 2, CHUNK_SIZE)] = 3;
+    chunk->voxels[blockIndex(1, 2, CHUNK_SIZE)] = 5;
 }
 
 void chunk_mesh(struct Chunk *chunk, struct Chunk* cn_right, struct Chunk* cn_left, struct Chunk* cn_front, struct Chunk* cn_back, struct Chunk* cn_top, struct Chunk* cn_bottom) {

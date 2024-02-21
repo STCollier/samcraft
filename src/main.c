@@ -8,6 +8,7 @@
 #include "engine/camera.h"
 #include "engine/player.h"
 #include "engine/mesher.h"
+#include "engine/sprite2D.h"
 #include "world/world.h"
 #include "world/chunk.h"
 
@@ -16,6 +17,15 @@
 int main() {
     window_create("samcraft", 1200, 800); // 1920 1080
     shader_t mainShader = shader_new("res/shaders/main.vert", "res/shaders/main.frag");
+    shader_t shader2D = shader_new("res/shaders/2D.vert", "res/shaders/2D.frag");
+
+    shader_use(shader2D);
+    mat4 projection2D;
+    glUniform1i(glGetUniformLocation(shader2D.ID, "image"), 0);
+    glm_ortho(0.0f, window.width, window.height, 0.0f, -1.0f, 1.0f, projection2D);
+    shader_setMat4(shader2D, "projection", projection2D);
+
+    struct Sprite2D crosshair = sprite2D_new("res/textures/crosshair.png", (ivec2){600, 400}, 12.0f);
 
     stbi_set_flip_vertically_on_load(true);
     blockdata_loadLuaData();
@@ -23,7 +33,6 @@ int main() {
 
     world_init(5);
     player_init();
-    
 
     bool clicked = false;
     while (!glfwWindowShouldClose(window.self)) {
@@ -33,6 +42,8 @@ int main() {
         camera_use(mainShader);
 
         world_render(mainShader);
+
+        sprite2D_render(&crosshair, shader2D);
 
         if (window.leftClicked && !clicked) {
             player_destroyBlock();

@@ -17,7 +17,7 @@
 #include "../engine/mesher.h"
 #include "block.h"
 
-#define CHUNK_SIZE 50
+#define CHUNK_SIZE 32
 #define CHUNK_AREA CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE
 
 typedef struct {

@@ -23,6 +23,7 @@ vec3 get_color(uint frag_type) {
     case 4: return vec3(0.1, 0.6, 0.6);
     case 5: return vec3(0.6, 0.1, 0.6);
     case 6: return vec3(0.6, 0.6, 0.1);
+    case 7: return vec3(0.1, 0.7, 0.7);
   }
 }
 

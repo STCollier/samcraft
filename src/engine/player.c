@@ -13,7 +13,7 @@ void player_init() {
     camera_init(player.FOV, player.speed.normal, 0.1f);
 
     player.selectedBlock = block_getID("dirt");
-    player.reach = 50.0f;
+    player.reach = 16.0f;
 }
 
 void player_update() {
@@ -42,11 +42,15 @@ void player_update() {
 
 void player_placeBlock() {
     player.ray = ray_cast(camera.position, camera.front, player.reach);
+    //player.ray = ray_cast((vec3){0.0f, 5.0f, 0.0f}, (vec3){0.01f, -0.99f, 0.01f}, 5.0f);
 
-    if (player.ray.blockFound) {
+    printf("Camera Position: %f %f %f\n", camera.position[0], camera.position[1], camera.position[2]);
+    printf("Camera Direction: %f %f %f\n\n", camera.front[0], camera.front[1], camera.front[2]);
+
+    /*if (player.ray.blockFound) {
         ivec3 blockPlaceLocation;
 
-        /*switch (player.ray.placedDirection) {
+        /witch (player.ray.placedDirection) {
             case FRONT:
                 glm_ivec3_copy((ivec3){player.ray.blockFoundPosition[0], player.ray.blockFoundPosition[1], player.ray.blockFoundPosition[2] - 1}, blockPlaceLocation);
                 break;
@@ -65,7 +69,7 @@ void player_placeBlock() {
             case LEFT:
                 glm_ivec3_copy((ivec3){player.ray.blockFoundPosition[0] - 1, player.ray.blockFoundPosition[1], player.ray.blockFoundPosition[2]}, blockPlaceLocation);
                 break;
-        }*/
+        }
 
         glm_ivec3_copy((ivec3){player.ray.blockFoundPosition[0], player.ray.blockFoundPosition[1] + 1, player.ray.blockFoundPosition[2]}, blockPlaceLocation);
 
@@ -81,12 +85,10 @@ void player_placeBlock() {
             struct Chunk *c = world_getChunk((ivec3){chunkToModify->position[0] - 1, chunkToModify->position[1], chunkToModify->position[2]});
             c->vertexList->size = 0;
             world_meshChunk(c->position);
-            puts("1");
         } else if (blockPlaceLocation[0] == CHUNK_SIZE) {
             struct Chunk *c = world_getChunk((ivec3){chunkToModify->position[0] + 1, chunkToModify->position[1], chunkToModify->position[2]});
             c->vertexList->size = 0;
             world_meshChunk(c->position);
-            puts("2");
         }
 
 
@@ -94,21 +96,28 @@ void player_placeBlock() {
             struct Chunk *c = world_getChunk((ivec3){chunkToModify->position[0], chunkToModify->position[1], chunkToModify->position[2] - 1});
             c->vertexList->size = 0;
             world_meshChunk(c->position);
-            puts("5");
         } else if (blockPlaceLocation[2] == CHUNK_SIZE) {
             struct Chunk *c = world_getChunk((ivec3){chunkToModify->position[0], chunkToModify->position[1], chunkToModify->position[2] + 1});
             c->vertexList->size = 0;
             world_meshChunk(c->position);
-            puts("6");
         }
 
-        /*if (blockPlaceLocation[2] == 1) {
+        if (blockPlaceLocation[2] == 1) {
             struct Chunk *c = world_getChunk((ivec3){chunkToModify->position[0], chunkToModify->position[1], chunkToModify->position[2] - 1});
             c->vertexList->size = 0;
             world_meshChunk(c->position);
             chunkToModify->voxels[blockIndex(player.ray.blockFoundPosition[0], player.ray.blockFoundPosition[1], 0)] = 4;
             puts("5");
-        }*/
+        }
+
+        world_meshChunk(chunkToModify->position);
+    }*/
+
+    if (player.ray.blockFound) {
+        struct Chunk *chunkToModify = player.ray.chunkToModify;
+
+        chunkToModify->voxels[blockIndex(player.ray.blockFoundPosition[0], player.ray.blockFoundPosition[1] + 1, player.ray.blockFoundPosition[2])] = 5;
+        chunkToModify->vertexList->size = 0;
 
         world_meshChunk(chunkToModify->position);
     }
