@@ -37,25 +37,44 @@ struct Ray ray_cast(vec3 startPosition, vec3 rayDirection, float maxDistance) {
         currentDistance = rayLength1D[axis];
         rayLength1D[axis] += rayUnitStepSize[axis];
 
-        ivec3 chunkPos = (ivec3){
-            check[0] / 32,
-            check[1] / 32,
-            check[2] / 32
-        };
+      ivec3 chunkPos;
+        glm_ivec3_copy((ivec3) {
+            check[0] / CHUNK_SIZE,
+            check[1] / CHUNK_SIZE,
+            check[2] / CHUNK_SIZE},
+        chunkPos);
 
-        ivec3 blockPos = (ivec3){
-            (check[0] % 32) + 1,
-            (check[1] % 32) + 1,
-            (check[2] % 32) + 1
-        };
+        // +1 to account for voxel padding
+        ivec3 blockPos;
+        glm_ivec3_copy((ivec3) {
+            (check[0] % CHUNK_SIZE) + 1,
+            (check[1] % CHUNK_SIZE) + 1,
+            (check[2] % CHUNK_SIZE) + 1},
+        blockPos);
 
-        ray.chunkToModify = world_getChunk(chunkPos);
+        for (int i = 0; i < 3; i++) {
+            if (blockPos[i] < 1) {
+                blockPos[i] += CHUNK_SIZE;
+                chunkPos[i] -= 1;
+            }
+        }
 
-        if (ray.chunkToModify->voxels[blockIndex(blockPos[0], blockPos[1], blockPos[2])] != BLOCK_AIR) {
-            glm_ivec3_copy(blockPos, ray.blockFoundPosition);
+        struct Chunk *chunkToModify = world_getChunk(chunkPos);
 
-            printf("CHUNK [%d %d %d] BLOCK: [%d %d %d]\n", chunkPos[0], chunkPos[1], chunkPos[2], blockPos[0], blockPos[1], blockPos[2]);
+        if (chunkToModify->voxels[blockIndex(blockPos[0], blockPos[1], blockPos[2])] != BLOCK_AIR) {
+            if (axis == 0) {
+                if (rayDirection[axis] > 0) ray.placedDirection = LEFT;
+                else ray.placedDirection = RIGHT;
+            } else if (axis == 1) {
+                if (rayDirection[axis] > 0) ray.placedDirection = BOTTOM;
+                else ray.placedDirection = TOP;
+            } else if (axis == 2) {
+                if (rayDirection[axis] > 0) ray.placedDirection = FRONT;
+                else ray.placedDirection = BACK;
+            }
 
+            glm_ivec3_copy((ivec3){blockPos[0], blockPos[1], blockPos[2]}, ray.blockFoundPosition);
+            ray.chunkToModify = chunkToModify;
             ray.blockFound = true;
         }
     }

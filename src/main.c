@@ -12,10 +12,9 @@
 #include "world/world.h"
 #include "world/chunk.h"
 
-// Chunk blocks are from 1 through CS_P - 1
 
 int main() {
-    window_create("samcraft", 1200, 800); // 1920 1080
+    window_create("samcraft", 1920, 1080);
     shader_t mainShader = shader_new("res/shaders/main.vert", "res/shaders/main.frag");
     shader_t shader2D = shader_new("res/shaders/2D.vert", "res/shaders/2D.frag");
 
@@ -25,13 +24,13 @@ int main() {
     glm_ortho(0.0f, window.width, window.height, 0.0f, -1.0f, 1.0f, projection2D);
     shader_setMat4(shader2D, "projection", projection2D);
 
-    struct Sprite2D crosshair = sprite2D_new("res/textures/crosshair.png", (ivec2){600, 400}, 12.0f);
+    struct Sprite2D crosshair = sprite2D_new("res/textures/crosshair-alt.png", (ivec2){window.width / 2, window.height / 2}, 16.0f);
 
     stbi_set_flip_vertically_on_load(true);
     blockdata_loadLuaData();
     blockdata_loadArrayTexture();
 
-    world_init(5);
+    world_init(4);
     player_init();
 
     bool clicked = false;

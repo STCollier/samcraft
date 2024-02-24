@@ -23,9 +23,6 @@ struct World {
     int chunkRenderDepth;
 };
 
-int world_hashChunk(ivec2s position);
-ivec2s world_unhashChunk(int hash);
-
 void world_addChunk(ivec3 position);
 struct Chunk *world_getChunk(ivec3 position);
 void world_meshChunk(ivec3 position);

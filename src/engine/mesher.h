@@ -13,12 +13,17 @@
 #define CS_P3 (CS_P * CS_P * CS_P)
 
 typedef struct {
-    uint32_t *data;
+    uint32_t x_y_z_type;
+    uint16_t u_v;
+    uint8_t norm_ao;
+} vertex_t;
+
+typedef struct {
+    vertex_t *data;
     size_t size;
 } vertices_t;
 
 int arr_at(uint8_t *arr, size_t idx);
-vertices_t *mesh(uint8_t *voxels, uint8_t *light_map);
-void calculate_light(uint8_t *voxels, uint8_t *light_map);
+vertices_t *mesh(uint8_t *voxels);
 
 #endif

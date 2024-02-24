@@ -1,5 +1,6 @@
 #include <stb/stb_image.h>
 #include "chunk.h"
+#include "worldgen.h"
 
 int blockIndex(int x, int y, int z) {
   return z + (x * CS_P) + (y * CS_P2);
@@ -15,27 +16,21 @@ void chunk_init(struct Chunk *chunk, ivec3 pos) {
     chunk->voxels = malloc(CS_P3);
     memset(chunk->voxels, 0, CS_P3);
 
-    chunk->light_map = malloc(CS_P3);
-    memset(chunk->light_map, 0, CS_P3);
-    calculate_light(chunk->voxels, chunk->light_map);
-
     chunk->vertexList = NULL;
 }
 
 void chunk_generate(struct Chunk *chunk) {
+
     for (int x = 1; x < CS_P - 1; x++) {
-        for (int y = 1; y < CS_P - 1; y++) {
-            for (int z = 1; z < CS_P - 1; z++) {
-                if ((x + z) % 2) chunk->voxels[blockIndex(x, 2, z)] = 4;
-                else chunk->voxels[blockIndex(x, 2, z)] = 7;
+        for (int z = 1; z < CS_P - 1; z++) {
+
+            int height = noiseHeight((ivec2){x, z}, (ivec2){chunk->position[0] * CHUNK_SIZE, -(chunk->position[2] * CHUNK_SIZE)});
+            
+            for (int y = 1; y < height; y++) {        
+                chunk->voxels[blockIndex(x, y, z)] = block_getID("grass");
             }
         }
     }
-
-    chunk->voxels[blockIndex(1, 2, 1)] = 1;
-    chunk->voxels[blockIndex(CHUNK_SIZE, 2, 1)] = 2;
-    chunk->voxels[blockIndex(CHUNK_SIZE, 2, CHUNK_SIZE)] = 3;
-    chunk->voxels[blockIndex(1, 2, CHUNK_SIZE)] = 5;
 }
 
 void chunk_mesh(struct Chunk *chunk, struct Chunk* cn_right, struct Chunk* cn_left, struct Chunk* cn_front, struct Chunk* cn_back, struct Chunk* cn_top, struct Chunk* cn_bottom) {
@@ -66,33 +61,32 @@ void chunk_mesh(struct Chunk *chunk, struct Chunk* cn_right, struct Chunk* cn_le
         }
     }
 
-    chunk->vertexList = mesh(chunk->voxels, chunk->light_map);
+    chunk->vertexList = mesh(chunk->voxels);
 }
 
 void chunk_bind(struct Chunk *chunk) {
-    glGenVertexArrays(1, &chunk->VAO);
-    glGenBuffers(1, &chunk->VBO);
+    GL_CHECK(glGenVertexArrays(1, &chunk->VAO));
+    GL_CHECK(glGenBuffers(1, &chunk->VBO));
 
-    glBindBuffer(GL_ARRAY_BUFFER, chunk->VBO);
-    glBindVertexArray(chunk->VAO);
-    glEnableVertexAttribArray(0);
-    glVertexAttribIPointer(0, sizeof(uint32_t), GL_UNSIGNED_INT, sizeof(uint32_t), (void*)0);
-    glBindVertexArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    glBindVertexArray(chunk->VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, chunk->VBO);
-    glBufferData(GL_ARRAY_BUFFER, chunk->vertexList->size * sizeof(uint32_t), chunk->vertexList->data, GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    GL_CHECK(glBindVertexArray(chunk->VAO));
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, chunk->VBO));
+    GL_CHECK(glBufferData(GL_ARRAY_BUFFER, chunk->vertexList->size * sizeof(vertex_t), chunk->vertexList->data, GL_STATIC_DRAW));
+    
+    GL_CHECK(glVertexAttribIPointer(0, 4, GL_UNSIGNED_INT, sizeof(vertex_t), (void*)0));
+    GL_CHECK(glVertexAttribIPointer(1, 2, GL_UNSIGNED_SHORT, sizeof(vertex_t), (void*)offsetof(vertex_t, u_v)));
+    GL_CHECK(glVertexAttribIPointer(2, 2, GL_UNSIGNED_BYTE, sizeof(vertex_t), (void*)offsetof(vertex_t, norm_ao)));
+    
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    GL_CHECK(glBindVertexArray(0));
 }
 
 void chunk_render(struct Chunk *chunk, shader_t shader) {
     glm_mat4_identity(camera.model);
-    glm_translate(camera.model, (vec3){chunk->position[0] * CHUNK_SIZE, chunk->position[1] * CHUNK_SIZE, chunk->position[2] * CHUNK_SIZE});
+    float f = 0.5f;
+    glm_translate(camera.model, (vec3){(chunk->position[0] * CHUNK_SIZE) + f, (chunk->position[1] * CHUNK_SIZE) + f, (chunk->position[2] * CHUNK_SIZE) + f});
     shader_setMat4(shader, "model", camera.model);
 
-    glBindVertexArray(chunk->VAO);
-    glDrawArrays(GL_TRIANGLES, 0, chunk->vertexList->size);
-    glBindVertexArray(0);
+    GL_CHECK(glBindVertexArray(chunk->VAO));
+    GL_CHECK(glDrawArrays(GL_TRIANGLES, 0, chunk->vertexList->size));
+    GL_CHECK(glBindVertexArray(0));
 }

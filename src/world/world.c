@@ -1,4 +1,5 @@
 #include "world.h"
+#include "worldgen.h"
 
 struct World world;
 
@@ -69,11 +70,22 @@ void world_meshChunk(ivec3 position) {
     chunk_bind(world_getChunk(position));
 }
 
+void world_remeshChunk(ivec3 position) {
+    struct Chunk *chunk = world_getChunk(position);
+
+    free(chunk->vertexList->data);
+
+    chunk->vertexList->size = 0;
+    world_meshChunk(position);
+}
+
 
 void world_init(int renderRadius) {
     world.chunks = NULL; // Initilize to NULL for hashtable
     world.renderRadius = renderRadius;
     world.chunkRenderDepth = 1;
+    
+    worldgenInit(0xff);
 
     int generationRadius = renderRadius + 1;
 
