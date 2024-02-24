@@ -93,7 +93,7 @@ void player_placeBlock() {
         }
 
         // This is where we actually edit the chunk
-        chunkToModify->voxels[blockIndex(blockPlaceLocation[0], blockPlaceLocation[1], blockPlaceLocation[2])] = 5;
+        chunkToModify->voxels[blockIndex(blockPlaceLocation[0], blockPlaceLocation[1], blockPlaceLocation[2])] = player.selectedBlock;
 
         // X axis remeshing
         if (blockPlaceLocation[0] == 1) {

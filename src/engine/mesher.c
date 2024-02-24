@@ -192,8 +192,6 @@ vertices_t *mesh(uint8_t *voxels) {
           uint8_t mesh_back = forward + 1;
           uint8_t mesh_up = bit_pos + (face % 2 == 0 ? 1 : 0);
 
-          uint8_t type = block_getTextureIndex(arr_at(voxels, get_axis_i(axis, right, forward, bit_pos)), face);
-
           int c = bit_pos;
           uint8_t ao_F = solid_check(arr_at(voxels, get_axis_i(axis, right, forward - 1, c))) ? 1 : 0;
           uint8_t ao_B = solid_check(arr_at(voxels, get_axis_i(axis, right, forward + 1, c))) ? 1 : 0;
@@ -215,40 +213,46 @@ vertices_t *mesh(uint8_t *voxels) {
 
           vertex_t v1, v2, v3, v4;
           if (face == 0) {
-              v1 = get_vertex(mesh_left, mesh_up, mesh_front, type, 0, 1, face, ao_LF);
+              uint8_t type = block_getTextureIndex(arr_at(voxels, get_axis_i(axis, right, forward, bit_pos)), TOP);
+
+              v1 = get_vertex(mesh_left, mesh_up, mesh_front, type, 0, mesh_back - mesh_front, face, ao_LF);
               v2 = get_vertex(mesh_left, mesh_up, mesh_back, type, 0, 0, face, ao_LB);
-              v3 = get_vertex(mesh_right, mesh_up, mesh_back, type, 1, 0, face, ao_RB);
-              v4 = get_vertex(mesh_right, mesh_up, mesh_front, type, 1, 1, face, ao_RF);
-          }
-          else if (face == 1) {
+              v3 = get_vertex(mesh_right, mesh_up, mesh_back, type, mesh_right - mesh_left, 0, face, ao_RB);
+              v4 = get_vertex(mesh_right, mesh_up, mesh_front, type, mesh_right - mesh_left, mesh_back - mesh_front, face, ao_RF);
+          } else if (face == 1) {
+              uint8_t type = block_getTextureIndex(arr_at(voxels, get_axis_i(axis, right, forward, bit_pos)), BOTTOM);
+
               v1 = get_vertex(mesh_left, mesh_up, mesh_back, type, 0, 0, face, ao_LB);
-              v2 = get_vertex(mesh_left, mesh_up, mesh_front, type, 0, 1, face, ao_LF);
-              v3 = get_vertex(mesh_right, mesh_up, mesh_front, type, 1, 1, face, ao_RF);
-              v4 = get_vertex(mesh_right, mesh_up, mesh_back, type, 1, 0, face, ao_RB);
-          }
-          else if (face == 2) {
-              v1 = get_vertex(mesh_up, mesh_front, mesh_left, type, 0, 1, face, ao_LF);
-              v2 = get_vertex(mesh_up, mesh_back, mesh_left, type, 0, 0, face, ao_LB);
-              v3 = get_vertex(mesh_up, mesh_back, mesh_right, type, 1, 0, face, ao_RB);
-              v4 = get_vertex(mesh_up, mesh_front, mesh_right, type, 1, 1, face, ao_RF);
-          }
-          else if (face == 3) {
-              v1 = get_vertex(mesh_up, mesh_back, mesh_left, type, 0, 0, face, ao_LB);
-              v2 = get_vertex(mesh_up, mesh_front, mesh_left, type, 0, 1, face, ao_LF);
-              v3 = get_vertex(mesh_up, mesh_front, mesh_right, type, 1, 1, face, ao_RF);
-              v4 = get_vertex(mesh_up, mesh_back, mesh_right, type, 1, 0, face, ao_RB);
-          }
-          else if (face == 4) {
-              v1 = get_vertex(mesh_front, mesh_left, mesh_up, type, 0, 1, face, ao_LF);
-              v2 = get_vertex(mesh_back, mesh_left, mesh_up, type, 0, 0, face, ao_LB);
-              v3 = get_vertex(mesh_back, mesh_right, mesh_up, type, 1, 0, face, ao_RB);
-              v4 = get_vertex(mesh_front, mesh_right, mesh_up, type, 1, 1, face, ao_RF);
-          }
-          else if (face == 5) {
-              v1 = get_vertex(mesh_back, mesh_left, mesh_up, type, 0, 0, face, ao_LB);
-              v2 = get_vertex(mesh_front, mesh_left, mesh_up, type, 0, 1, face, ao_LF);
-              v3 = get_vertex(mesh_front, mesh_right, mesh_up, type, 1, 1, face, ao_RF);
-              v4 = get_vertex(mesh_back, mesh_right, mesh_up, type, 1, 0, face, ao_RB);
+              v2 = get_vertex(mesh_left, mesh_up, mesh_front, type, 0, mesh_back - mesh_front, face, ao_LF);
+              v3 = get_vertex(mesh_right, mesh_up, mesh_front, type, mesh_right - mesh_left, mesh_back - mesh_front, face, ao_RF);
+              v4 = get_vertex(mesh_right, mesh_up, mesh_back, type, mesh_right - mesh_left, 0, face, ao_RB);
+          } else if (face == 2) {
+              uint8_t type = block_getTextureIndex(arr_at(voxels, get_axis_i(axis, right, forward, bit_pos)), RIGHT);
+
+              v1 = get_vertex(mesh_up, mesh_front, mesh_left, type, mesh_right - mesh_left, 0, face, ao_LF);
+              v2 = get_vertex(mesh_up, mesh_back, mesh_left, type, mesh_right - mesh_left, mesh_back - mesh_front, face, ao_LB);
+              v3 = get_vertex(mesh_up, mesh_back, mesh_right, type, 0, mesh_back - mesh_front, face, ao_RB);
+              v4 = get_vertex(mesh_up, mesh_front, mesh_right, type, 0, 0, face, ao_RF);
+          } else if (face == 3) {
+            uint8_t type = block_getTextureIndex(arr_at(voxels, get_axis_i(axis, right, forward, bit_pos)), LEFT);
+              v1 = get_vertex(mesh_up, mesh_back, mesh_left, type, 0, mesh_back - mesh_front, face, ao_LB);
+              v2 = get_vertex(mesh_up, mesh_front, mesh_left, type, 0, 0, face, ao_LF);
+              v3 = get_vertex(mesh_up, mesh_front, mesh_right, type, mesh_right - mesh_left, 0, face, ao_RF);
+              v4 = get_vertex(mesh_up, mesh_back, mesh_right, type, mesh_right - mesh_left, mesh_back - mesh_front, face, ao_RB);
+          } else if (face == 4) {
+            uint8_t type = block_getTextureIndex(arr_at(voxels, get_axis_i(axis, right, forward, bit_pos)), FRONT);
+            
+            v1 = get_vertex(mesh_front, mesh_left, mesh_up, type, 0, 0, face, ao_LF);
+            v2 = get_vertex(mesh_back, mesh_left, mesh_up, type, mesh_back - mesh_front, 0, face, ao_LB);
+            v3 = get_vertex(mesh_back, mesh_right, mesh_up, type, mesh_back - mesh_front, mesh_right - mesh_left, face, ao_RB);
+            v4 = get_vertex(mesh_front, mesh_right, mesh_up, type, 0, mesh_right - mesh_left, face, ao_RF);
+          } else if (face == 5) {
+            uint8_t type = block_getTextureIndex(arr_at(voxels, get_axis_i(axis, right, forward, bit_pos)), BACK);
+
+            v1 = get_vertex(mesh_back, mesh_left, mesh_up, type, mesh_back - mesh_front, 0, face, ao_LB);
+            v2 = get_vertex(mesh_back, mesh_right, mesh_up, type, mesh_back - mesh_front, mesh_right - mesh_left, face, ao_RB);
+            v3 = get_vertex(mesh_front, mesh_right, mesh_up, type, 0, mesh_right - mesh_left, face, ao_RF);
+            v4 = get_vertex(mesh_front, mesh_left, mesh_up, type, 0, 0, face, ao_LF);
           }
 
           if (ao_LB + ao_RF > ao_RB + ao_LF) {

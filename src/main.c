@@ -24,13 +24,13 @@ int main() {
     glm_ortho(0.0f, window.width, window.height, 0.0f, -1.0f, 1.0f, projection2D);
     shader_setMat4(shader2D, "projection", projection2D);
 
-    struct Sprite2D crosshair = sprite2D_new("res/textures/crosshair-alt.png", (ivec2){window.width / 2, window.height / 2}, 16.0f);
+    struct Sprite2D crosshair = sprite2D_new("res/textures/crosshair.png", (ivec2){window.width / 2, window.height / 2}, 16.0f);
 
     stbi_set_flip_vertically_on_load(true);
     blockdata_loadLuaData();
     blockdata_loadArrayTexture();
 
-    world_init(4);
+    world_init(20);
     player_init();
 
     bool clicked = false;

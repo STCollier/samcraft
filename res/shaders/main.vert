@@ -38,7 +38,7 @@ void main() {
   
   frag_ao = clamp(float(ao) / 3.0, 0.5, 1.0);
 
-  frag_pos = vec3(x, y, z) - vec3(0.5);
+  frag_pos = vec3(x, y, z);
   frag_viewspace = view * model * vec4(frag_pos, 1);
   frag_normal = NORMALS[norm];
   frag_uv = vec2(u, v);

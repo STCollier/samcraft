@@ -26,8 +26,11 @@ void chunk_generate(struct Chunk *chunk) {
 
             int height = noiseHeight((ivec2){x, z}, (ivec2){chunk->position[0] * CHUNK_SIZE, -(chunk->position[2] * CHUNK_SIZE)});
             
-            for (int y = 1; y < height; y++) {        
-                chunk->voxels[blockIndex(x, y, z)] = block_getID("grass");
+            for (int y = 1; y <= height; y++) {   
+                 
+                if (y == height) chunk->voxels[blockIndex(x, y, z)] = block_getID("grass");
+                else chunk->voxels[blockIndex(x, y, z)] = block_getID("dirt");
+        
             }
         }
     }
@@ -73,8 +76,13 @@ void chunk_bind(struct Chunk *chunk) {
     GL_CHECK(glBufferData(GL_ARRAY_BUFFER, chunk->vertexList->size * sizeof(vertex_t), chunk->vertexList->data, GL_STATIC_DRAW));
     
     GL_CHECK(glVertexAttribIPointer(0, 4, GL_UNSIGNED_INT, sizeof(vertex_t), (void*)0));
+    glEnableVertexAttribArray(0);
+
     GL_CHECK(glVertexAttribIPointer(1, 2, GL_UNSIGNED_SHORT, sizeof(vertex_t), (void*)offsetof(vertex_t, u_v)));
+    glEnableVertexAttribArray(1);
+
     GL_CHECK(glVertexAttribIPointer(2, 2, GL_UNSIGNED_BYTE, sizeof(vertex_t), (void*)offsetof(vertex_t, norm_ao)));
+    glEnableVertexAttribArray(2);
     
     GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
     GL_CHECK(glBindVertexArray(0));
@@ -82,8 +90,7 @@ void chunk_bind(struct Chunk *chunk) {
 
 void chunk_render(struct Chunk *chunk, shader_t shader) {
     glm_mat4_identity(camera.model);
-    float f = 0.5f;
-    glm_translate(camera.model, (vec3){(chunk->position[0] * CHUNK_SIZE) + f, (chunk->position[1] * CHUNK_SIZE) + f, (chunk->position[2] * CHUNK_SIZE) + f});
+    glm_translate(camera.model, (vec3){chunk->position[0] * CHUNK_SIZE, chunk->position[1] * CHUNK_SIZE, chunk->position[2] * CHUNK_SIZE});
     shader_setMat4(shader, "model", camera.model);
 
     GL_CHECK(glBindVertexArray(chunk->VAO));
