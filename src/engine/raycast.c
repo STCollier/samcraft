@@ -61,6 +61,10 @@ struct Ray ray_cast(vec3 startPosition, vec3 rayDirection, float maxDistance) {
 
         struct Chunk *chunkToModify = world_getChunk(chunkPos);
 
+        if (chunkToModify == NULL) {
+            ray.blockFound = false;
+        }
+
         if (chunkToModify->voxels[blockIndex(blockPos[0], blockPos[1], blockPos[2])] != BLOCK_AIR) {
             if (axis == 0) {
                 if (rayDirection[axis] > 0) ray.placedDirection = LEFT;

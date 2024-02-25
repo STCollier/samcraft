@@ -266,11 +266,11 @@ vertices_t *mesh(uint8_t *voxels) {
     }
   }
 
-  if (vertexList->size == 0) {
+  /*if (vertexList->size == 0) {
       ERROR("Vertexlist is empty. Returning NULL");
       free(vertexList->data);
       return NULL;
-  }
+  }*/
 
   return vertexList;
 }

@@ -17,12 +17,12 @@ float pitch = 0.0f;
 float lastX = 0;
 float lastY = 0;
 
-void camera_init(float fov, float speed, float sensitivity) {
+void camera_init(float fov, float speed, float sensitivity, vec3 position) {
     camera.fov = fov;
     camera.speed = speed;
     camera.sensitivity = sensitivity;
 
-    glm_vec3_copy((vec3){0.0f, 64.0f, 0.0f}, camera.position);
+    glm_vec3_copy(position, camera.position);
     glm_vec3_copy((vec3){0.0f, 0.0f, 0.0f}, camera.front);
     glm_vec3_copy((vec3){0.0f, 1.0f, 0.0f}, camera.up);
 
@@ -69,7 +69,7 @@ static void camera_handleKeyboard() {
     } 
 
     if (glfwGetKey(window.self, GLFW_KEY_E) == GLFW_PRESS) {
-        camera.speed = 90.0f;
+        camera.speed = 120.0f;
     } else if (glfwGetKey(window.self, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
         camera.speed = 30.0f;
     } else {

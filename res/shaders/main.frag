@@ -17,5 +17,5 @@ void main() {
   ao *= smoothstep(0.0, 1.0, clamp(frag_ao, 0.0, 1.0));
 
   frag_color = vec4((texture(arrayTexture, vec3(frag_uv, frag_type)).xyz), 1.0f);
-  //frag_color = vec4(final_color, 1.0);
+  //frag_color = vec4(ao, 1.0);
 }

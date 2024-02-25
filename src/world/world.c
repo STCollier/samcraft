@@ -42,7 +42,7 @@ struct Chunk *world_getChunk(ivec3 position) {
 
     if (chunk == NULL) {
         fprintf(stderr, "Failed to find chunk at (%d %d %d)\n", position[0], position[1], position[2]);
-        exit(EXIT_FAILURE);
+        return NULL;
     }
 
     return chunk;
@@ -83,7 +83,7 @@ void world_remeshChunk(ivec3 position) {
 void world_init(int renderRadius) {
     world.chunks = NULL; // Initilize to NULL for hashtable
     world.renderRadius = renderRadius;
-    world.chunkRenderDepth = 1;
+    world.chunkRenderDepth = 4;
     
     worldgenInit(0xff);
 

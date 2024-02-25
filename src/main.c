@@ -30,7 +30,7 @@ int main() {
     blockdata_loadLuaData();
     blockdata_loadArrayTexture();
 
-    world_init(20);
+    world_init(5);
     player_init();
 
     bool clicked = false;

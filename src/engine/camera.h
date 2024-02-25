@@ -20,7 +20,7 @@ struct Camera {
     float fov;
 };
 
-void camera_init(float fov, float speed, float sensitivity);
+void camera_init(float fov, float speed, float sensitivity, vec3 position);
 void camera_use(shader_t shader);
 void camera_mouseCallback(double xposIn, double yposIn);
 

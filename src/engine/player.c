@@ -4,16 +4,17 @@ struct Player player;
 
 void player_init() {
     player.FOV = 60.0f;
+    glm_vec3_copy((vec3){0.0f, 150.0f, 0.0f}, player.position);
     player.speed = (struct PlayerSpeed) {
         30.0f,
         60.0f,
         90.0f
     };
 
-    camera_init(player.FOV, player.speed.normal, 0.1f);
+    camera_init(player.FOV, player.speed.normal, 0.1f, player.position);
 
     player.selectedBlock = block_getID("dirt");
-    player.reach = 16.0f;
+    player.reach = 50.0f;
 }
 
 void player_update() {
@@ -68,6 +69,8 @@ void player_placeBlock() {
                 break;
         }
 
+        //printf("PLACE: [C: %d %d %d] [B: %d %d %d]\n", chunkToModify->position[0], chunkToModify->position[1], chunkToModify->position[2], blockPlaceLocation[0], blockPlaceLocation[1], blockPlaceLocation[2]);
+
         if (blockPlaceLocation[0] == CHUNK_SIZE + 1) {
             glm_ivec3_copy((ivec3){1, player.ray.blockFoundPosition[1], player.ray.blockFoundPosition[2]}, blockPlaceLocation);
             chunkToModify = world_getChunk((ivec3){chunkToModify->position[0] + 1, chunkToModify->position[1], chunkToModify->position[2]});
@@ -77,7 +80,7 @@ void player_placeBlock() {
         }
 
         if (blockPlaceLocation[1] == CHUNK_SIZE + 1) {
-            glm_ivec3_copy((ivec3){player.ray.blockFoundPosition[0], 1, player.ray.blockFoundPosition[1]}, blockPlaceLocation);
+            glm_ivec3_copy((ivec3){player.ray.blockFoundPosition[0], 1, player.ray.blockFoundPosition[2]}, blockPlaceLocation);
             chunkToModify = world_getChunk((ivec3){chunkToModify->position[0], chunkToModify->position[1] + 1, chunkToModify->position[2]});
         } else if (blockPlaceLocation[1] == 0) {
             glm_ivec3_copy((ivec3){player.ray.blockFoundPosition[0], CHUNK_SIZE, player.ray.blockFoundPosition[2]}, blockPlaceLocation);
@@ -91,6 +94,8 @@ void player_placeBlock() {
             glm_ivec3_copy((ivec3){player.ray.blockFoundPosition[0], player.ray.blockFoundPosition[1], CHUNK_SIZE}, blockPlaceLocation);
             chunkToModify = world_getChunk((ivec3){chunkToModify->position[0], chunkToModify->position[1], chunkToModify->position[2] - 1});
         }
+
+        //printf("WHERE TO PLACE: [C: %d %d %d] [B: %d %d %d]\n\n", chunkToModify->position[0], chunkToModify->position[1], chunkToModify->position[2], blockPlaceLocation[0], blockPlaceLocation[1], blockPlaceLocation[2]);
 
         // This is where we actually edit the chunk
         chunkToModify->voxels[blockIndex(blockPlaceLocation[0], blockPlaceLocation[1], blockPlaceLocation[2])] = player.selectedBlock;
