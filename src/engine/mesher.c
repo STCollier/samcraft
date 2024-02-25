@@ -62,16 +62,16 @@ static const bool compare_ao(uint8_t *voxels, int axis, int forward, int right, 
   return true;
 }
 
-static const bool compare_forward(uint8_t *voxels, int axis, int forward, int right, int bit_pos) {
+static const bool compare_forward(uint8_t *voxels, int axis, int forward, int right, int bit_pos, int light_dir) {
   return
     arr_at(voxels, get_axis_i(axis, right, forward, bit_pos)) == arr_at(voxels, get_axis_i(axis, right, forward + 1, bit_pos)) &&
-    compare_ao(voxels, axis, forward, right, bit_pos, 1, 0);
+    compare_ao(voxels, axis, forward, right, bit_pos + light_dir, 1, 0);
 }
 
-static const bool compare_right(uint8_t *voxels, int axis, int forward, int right, int bit_pos) {
+static const bool compare_right(uint8_t *voxels, int axis, int forward, int right, int bit_pos, int light_dir) {
   return
     arr_at(voxels, get_axis_i(axis, right, forward, bit_pos)) == arr_at(voxels, get_axis_i(axis, right + 1, forward, bit_pos)) &&
-    compare_ao(voxels, axis, forward, right, bit_pos, 0, 1);
+    compare_ao(voxels, axis, forward, right, bit_pos + light_dir, 0, 1);
 }
 
 static void insert_quad(vertices_t *vertexList, vertex_t v1, vertex_t v2, vertex_t v3, vertex_t v4, bool flipped) {
@@ -97,7 +97,7 @@ static const vertex_t get_vertex(uint32_t x, uint32_t y, uint32_t z, uint32_t ty
 
   vertex.x_y_z_type = (type << 24) | ((z - 1) << 16) | ((y - 1) << 8) | (x - 1);
   vertex.u_v = (v << 8) | u;
-  vertex.norm_ao = (ao << 5) | norm;
+  vertex.norm_ao = (ao << 6) | norm;
 
   return vertex;
 }
@@ -139,6 +139,7 @@ vertices_t *mesh(uint8_t *voxels) {
   // Step 3: Greedy meshing
   for (int face = 0; face < 6; face++) {
     int axis = face / 2;
+    int light_dir = face % 2 == 0 ? 1 : -1;
 
     int merged_forward[CS_P2] = { 0 };
     for (int forward = 1; forward < CS_P - 1; forward++) {
@@ -158,7 +159,7 @@ vertices_t *mesh(uint8_t *voxels) {
 
           if (bit_pos == 0 || bit_pos == CS_P - 1) continue;
 
-          if (compare_forward(voxels, axis, forward, right, bit_pos)) {
+          if (compare_forward(voxels, axis, forward, right, bit_pos, light_dir)) {
             merged_forward[(right * CS_P) + bit_pos]++;
           }
           else {
@@ -177,7 +178,7 @@ vertices_t *mesh(uint8_t *voxels) {
           if (
             (bits_merging_right & (1ULL << bit_pos)) != 0 &&
             merged_forward[(right * CS_P) + bit_pos] == merged_forward[(right + 1) * CS_P + bit_pos] &&
-            compare_right(voxels, axis, forward, right, bit_pos)
+            compare_right(voxels, axis, forward, right, bit_pos, light_dir)
           ) {
             bits_walking_right |= 1ULL << bit_pos;
             merged_right[bit_pos]++;
@@ -192,7 +193,7 @@ vertices_t *mesh(uint8_t *voxels) {
           uint8_t mesh_back = forward + 1;
           uint8_t mesh_up = bit_pos + (face % 2 == 0 ? 1 : 0);
 
-          int c = bit_pos;
+          int c = bit_pos + light_dir;
           uint8_t ao_F = solid_check(arr_at(voxels, get_axis_i(axis, right, forward - 1, c))) ? 1 : 0;
           uint8_t ao_B = solid_check(arr_at(voxels, get_axis_i(axis, right, forward + 1, c))) ? 1 : 0;
           uint8_t ao_L = solid_check(arr_at(voxels, get_axis_i(axis, right - 1, forward, c))) ? 1 : 0;
@@ -234,7 +235,8 @@ vertices_t *mesh(uint8_t *voxels) {
               v3 = get_vertex(mesh_up, mesh_back, mesh_right, type, 0, mesh_back - mesh_front, face, ao_RB);
               v4 = get_vertex(mesh_up, mesh_front, mesh_right, type, 0, 0, face, ao_RF);
           } else if (face == 3) {
-            uint8_t type = block_getTextureIndex(arr_at(voxels, get_axis_i(axis, right, forward, bit_pos)), LEFT);
+              uint8_t type = block_getTextureIndex(arr_at(voxels, get_axis_i(axis, right, forward, bit_pos)), LEFT);
+              
               v1 = get_vertex(mesh_up, mesh_back, mesh_left, type, 0, mesh_back - mesh_front, face, ao_LB);
               v2 = get_vertex(mesh_up, mesh_front, mesh_left, type, 0, 0, face, ao_LF);
               v3 = get_vertex(mesh_up, mesh_front, mesh_right, type, mesh_right - mesh_left, 0, face, ao_RF);

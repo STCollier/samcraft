@@ -33,8 +33,8 @@ void main() {
   uint u = (uv & 255u);
   uint v = (uv >> 8) & 255u;
 
-  uint norm = (norm_ao & 31u);
-  uint ao = (norm_ao >> 5) & 3u;
+  uint norm = (norm_ao & 63u);
+  uint ao = (norm_ao >> 6) & 3u;
   
   frag_ao = clamp(float(ao) / 3.0, 0.5, 1.0);
 
