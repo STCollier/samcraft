@@ -13,6 +13,7 @@ out vec3 frag_pos;
 out vec3 frag_normal;
 out vec2 frag_uv;
 out float frag_ao;
+flat out uint frag_opaque;
 flat out uint frag_type;
 
 vec3 NORMALS[6] = vec3[6](
@@ -33,8 +34,9 @@ void main() {
   uint u = (uv & 255u);
   uint v = (uv >> 8) & 255u;
 
-  uint norm = (norm_ao & 63u);
+  uint norm = (norm_ao & 31u);
   uint ao = (norm_ao >> 6) & 3u;
+  uint opaque = (norm_ao >> 5) & 1u;
   
   frag_ao = clamp(float(ao) / 3.0, 0.5, 1.0);
 
@@ -42,6 +44,7 @@ void main() {
   frag_viewspace = view * model * vec4(frag_pos, 1);
   frag_normal = NORMALS[norm];
   frag_uv = vec2(u, v);
+  frag_opaque = opaque;
   frag_type = type;
   
   gl_Position = projection * frag_viewspace;

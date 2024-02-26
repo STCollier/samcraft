@@ -73,9 +73,12 @@ void world_meshChunk(ivec3 position) {
 void world_remeshChunk(ivec3 position) {
     struct Chunk *chunk = world_getChunk(position);
 
-    free(chunk->vertexList->data);
+    free(chunk->vertexList->opaque->data);
+    chunk->vertexList->opaque->size = 0;
 
-    chunk->vertexList->size = 0;
+    free(chunk->vertexList->transparent->data);
+    chunk->vertexList->transparent->size = 0;
+
     world_meshChunk(position);
 }
 
@@ -85,7 +88,7 @@ void world_init(int renderRadius) {
     world.renderRadius = renderRadius;
     world.chunkRenderDepth = 4;
     
-    worldgenInit(0xff);
+    worldgenInit(0x1);
 
     int generationRadius = renderRadius + 1;
 
@@ -114,7 +117,15 @@ void world_render(shader_t shader) {
     for (int z = -world.renderRadius; z < world.renderRadius; z++) {
         for (int y = 0; y < world.chunkRenderDepth; y++) {
             for (int x = -world.renderRadius; x < world.renderRadius; x++) {
-                chunk_render(world_getChunk((ivec3){x, y, z}), shader);
+                chunk_render(world_getChunk((ivec3){x, y, z}), shader, 1);
+            }
+        }
+    }
+
+    for (int z = -world.renderRadius; z < world.renderRadius; z++) {
+        for (int y = 0; y < world.chunkRenderDepth; y++) {
+            for (int x = -world.renderRadius; x < world.renderRadius; x++) {
+                chunk_render(world_getChunk((ivec3){x, y, z}), shader, 0);
             }
         }
     }

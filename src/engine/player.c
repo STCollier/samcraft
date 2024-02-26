@@ -121,8 +121,7 @@ void player_placeBlock() {
         // Z axis Remeshing
         if (blockPlaceLocation[2] == 1) {
             struct Chunk *c = world_getChunk((ivec3){chunkToModify->position[0], chunkToModify->position[1], chunkToModify->position[2] - 1});
-            c->vertexList->size = 0;
-            world_meshChunk(c->position);
+            world_remeshChunk(c->position);
         } else if (blockPlaceLocation[2] == CHUNK_SIZE) {
             struct Chunk *c = world_getChunk((ivec3){chunkToModify->position[0], chunkToModify->position[1], chunkToModify->position[2] + 1});
             world_remeshChunk(c->position);

@@ -3,7 +3,7 @@
 
 #include "util.h"
 
-#define MAX_VERTEX_STORAGE 36000
+#define MAX_VERTEX_STORAGE 16000
 
 #define CS (CHUNK_SIZE)
 
@@ -24,6 +24,6 @@ typedef struct {
 } vertices_t;
 
 int arr_at(uint8_t *arr, size_t idx);
-vertices_t *mesh(uint8_t *voxels);
+vertices_t *mesh(uint8_t *voxels, bool opaque);
 
 #endif

@@ -30,14 +30,13 @@ int main() {
     blockdata_loadLuaData();
     blockdata_loadArrayTexture();
 
-    world_init(5);
+    world_init(10);
     player_init();
 
     bool clicked = false;
     while (!glfwWindowShouldClose(window.self)) {
         window_update();
         player_update();
-        shader_use(mainShader);
         camera_use(mainShader);
 
         world_render(mainShader);
