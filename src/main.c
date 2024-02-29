@@ -31,7 +31,7 @@ int main() {
     stbi_set_flip_vertically_on_load(true);
     blockdata_loadLuaData();
     blockdata_loadArrayTexture();
-    world_init(10);
+    world_init(20);
 
     player_init();
 

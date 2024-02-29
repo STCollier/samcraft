@@ -34,7 +34,7 @@ double octaveNoise(ivec2 pos, ivec2 offset, double spread, double size, int numO
 
 int noiseHeight(ivec2 pos, ivec2 offset) {
     double spread = 100;
-    double size = 80;
+    double size = 75;
     int numOctaves = 3;
     double persistence = 0.5;
 

@@ -100,9 +100,9 @@ void world_init(int renderRadius) {
                 ivec2 pos = {x, z};
 
                 //if (idist2d(origin, pos) <= world.renderRadius)
-                //EXECTIME("world_addChunk", added,
+                EXECTIME("world_addChunk", added,
                     world_addChunk((ivec3){x, y, z});
-                //)
+                )
 
                 added++;
             }
@@ -118,9 +118,9 @@ void world_init(int renderRadius) {
 
                 //if (idist2d(origin, pos) < world.renderRadius) 
 
-                //EXECTIME("world_meshChunk", chunkCount,
+                EXECTIME("world_meshChunk", chunkCount,
                     world_meshChunk((ivec3){x, y, z});
-                //)
+                )
                 chunkCount++;
             }
         }

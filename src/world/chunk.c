@@ -52,31 +52,32 @@ void chunk_mesh(struct Chunk *chunk, struct Chunk* cn_right, struct Chunk* cn_le
     uint8_t* transparent = malloc(CS_P3);
     memset(transparent, 0, CS_P3);
 
-    for (int x = 0; x < CS_P; x++) {
-        for (int y = 0; y < CS_P; y++) {
-            for (int z = 0; z < CS_P; z++) {
-                // Chunk Neighbors
-                if (cn_right != NULL)   chunk->voxels[blockIndex(CS + 1, y, z)] = cn_right->voxels[blockIndex(1, y, z)];
-                if (cn_left != NULL)    chunk->voxels[blockIndex(0, y, z)] = cn_left->voxels[blockIndex(CS, y, z)];
-                if (cn_back != NULL)    chunk->voxels[blockIndex(x, y, CS + 1)] = cn_back->voxels[blockIndex(x, y, 1)];
-                if (cn_front != NULL)   chunk->voxels[blockIndex(x, y, 0)] = cn_front->voxels[blockIndex(x, y, CS)];
-                if (cn_top != NULL)     chunk->voxels[blockIndex(x, CS + 1, z)] = cn_top->voxels[blockIndex(x, 1, z)];
-                if (cn_bottom != NULL)  chunk->voxels[blockIndex(x, 0, z)] = cn_bottom->voxels[blockIndex(x, CS, z)];
-                
-                int idx = blockIndex(x, y, z);
+    uint8_t water = block_getID("water");
+        for (int x = 0; x < CS_P; x++) {
+            for (int y = 0; y < CS_P; y++) {
+                for (int z = 0; z < CS_P; z++) {
+                    // Chunk Neighbors
+                    if (x == CS + 1)   chunk->voxels[blockIndex(CS + 1, y, z)] = cn_right->voxels[blockIndex(1, y, z)];
+                    if (x == 0)    chunk->voxels[blockIndex(0, y, z)] = cn_left->voxels[blockIndex(CS, y, z)];
+                    if (z == CS + 1)    chunk->voxels[blockIndex(x, y, CS + 1)] = cn_back->voxels[blockIndex(x, y, 1)];
+                    if (z == 0)   chunk->voxels[blockIndex(x, y, 0)] = cn_front->voxels[blockIndex(x, y, CS)];
+                    if (y == CS + 1)     chunk->voxels[blockIndex(x, CS + 1, z)] = cn_top->voxels[blockIndex(x, 1, z)];
+                    if (y == 0)  chunk->voxels[blockIndex(x, 0, z)] = cn_bottom->voxels[blockIndex(x, CS, z)];
+                    
+                    int idx = blockIndex(x, y, z);
 
-                // Sort opaque and transparent blocks into separate arrays to mesh
-                if (chunk->voxels[idx] == block_getID("water")) {
-                    transparent[idx] = chunk->voxels[idx];
-                } else {
-                    opaque[idx] = chunk->voxels[idx];
+                    // Sort opaque and transparent blocks into separate arrays to mesh
+                    if (chunk->voxels[idx] == water) {
+                        transparent[idx] = chunk->voxels[idx];
+                    } else {
+                        opaque[idx] = chunk->voxels[idx];
+                    }
                 }
             }
         }
-    }
 
-    chunk->vertexList->opaque = mesh(opaque, true);
-    chunk->vertexList->transparent = mesh(transparent, false);
+        chunk->vertexList->opaque = mesh(chunk->voxels, true);
+        chunk->vertexList->transparent = mesh(transparent, false);
 
     free(opaque);
     free(transparent);
@@ -120,6 +121,9 @@ void chunk_render(struct Chunk *chunk, shader_t shader, bool pass) {
     glm_mat4_identity(camera.model);
     glm_translate(camera.model, (vec3){chunk->position[0] * (CHUNK_SIZE), chunk->position[1] * (CHUNK_SIZE), chunk->position[2] * (CHUNK_SIZE)});
     shader_setMat4(shader, "model", camera.model);
+
+        GL_CHECK(glBindVertexArray(chunk->VAO));
+        GL_CHECK(glDrawArrays(GL_TRIANGLES, 0, chunk->vertexList->opaque->size));
 
     if (pass) {
         GL_CHECK(glBindVertexArray(chunk->VAO));
