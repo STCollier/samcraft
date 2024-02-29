@@ -112,7 +112,7 @@ void blockdata_loadArrayTexture() {
     }
 
     // Allocate texture storage with GL_RGBA8 internal format
-    GL_CHECK(glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA8, 16, 16, numTextures, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL));
+    GL_CHECK(glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_SRGB8_ALPHA8, 16, 16, numTextures, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL));
 
     int width, height, channels;
     for (int i = 0; i < numTextures; i++) {

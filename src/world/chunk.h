@@ -18,7 +18,7 @@
 #include "block.h"
 
 #define CHUNK_SIZE 32
-#define WATER_HEIGHT 70
+#define WATER_HEIGHT 50
 #define CHUNK_AREA CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE
 
 typedef struct {

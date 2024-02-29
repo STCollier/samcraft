@@ -4,7 +4,7 @@ struct Player player;
 
 void player_init() {
     player.FOV = 60.0f;
-    glm_vec3_copy((vec3){0.0f, 150.0f, 0.0f}, player.position);
+    glm_vec3_copy((vec3){0.0f, 100.0f, 0.0f}, player.position);
     player.speed = (struct PlayerSpeed) {
         30.0f,
         60.0f,
@@ -21,23 +21,23 @@ void player_update() {
     if (window.keyPressed[GLFW_KEY_1]) {
         player.selectedBlock = block_getID("dirt"); 
     } else if (window.keyPressed[GLFW_KEY_2]) {
-         player.selectedBlock = block_getID("grass");
+        player.selectedBlock = block_getID("grass");
     } else if (window.keyPressed[GLFW_KEY_3]) {
-         player.selectedBlock = block_getID("planks");
+        player.selectedBlock = block_getID("planks");
     } else if (window.keyPressed[GLFW_KEY_4]) {
-         player.selectedBlock = block_getID("log");
+        player.selectedBlock = block_getID("log");
     } else if (window.keyPressed[GLFW_KEY_5]) {
-         player.selectedBlock = block_getID("stone");
+        player.selectedBlock = block_getID("stone");
     } else if (window.keyPressed[GLFW_KEY_6]) {
-         player.selectedBlock = block_getID("sand");
+        player.selectedBlock = block_getID("sand");
     } else if (window.keyPressed[GLFW_KEY_7]) {
-         player.selectedBlock = block_getID("snow");
+        player.selectedBlock = block_getID("cobblestone");
     } else if (window.keyPressed[GLFW_KEY_8]) {
-         player.selectedBlock = block_getID("lava");
+        player.selectedBlock = block_getID("S");
     } else if (window.keyPressed[GLFW_KEY_9]) {
-         player.selectedBlock = block_getID("leaves");
+        player.selectedBlock = block_getID("A");
     } else if (window.keyPressed[GLFW_KEY_0]) {
-         player.selectedBlock = block_getID("cobblestone");
+        player.selectedBlock = block_getID("M");
     }
 }
 

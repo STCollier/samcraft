@@ -118,7 +118,7 @@ void chunk_bind(struct Chunk *chunk) {
 
 void chunk_render(struct Chunk *chunk, shader_t shader, bool pass) {
     glm_mat4_identity(camera.model);
-    glm_translate(camera.model, (vec3){chunk->position[0] * CHUNK_SIZE, chunk->position[1] * CHUNK_SIZE, chunk->position[2] * CHUNK_SIZE});
+    glm_translate(camera.model, (vec3){chunk->position[0] * (CHUNK_SIZE), chunk->position[1] * (CHUNK_SIZE), chunk->position[2] * (CHUNK_SIZE)});
     shader_setMat4(shader, "model", camera.model);
 
     if (pass) {
@@ -126,7 +126,7 @@ void chunk_render(struct Chunk *chunk, shader_t shader, bool pass) {
         GL_CHECK(glDrawArrays(GL_TRIANGLES, 0, chunk->vertexList->opaque->size));
     } else {
         glm_mat4_identity(camera.model);
-        glm_translate(camera.model, (vec3){chunk->position[0] * CHUNK_SIZE, (chunk->position[1] * CHUNK_SIZE) - 0.25, chunk->position[2] * CHUNK_SIZE});
+        glm_translate(camera.model, (vec3){chunk->position[0] * (CHUNK_SIZE), chunk->position[1] * (CHUNK_SIZE) - 0.25, chunk->position[2] * (CHUNK_SIZE)});
         shader_setMat4(shader, "model", camera.model);
     
         GL_CHECK(glBindVertexArray(chunk->tVAO));

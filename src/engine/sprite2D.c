@@ -31,7 +31,7 @@ struct Sprite2D sprite2D_new(const char* filename, ivec2 position, float scale) 
     unsigned char *data = stbi_load(sprite.textureName, &width, &height, &channels, 0);
     if (data) { 
 
-        GL_CHECK(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data));
+        GL_CHECK(glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB8_ALPHA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data));
         GL_CHECK(glGenerateMipmap(GL_TEXTURE_2D));
 
         sprite.textureData = data;

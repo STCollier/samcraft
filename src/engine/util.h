@@ -7,6 +7,7 @@
 #include <lua/lauxlib.h>
 #include <lua/lualib.h>
 #include <limits.h>
+#include <time.h>
 
 #include "cglm/cglm.h"
 #include "cglm/call.h"
@@ -23,6 +24,13 @@
 #else
     #define GL_CHECK(stmt) stmt
 #endif
+
+#define EXECTIME(process, num, ...) \
+    clock_t start = clock(); \
+    __VA_ARGS__ \
+    clock_t finish = clock(); \
+    double t = (double)(finish - start) / CLOCKS_PER_SEC; \
+    fprintf(stdout, "[%s %d] took %lf ms\n", process, num, t*1000); \
 
 #define ARR_SIZE(arr) (sizeof((arr)) / sizeof((arr[0])))
 #define UNUSED(x) ((void) x)

@@ -86,16 +86,25 @@ void world_remeshChunk(ivec3 position) {
 void world_init(int renderRadius) {
     world.chunks = NULL; // Initilize to NULL for hashtable
     world.renderRadius = renderRadius;
-    world.chunkRenderDepth = 4;
+    world.chunkRenderDepth = 3;
     
     worldgenInit(0x1);
 
     int generationRadius = renderRadius + 1;
 
+    int added = 0;
     for (int z = -generationRadius; z < generationRadius; z++) {
         for (int y = -1; y <= world.chunkRenderDepth; y++) {
             for (int x = -generationRadius; x < generationRadius; x++) {
-                world_addChunk((ivec3){x, y, z});
+                ivec2 origin = {0, 0};
+                ivec2 pos = {x, z};
+
+                //if (idist2d(origin, pos) <= world.renderRadius)
+                //EXECTIME("world_addChunk", added,
+                    world_addChunk((ivec3){x, y, z});
+                //)
+
+                added++;
             }
         }
     }
@@ -104,7 +113,14 @@ void world_init(int renderRadius) {
     for (int z = -world.renderRadius; z < world.renderRadius; z++) {
         for (int y = 0; y < world.chunkRenderDepth; y++) {
             for (int x = -world.renderRadius; x < world.renderRadius; x++) {
-                world_meshChunk((ivec3){x, y, z});
+                ivec2 origin = {0, 0};
+                ivec2 pos = {x, z};
+
+                //if (idist2d(origin, pos) < world.renderRadius) 
+
+                //EXECTIME("world_meshChunk", chunkCount,
+                    world_meshChunk((ivec3){x, y, z});
+                //)
                 chunkCount++;
             }
         }
@@ -117,6 +133,10 @@ void world_render(shader_t shader) {
     for (int z = -world.renderRadius; z < world.renderRadius; z++) {
         for (int y = 0; y < world.chunkRenderDepth; y++) {
             for (int x = -world.renderRadius; x < world.renderRadius; x++) {
+                ivec2 origin = {0, 0};
+                ivec2 pos = {x, z};
+
+                //if (idist2d(origin, pos) < world.renderRadius)
                 chunk_render(world_getChunk((ivec3){x, y, z}), shader, 1);
             }
         }
@@ -125,6 +145,10 @@ void world_render(shader_t shader) {
     for (int z = -world.renderRadius; z < world.renderRadius; z++) {
         for (int y = 0; y < world.chunkRenderDepth; y++) {
             for (int x = -world.renderRadius; x < world.renderRadius; x++) {
+                ivec2 origin = {0, 0};
+                ivec2 pos = {x, z};
+
+                //if (idist2d(origin, pos) < world.renderRadius) 
                 chunk_render(world_getChunk((ivec3){x, y, z}), shader, 0);
             }
         }

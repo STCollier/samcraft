@@ -111,10 +111,14 @@ void shader_setMat4(shader_t self, char* name, const mat4 mat) {
   glUniformMatrix4fv(glGetUniformLocation(self.ID, name), 1, GL_FALSE, &mat[0][0]);
 }
 
-void shader_setVec4(shader_t self, char* name, float r, float g, float b) {
-  glUniform4f(glGetUniformLocation(self.ID, name), r, g, b, 1.0f);
+void shader_setVec4(shader_t self, char* name, float x, float y, float z, float w) {
+  glUniform4f(glGetUniformLocation(self.ID, name), x, y, z, w);
 }
 
-void shader_setVec3(shader_t self, char* name, float r, float g, float b) { 
-  glUniform3f(glGetUniformLocation(self.ID, name), r, g, b); 
+void shader_setVec3(shader_t self, char* name, float x, float y, float z) { 
+  glUniform3f(glGetUniformLocation(self.ID, name), x, y, z); 
+}
+
+void shader_setVec2(shader_t self, char* name, float x, float y) {
+  glUniform2f(glGetUniformLocation(self.ID, name), x, y);
 }

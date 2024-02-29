@@ -21,7 +21,8 @@ void shader_setBool(shader_t self, char* name, int value);
 void shader_setInt(shader_t self, char* name, int value);
 void shader_setFloat(shader_t self, char* name, float value);
 void shader_setMat4(shader_t self, char* name, const mat4 mat);
-void shader_setVec4(shader_t self, char* name, float r, float g, float b);
-void shader_setVec3(shader_t self, char* name, float r, float g, float b);
+void shader_setVec4(shader_t self, char* name, float x, float y, float z, float w);
+void shader_setVec3(shader_t self, char* name, float x, float y, float z);
+void shader_setVec2(shader_t self, char* name, float x, float y);
 
 #endif

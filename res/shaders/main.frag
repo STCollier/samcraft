@@ -12,6 +12,7 @@ flat in uint frag_opaque;
 
 uniform vec3 eye_position;
 uniform sampler2DArray arrayTexture;
+uniform vec3 camera_position;
 
 void main() {
   bool isOpaque = bool(frag_opaque);
@@ -19,7 +20,7 @@ void main() {
 
   if (isOpaque) {
     float ao = clamp(frag_ao, 0.0, 1.0);
-    final *= float(15.0 / 16.0) * smoothstep(0.0, 1.0, ao);
+    final *= smoothstep(0.0, 1.0, ao);
 
     frag_color = vec4(final.xyz, 1.0);
   } else {
