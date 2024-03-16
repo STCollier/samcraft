@@ -3,8 +3,6 @@
 
 #include "util.h"
 
-#define MAX_VERTEX_STORAGE 16000
-
 #define CS (CHUNK_SIZE)
 
 // Padded chunk size
@@ -13,17 +11,23 @@
 #define CS_P3 (CS_P * CS_P * CS_P)
 
 typedef struct {
-    uint32_t x_y_z_type;
-    uint16_t u_v;
-    uint8_t norm_ao;
-} vertex_t;
+    uint64_t *data;
+    size_t size;
+    size_t capacity;
+} list64_t;
 
 typedef struct {
-    vertex_t *data;
+    uint32_t *data;
     size_t size;
-} vertices_t;
+    size_t capacity;
+} list32_t;
+
+struct MeshData {
+    list64_t *vertices;
+    list32_t *indices;
+};
 
 int arr_at(uint8_t *arr, size_t idx);
-vertices_t *mesh(uint8_t *voxels, bool opaque);
+struct MeshData *mesh(uint8_t *voxels, bool opaque);
 
 #endif

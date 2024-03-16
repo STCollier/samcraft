@@ -22,6 +22,9 @@ void camera_init(float fov, float speed, float sensitivity, vec3 position) {
     camera.speed = speed;
     camera.sensitivity = sensitivity;
 
+    camera.near = 0.1f;
+    camera.far = 10000.0f;
+
     glm_vec3_copy(position, camera.position);
     glm_vec3_copy((vec3){0.0f, 0.0f, 0.0f}, camera.front);
     glm_vec3_copy((vec3){0.0f, 1.0f, 0.0f}, camera.up);
@@ -35,19 +38,19 @@ void camera_init(float fov, float speed, float sensitivity, vec3 position) {
 static void camera_handleKeyboard() {
     float cameraSpeed = camera.speed * window.dt;
 
-    if (glfwGetKey(window.self, GLFW_KEY_W) == GLFW_PRESS) {
+    if (glfwGetKey(window.self, GLFW_KEY_W) == GLFW_PRESS) { // forward
         vec3 forwardDir;
         glm_vec3_scale(camera.front, cameraSpeed, forwardDir);
         glm_vec3_add(camera.position, forwardDir, camera.position);
     }
 
-    if (glfwGetKey(window.self, GLFW_KEY_S) == GLFW_PRESS) {
+    if (glfwGetKey(window.self, GLFW_KEY_S) == GLFW_PRESS) { // backward
         vec3 backwardsDir;
         glm_vec3_scale(camera.front, cameraSpeed, backwardsDir);
         glm_vec3_sub(camera.position, backwardsDir, camera.position);
     }
 
-    if (glfwGetKey(window.self, GLFW_KEY_A) == GLFW_PRESS) {
+    if (glfwGetKey(window.self, GLFW_KEY_A) == GLFW_PRESS) { // left
         vec3 leftDir;
         glm_cross(camera.front, camera.up, leftDir);
         glm_normalize(leftDir);
@@ -57,7 +60,7 @@ static void camera_handleKeyboard() {
         glm_vec3_sub(camera.position, offset, camera.position);
     }
 
-    if (glfwGetKey(window.self, GLFW_KEY_D) == GLFW_PRESS) {
+    if (glfwGetKey(window.self, GLFW_KEY_D) == GLFW_PRESS) { // right
         vec3 rightDir;
         glm_cross(camera.front, camera.up, rightDir);
         glm_normalize(rightDir);
@@ -69,11 +72,11 @@ static void camera_handleKeyboard() {
     } 
 
     if (glfwGetKey(window.self, GLFW_KEY_E) == GLFW_PRESS) {
-        camera.speed = 120.0f;
+        camera.speed = 300.0f;
     } else if (glfwGetKey(window.self, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
         camera.speed = 30.0f;
     } else {
-        camera.speed = 60.0f;
+        camera.speed = 100.0f;
     }
 }
 
@@ -81,7 +84,7 @@ void camera_use(shader_t shader) {
     shader_use(shader);
 
     glm_mat4_identity(camera.projection);
-    glm_perspective(glm_rad(camera.fov), (float) window.width / (float) window.height, 0.1f, 10000.0f, camera.projection); // Make sure to convert to floats for float division
+    glm_perspective(glm_rad(camera.fov), (float) window.width / (float) window.height, camera.near, camera.far, camera.projection); // Make sure to convert to floats for float division
     shader_setMat4(shader, "projection", camera.projection);
 
     glm_mat4_identity(camera.view);
@@ -120,10 +123,13 @@ void camera_mouseCallback(double xposIn, double yposIn) {
     front[0] = cos(glm_rad(yaw)) * cos(glm_rad(pitch));
     front[1] = sin(glm_rad(pitch));
     front[2] = sin(glm_rad(yaw)) * cos(glm_rad(pitch));
-
     glm_vec3_normalize(front);
-
     glm_vec3_copy(front, camera.front);
+
+    vec3 right;
+    glm_vec3_cross(camera.front, (vec3){0.0, 1.0, 0.0}, right);
+    glm_vec3_normalize(right);
+    glm_vec3_copy(right, camera.right);
 }
 
 /*float x = (2.0f * window.mouseX) / window.width - 1.0f;

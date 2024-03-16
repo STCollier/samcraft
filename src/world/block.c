@@ -92,12 +92,6 @@ void blockdata_loadArrayTexture() {
     GL_CHECK(glGenTextures(1, &arrayTexture));
     GL_CHECK(glBindTexture(GL_TEXTURE_2D_ARRAY, arrayTexture));
 
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);    
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
     DIR *d;
     struct dirent *dir;
     d = opendir("./res/textures");
@@ -110,6 +104,11 @@ void blockdata_loadArrayTexture() {
             numTextures++;
         }
     }
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);    
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     // Allocate texture storage with GL_RGBA8 internal format
     GL_CHECK(glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_SRGB8_ALPHA8, 16, 16, numTextures, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL));
@@ -129,6 +128,9 @@ void blockdata_loadArrayTexture() {
         GL_CHECK(glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, 16, 16, 1, GL_RGBA, GL_UNSIGNED_BYTE, texture));
         stbi_image_free(texture);
     }
+
+
+        GL_CHECK(glGenerateMipmap(GL_TEXTURE_2D_ARRAY));
 }
 
 unsigned int block_getArrayTexture() {

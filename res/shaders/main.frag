@@ -22,6 +22,7 @@ void main() {
     float ao = clamp(frag_ao, 0.0, 1.0);
     final *= smoothstep(0.0, 1.0, ao);
 
+    
     frag_color = vec4(final.xyz, 1.0);
   } else {
     frag_color = final;

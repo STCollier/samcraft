@@ -19,6 +19,9 @@ struct Player {
     struct PlayerSpeed speed; // Different speeds of the player
     struct Ray ray; // Ray emitted by the player
     int selectedBlock; // Block that the player selected
+
+    bool exitedChunk;
+    ivec3 previousPosition, chunkPosition;
 };
 
 void player_init();

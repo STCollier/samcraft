@@ -1,8 +1,6 @@
 #version 410 core
 
-layout (location = 0) in uint xyz_type;
-layout (location = 1) in uint uv;
-layout (location = 2) in uint norm_ao;
+layout (location = 0) in uvec2 data;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -26,17 +24,16 @@ vec3 NORMALS[6] = vec3[6](
 );
 
 void main() {
-  float x = float(xyz_type & 255u);
-  float y = float((xyz_type >> 8) & 255u);
-  float z = float((xyz_type >> 16) & 255u);
-  uint type = (xyz_type >> 24) & 255u;
+  float x = float(data.x & 255u);
+  float y = float((data.x >> 8) & 255u);
+  float z = float((data.x >> 16) & 255u);
+  uint u = (data.x >> 24) & 255u;
 
-  uint u = (uv & 255u);
-  uint v = (uv >> 8) & 255u;
-
-  uint norm = (norm_ao & 31u);
-  uint ao = (norm_ao >> 6) & 3u;
-  uint opaque = (norm_ao >> 5) & 1u;
+  uint type = data.y & 262143u;
+  uint v = (data.y >> 18) & 255u;
+  uint norm = (data.y >> 26) & 7u;
+  uint ao = (data.y >> 29) & 3u;
+  uint opaque = (data.y >> 31) & 1u;
   
   frag_ao = clamp(float(ao) / 3.0, 0.5, 1.0);
 

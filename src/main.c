@@ -14,7 +14,7 @@
 #include "world/chunk.h"
 
 int main() {
-    window_create("samcraft", 1920, 1080);
+    window_create("samcraft", 1600, 900);
     shader_t mainShader = shader_new("res/shaders/main.vert", "res/shaders/main.frag");
     shader_t shader2D = shader_new("res/shaders/2D.vert", "res/shaders/2D.frag");
     shader_t skyShader = shader_new("res/shaders/sky.vert", "res/shaders/sky.frag");
@@ -31,10 +31,10 @@ int main() {
     stbi_set_flip_vertically_on_load(true);
     blockdata_loadLuaData();
     blockdata_loadArrayTexture();
-    world_init(20);
+    world_init(10);
 
     player_init();
-
+    
     bool clicked = false;
     while (!glfwWindowShouldClose(window.self)) {
         window_update();

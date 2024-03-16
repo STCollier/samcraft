@@ -19,6 +19,7 @@ struct Window {
 
     float dt; // Delta Time
     float lastFrame;
+    float aspectRatio;
     bool leftClicked;
     bool rightClicked;
     bool onMouseRelease;

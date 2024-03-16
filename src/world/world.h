@@ -17,10 +17,29 @@
 #include "chunk.h"
 #include "block.h"
 
+struct ChunkList {
+    struct Chunk **chunks;
+    size_t size;
+    size_t capacity;
+    size_t index;
+    size_t tick;
+};
+
+struct ChunkQueue {
+    struct ChunkList toGenerate;
+    struct ChunkList toMesh;
+    size_t passesPerFrame;
+};
+
+enum ChunkQueueState {
+    GENERATE, MESH
+};
+
 struct World {
     struct Chunk *chunks;
-    int renderRadius;
-    int chunkRenderDepth;
+    int renderRadius, renderHeight;
+
+    struct ChunkQueue chunkQueue;
 };
 
 void world_addChunk(ivec3 position);

@@ -53,6 +53,7 @@ void window_create(const char* title, int width, int height) {
     window.title = title;
     window.width = width;
     window.height = height;
+    window.aspectRatio = window.width / window.height;
 
     window.dt = 0.0f;
     window.lastFrame = 0.0f;
@@ -103,7 +104,7 @@ void window_create(const char* title, int width, int height) {
 
     glfwGetFramebufferSize(window.self, &window.width, &window.height);
 
-    glfwSwapInterval(1);
+    //glfwSwapInterval(1);
 }
 
 void window_destroy() {

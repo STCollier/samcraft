@@ -4,20 +4,35 @@ struct Player player;
 
 void player_init() {
     player.FOV = 60.0f;
-    glm_vec3_copy((vec3){0.0f, 100.0f, 0.0f}, player.position);
+    glm_vec3_copy((vec3){CHUNK_SIZE / 2, 100.0f, CHUNK_SIZE / 2}, player.position);
     player.speed = (struct PlayerSpeed) {
         30.0f,
         60.0f,
         90.0f
     };
 
+    glm_ivec3_copy((ivec3){player.position[0] / CHUNK_SIZE, player.position[1] / CHUNK_SIZE, player.position[2] / CHUNK_SIZE}, player.chunkPosition);
+    glm_ivec3_copy((ivec3){0, 0, 0}, player.previousPosition);
+
     camera_init(player.FOV, player.speed.normal, 0.1f, player.position);
+    player.exitedChunk = false;
 
     player.selectedBlock = block_getID("dirt");
     player.reach = 50.0f;
 }
 
 void player_update() {
+    glm_vec3_copy(camera.position, player.position);
+    glm_ivec3_copy((ivec3){player.position[0] / CHUNK_SIZE, player.position[1] / CHUNK_SIZE, player.position[2] / CHUNK_SIZE}, player.chunkPosition);
+
+    if ((player.chunkPosition[0] != player.previousPosition[0]) || 
+        (player.chunkPosition[1] != player.previousPosition[1]) ||
+        (player.chunkPosition[2] != player.previousPosition[2])) {
+
+        glm_ivec3_copy(player.chunkPosition, player.previousPosition);
+        player.exitedChunk = true;
+    }
+
     if (window.keyPressed[GLFW_KEY_1]) {
         player.selectedBlock = block_getID("dirt"); 
     } else if (window.keyPressed[GLFW_KEY_2]) {

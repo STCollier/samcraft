@@ -14,6 +14,30 @@
     }
 #endif
 
+static void push_list64(list64_t *list, uint64_t data) {
+	if (list->size < list->capacity) {
+		list->data[list->size] = data;
+	} else {
+		list->capacity *= 2;
+		list->data = realloc(list->data, list->capacity * sizeof(uint64_t));
+		list->data[list->size] = data;
+	}
+
+	list->size++;
+}
+
+static void push_list32(list32_t *list, uint32_t data) {
+	if (list->size < list->capacity) {
+		list->data[list->size] = data;
+	} else {
+		list->capacity *= 2;
+		list->data = realloc(list->data, list->capacity * sizeof(uint32_t));
+		list->data[list->size] = data;
+	}
+
+	list->size++;
+}
+
 static const int get_axis_i(const int axis, const int a, const int b, const int c) {
     if (axis == 0) return b + (a * CS_P) + (c * CS_P2);
     else if (axis == 1) return a + (c * CS_P) + (b* CS_P2);
@@ -74,43 +98,52 @@ static const bool compare_right(uint8_t *voxels, int axis, int forward, int righ
     compare_ao(voxels, axis, forward, right, bit_pos + light_dir, 0, 1);
 }
 
-static void insert_quad(vertices_t *vertexList, vertex_t v1, vertex_t v2, vertex_t v3, vertex_t v4, bool flipped) {
-    if (flipped) {
-        vertexList->data[vertexList->size++] = v1;
-        vertexList->data[vertexList->size++] = v2;
-        vertexList->data[vertexList->size++] = v4;
-        vertexList->data[vertexList->size++] = v4;
-        vertexList->data[vertexList->size++] = v2;
-        vertexList->data[vertexList->size++] = v3;
-    } else {
-        vertexList->data[vertexList->size++] = v1;
-        vertexList->data[vertexList->size++] = v2;
-        vertexList->data[vertexList->size++] = v3;
-        vertexList->data[vertexList->size++] = v3;
-        vertexList->data[vertexList->size++] = v4;
-        vertexList->data[vertexList->size++] = v1;
-    }
+static void insert_quad(list64_t *vertices, list32_t *indices, uint64_t v1, uint64_t v2, uint64_t v3, uint64_t v4, bool flipped) {
+	int offset = vertices->size;
+
+	push_list64(vertices, v1);
+	push_list64(vertices, v2);
+	push_list64(vertices, v3);
+	push_list64(vertices, v4);
+
+	if (flipped) {
+		push_list32(indices, offset + 0);
+		push_list32(indices, offset + 1);
+		push_list32(indices, offset + 3);
+		push_list32(indices, offset + 3);
+		push_list32(indices, offset + 1);
+		push_list32(indices, offset + 2);
+  } else {
+		push_list32(indices, offset + 0);
+		push_list32(indices, offset + 1);
+		push_list32(indices, offset + 2);
+		push_list32(indices, offset + 2);
+		push_list32(indices, offset + 3);
+		push_list32(indices, offset + 0);
+  	}
 }
 
-static const vertex_t get_vertex(uint32_t x, uint32_t y, uint32_t z, uint32_t type, uint32_t u, uint32_t v, uint32_t norm, uint32_t ao, uint32_t opaque) {
-  vertex_t vertex;
-
-  vertex.x_y_z_type = (type << 24) | ((z - 1) << 16) | ((y - 1) << 8) | (x - 1);
-  vertex.u_v = (v << 8) | u;
-  vertex.norm_ao = (ao << 6) | (opaque << 5) | norm;
-
-  return vertex;
+static const uint64_t get_vertex(uint64_t x, uint64_t y, uint64_t z, uint64_t type, uint64_t u, uint64_t v, uint64_t normal, uint64_t ao, uint64_t opaque) {
+	return (opaque << 63) | (ao << 61) | (normal << 58) | (v << 50) | (type << 32) | (u << 24) | ((z - 1) << 16) | ((y - 1) << 8) | (x - 1);
 }
 
-vertices_t *mesh(uint8_t *voxels, bool opaque) {
-  uint64_t axis_cols[CS_P2 * 3] = { 0 };
-  uint64_t col_face_masks[CS_P2 * 6];
+struct MeshData *mesh(uint8_t *voxels, bool opaque) {
+	struct MeshData *mesh_data = malloc(sizeof(struct MeshData));
 
-  vertices_t *vertexList = malloc(sizeof(vertices_t));
-  vertexList->data = malloc(sizeof(vertex_t) * MAX_VERTEX_STORAGE);
-  vertexList->size = 0;
+	uint64_t axis_cols[CS_P2 * 3] = { 0 };
+	uint64_t col_face_masks[CS_P2 * 6];
 
-  int isOpaque = opaque;
+	mesh_data->vertices = malloc(sizeof(list64_t));
+	mesh_data->vertices->capacity = 16;
+	mesh_data->vertices->size = 0;
+	mesh_data->vertices->data = malloc(sizeof(uint64_t) * mesh_data->vertices->capacity);
+
+	mesh_data->indices = malloc(sizeof(list32_t));
+	mesh_data->indices->capacity = 16;
+	mesh_data->indices->size = 0;
+	mesh_data->indices->data = malloc(sizeof(uint32_t) * mesh_data->indices->capacity);
+
+	int isOpaque = opaque;
 
   // Step 1: Convert to binary representation for each direction
   int voxelIdx = 0;
@@ -214,7 +247,7 @@ vertices_t *mesh(uint8_t *voxels, bool opaque) {
           merged_forward[(right * CS_P) + bit_pos] = 0;
           merged_right[bit_pos] = 0;
 
-          vertex_t v1, v2, v3, v4;
+          uint64_t v1, v2, v3, v4;
           if (face == 0) {
               uint8_t type = block_getTextureIndex(arr_at(voxels, get_axis_i(axis, right, forward, bit_pos)), TOP);
 
@@ -260,20 +293,14 @@ vertices_t *mesh(uint8_t *voxels, bool opaque) {
           }
 
             if (ao_LB + ao_RF > ao_RB + ao_LF) {
-              insert_quad(vertexList, v1, v2, v3, v4, true);
+            	insert_quad(mesh_data->vertices, mesh_data->indices, v1, v2, v3, v4, true);
             } else {
-              insert_quad(vertexList, v1, v2, v3, v4, false);
+            	insert_quad(mesh_data->vertices, mesh_data->indices, v1, v2, v3, v4, false);
             }
         }
       }
     }
   }
 
-  /*if (vertexList->size == 0) {
-      ERROR("Vertexlist is empty. Returning NULL");
-      free(vertexList->data);
-      return NULL;
-  }*/
-
-  return vertexList;
+  return mesh_data;
 }

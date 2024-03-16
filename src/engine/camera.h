@@ -14,10 +14,9 @@ struct Camera {
     vec3 position;
     vec3 front;
     vec3 up;
+    vec3 right;
 
-    float sensitivity;
-    float speed;
-    float fov;
+    float near, far, sensitivity, speed, fov;
 };
 
 void camera_init(float fov, float speed, float sensitivity, vec3 position);

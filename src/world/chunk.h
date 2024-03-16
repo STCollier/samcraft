@@ -17,8 +17,8 @@
 #include "../engine/mesher.h"
 #include "block.h"
 
-#define CHUNK_SIZE 32
-#define WATER_HEIGHT 50
+#define CHUNK_SIZE 50
+#define WATER_HEIGHT 25
 #define CHUNK_AREA CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE
 
 typedef struct {
@@ -27,30 +27,36 @@ typedef struct {
     int z;
 } chunk_key_t;
 
-struct VertexList {
-    vertices_t *opaque;
-    vertices_t *transparent;
+enum ChunkPipelineState {
+    ADDED,
+    GENERATED,
+    MESHED,
+    BOUND,
+};
+
+struct ChunkMesh {
+    struct MeshData *opaque;
+    struct MeshData *transparent;
 };
 
 struct Chunk {
-    bool isNull;
-    unsigned int arrayTexture;
-    unsigned int VBO, VAO, tVBO, tVAO;
-
     uint8_t *voxels;
-    struct VertexList *vertexList;
-
     ivec3 position; // chunk location relative to to other chunks e.g (0, 0, 0) origin
-
     chunk_key_t key; // Key, represented as a 1D index in a 2D array
     UT_hash_handle hh; // Makes this structure hashable s
+
+    struct ChunkMesh *mesh;
+    enum ChunkPipelineState state;
+
+    unsigned int arrayTexture;
+    unsigned int VBO, VAO, EBO, tVBO, tVAO, tEBO;
 };
 
 int blockIndex(int x, int y, int z);
 
 void chunk_init(struct Chunk *chunk, ivec3 pos);
 void chunk_generate(struct Chunk *chunk);
-void chunk_mesh(struct Chunk *chunk, struct Chunk* cn_right, struct Chunk* cn_left, struct Chunk* cn_front, struct Chunk* cn_back, struct Chunk* cn_top, struct Chunk* cn_bottom);
+void chunk_mesh(struct Chunk *chunk);
 void world_remeshChunk(ivec3 position);
 void chunk_bind(struct Chunk *chunk);
 void chunk_render(struct Chunk *chunk, shader_t shader, bool pass);
