@@ -17,6 +17,7 @@ void chunk_init(struct Chunk *chunk, ivec3 pos) {
     chunk->mesh = malloc(sizeof(struct ChunkMesh));
 
     chunk->state = ADDED;
+    chunk->addedToMeshQueue = false;
 }
 
 void chunk_generate(struct Chunk *chunk) {
@@ -80,6 +81,8 @@ void chunk_mesh(struct Chunk *chunk) {
 
     free(opaque);
     free(transparent);
+
+    puts("IM MESHING");
 
     chunk->state = MESHED;
 }

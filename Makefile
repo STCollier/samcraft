@@ -2,7 +2,7 @@ CC ?= gcc
 CFLAGS = -Wall -Wextra -std=c2x
 BIN_DIR = ./bin
 CFLAGS = -I/opt/homebrew/include
-LDFLAGS = -L/opt/homebrew/lib/ -lglfw -llua -lm
+LDFLAGS = -L/opt/homebrew/lib/ -lglfw -llua -lm -lpthread
 
 run:
 	mkdir -p bin

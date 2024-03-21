@@ -30,10 +30,10 @@ static void world_generateChunk(ivec3 position) {
 static void world_deleteChunk(ivec3 position) {
     struct Chunk *chunk = world_getChunk(position);
 
-    // Delete chunk from hashtable
-    //...
-
-    free(chunk);
+    if (chunk != NULL) {
+        HASH_DEL(world.chunks, chunk);
+        free(chunk);
+    }
 }
 
 struct Chunk *world_getChunk(ivec3 position) {
@@ -57,8 +57,12 @@ struct Chunk *world_getChunk(ivec3 position) {
 }
 
 void world_meshChunk(ivec3 position) {
-    chunk_mesh(world_getChunk(position));
-    chunk_bind(world_getChunk(position));
+    struct Chunk *chunk = world_getChunk(position);
+
+    chunk_mesh(chunk);
+    chunk_bind(chunk);
+
+    //printf("meshing (%d %d %d) state: %d\n", position[0], position[1], position[2], world_getChunk(position)->state);
 }
 
 void world_remeshChunk(ivec3 position) {
@@ -88,7 +92,7 @@ static void world_addChunkToQueue(struct Chunk *chunk, enum ChunkQueueState stat
         }
 
         world.chunkQueue.toGenerate.size++;
-    } else {
+    } else if (state == MESH) {
         if (world.chunkQueue.toMesh.size < world.chunkQueue.toMesh.capacity) {
             world.chunkQueue.toMesh.chunks[world.chunkQueue.toMesh.size] = chunk;
         } else {
@@ -98,6 +102,16 @@ static void world_addChunkToQueue(struct Chunk *chunk, enum ChunkQueueState stat
         }
 
         world.chunkQueue.toMesh.size++;
+    } else {
+        if (world.chunkQueue.toBind.size < world.chunkQueue.toBind.capacity) {
+            world.chunkQueue.toBind.chunks[world.chunkQueue.toBind.size] = chunk;
+        } else {
+            world.chunkQueue.toBind.capacity *= 2;
+            world.chunkQueue.toBind.chunks = realloc(world.chunkQueue.toBind.chunks, world.chunkQueue.toBind.capacity * sizeof(struct Chunk));
+            world.chunkQueue.toBind.chunks[world.chunkQueue.toBind.size] = chunk;
+        }
+
+        world.chunkQueue.toBind.size++;
     }
 }
 
@@ -125,8 +139,10 @@ void world_loadNewChunks() {
                 ivec2 pos = {x, z};
                 
                 if (idist2d(origin, pos) < world.renderRadius) {
-                    if (world_getChunk((ivec3){x, y, z})->state == ADDED) {
+                    if (world_getChunk((ivec3){x, y, z})->state == ADDED && !world_getChunk((ivec3){x, y, z})->addedToMeshQueue) {
+                        world_getChunk((ivec3){x, y, z})->addedToMeshQueue = true;
                         world_addChunkToQueue(world_getChunk((ivec3){x, y, z}), MESH);
+                        world_addChunkToQueue(world_getChunk((ivec3){x, y, z}), BIND);
                     }
                 }
             }
@@ -145,7 +161,7 @@ static void world_clearChunkQueue(enum ChunkQueueState state) {
 
         world.chunkQueue.toGenerate.index = 0;
         world.chunkQueue.toGenerate.tick = 0;
-    } else {
+    } else if (state == MESH) {
         world.chunkQueue.toMesh.size = 0;
         world.chunkQueue.toMesh.capacity = 16;
 
@@ -155,47 +171,29 @@ static void world_clearChunkQueue(enum ChunkQueueState state) {
 
         world.chunkQueue.toMesh.index = 0;
         world.chunkQueue.toMesh.tick = 0;
+    } else {
+        world.chunkQueue.toBind.size = 0;
+        world.chunkQueue.toBind.capacity = 16;
+
+        memset(world.chunkQueue.toBind.chunks, 0, world.chunkQueue.toBind.capacity);
+
+        world.chunkQueue.toBind.chunks = realloc(world.chunkQueue.toBind.chunks, world.chunkQueue.toBind.capacity * sizeof(struct Chunk));
+
+        world.chunkQueue.toBind.index = 0;
+        world.chunkQueue.toBind.tick = 0;
     }
 }
 
-static void world_handleChunkQueue(enum ChunkQueueState state) {
-    if (state == GENERATE) {
-        if (world.chunkQueue.toGenerate.size > 0) {
-            if (world.chunkQueue.toGenerate.index < world.chunkQueue.toGenerate.size) {
-                
-                if (world.chunkQueue.toGenerate.tick) {
-                    for (int i = 0; i < world.chunkQueue.passesPerFrame; i++) {
-                        if (world.chunkQueue.toGenerate.index + i < world.chunkQueue.toGenerate.size) {
-                            //puts("gen");
-                            world_generateChunk(world.chunkQueue.toGenerate.chunks[world.chunkQueue.toGenerate.index + i]->position);
-                        }
-                    }
+void thread_genchunk(void *arg) {
+    struct Chunk *chunk = arg;
+    printf("Thread %p generating\n", pthread_self());
+    chunk_generate(chunk);
+}
 
-                    world.chunkQueue.toGenerate.index += world.chunkQueue.passesPerFrame;
-                }
-            } else world_clearChunkQueue(GENERATE);
-
-            world.chunkQueue.toGenerate.tick++;
-        }
-    } else {
-        if (world.chunkQueue.toMesh.size > 0) {
-            if (world.chunkQueue.toMesh.index < world.chunkQueue.toMesh.size) {
-                if (world.chunkQueue.toMesh.tick) {
-                    for (int i = 0; i < world.chunkQueue.passesPerFrame; i++) {
-                        if (world.chunkQueue.toMesh.index + i < world.chunkQueue.toMesh.size) {
-                            if (world_getChunk(world.chunkQueue.toMesh.chunks[world.chunkQueue.toMesh.index + i]->position)->state == GENERATED) {
-                                world_meshChunk(world.chunkQueue.toMesh.chunks[world.chunkQueue.toMesh.index + i]->position);
-                            }
-                        }
-                    }
-
-                    world.chunkQueue.toMesh.index += world.chunkQueue.passesPerFrame;
-                }
-            } else world_clearChunkQueue(MESH);
-
-            world.chunkQueue.toMesh.tick++;
-        }
-    }
+void thread_meshchunk(void *arg) {
+    struct Chunk *chunk = arg;
+    printf("Thread %p meshing\n", pthread_self());
+    chunk_mesh(chunk);
 }
 
 
@@ -203,7 +201,9 @@ void world_init(int renderRadius) {
     world.chunks = NULL; // Initilize to NULL for hashtable
     world.renderRadius = renderRadius;
     world.renderHeight = 4;
-    world.chunkQueue.passesPerFrame = 6;
+
+    world.chunkQueue.passesPerFrame = 2;
+    world.chunkQueue.running = false;
 
     world.chunkQueue.toGenerate.capacity = 16;
     world.chunkQueue.toGenerate.size = 0;
@@ -218,6 +218,13 @@ void world_init(int renderRadius) {
     world.chunkQueue.toMesh.tick = 0;
     world.chunkQueue.toMesh.chunks = malloc(sizeof(struct Chunk) * world.chunkQueue.toMesh.capacity);
     memset(world.chunkQueue.toMesh.chunks, 0, world.chunkQueue.toMesh.capacity);
+
+    world.chunkQueue.toBind.capacity = 16;
+    world.chunkQueue.toBind.size = 0;
+    world.chunkQueue.toBind.index = 0;
+    world.chunkQueue.toBind.tick = 0;
+    world.chunkQueue.toBind.chunks = malloc(sizeof(struct Chunk) * world.chunkQueue.toBind.capacity);
+    memset(world.chunkQueue.toBind.chunks, 0, world.chunkQueue.toBind.capacity);
     
     worldgenInit(0xff);
 
@@ -251,16 +258,57 @@ void world_init(int renderRadius) {
     LOG("World loaded!");
 }
 
-void world_render(shader_t shader) {
+int t = 0;
+void world_render(shader_t shader, threadpool thpool) {
+
     if (player.exitedChunk) {
         world_loadNewChunks();
 
         player.exitedChunk = false;
     }
 
-    world_handleChunkQueue(GENERATE);
-    world_handleChunkQueue(MESH);
+    if (world.chunkQueue.toGenerate.size > 0) {
+        if (world.chunkQueue.toGenerate.index < world.chunkQueue.toGenerate.size) {
+            if (world.chunkQueue.toGenerate.tick) {
+                for (int i = 0; i < world.chunkQueue.passesPerFrame; i++) {
+                    if (world.chunkQueue.toGenerate.index + i < world.chunkQueue.toGenerate.size) {
+                        //if (world_getChunk(world.chunkQueue.toGenerate.chunks[world.chunkQueue.toGenerate.index + i]->position) != NULL) {
+                            thpool_add_work(thpool, thread_genchunk, world.chunkQueue.toGenerate.chunks[world.chunkQueue.toGenerate.index + i]);
+                            //chunk_generate(world.chunkQueue.toGenerate.chunks[world.chunkQueue.toGenerate.index + i]);
+                        //}
+                    }
+                }
+
+                world.chunkQueue.toGenerate.index += world.chunkQueue.passesPerFrame;
+            }
+        } else world_clearChunkQueue(GENERATE);
+
+        world.chunkQueue.toGenerate.tick++;
+    }
     
+    if (world.chunkQueue.toMesh.size > 0) {
+        if (world.chunkQueue.toMesh.index < world.chunkQueue.toMesh.size) {
+            if (world.chunkQueue.toMesh.tick) {
+                for (int i = 0; i < world.chunkQueue.passesPerFrame; i++) {
+                    if (world.chunkQueue.toMesh.index + i < world.chunkQueue.toMesh.size) {
+                        //if (world_getChunk(world.chunkQueue.toMesh.chunks[world.chunkQueue.toMesh.index + i]->position) != NULL) {
+                            thpool_add_work(thpool, thread_meshchunk, world.chunkQueue.toMesh.chunks[world.chunkQueue.toMesh.index + i]);
+                            //chunk_mesh(world.chunkQueue.toMesh.chunks[world.chunkQueue.toMesh.index + i]);
+                        //}
+                    }
+                }
+
+                world.chunkQueue.toMesh.index += world.chunkQueue.passesPerFrame;
+            }
+        } else {
+            world_clearChunkQueue(MESH);
+        }
+
+        world.chunkQueue.toMesh.tick++;
+    }
+
+    thpool_wait(thpool);
+
 
     for (int z = -world.renderRadius + player.chunkPosition[2]; z < world.renderRadius + player.chunkPosition[2]; z++) {
         for (int y = 0; y < world.renderHeight; y++) {

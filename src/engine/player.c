@@ -4,7 +4,7 @@ struct Player player;
 
 void player_init() {
     player.FOV = 60.0f;
-    glm_vec3_copy((vec3){CHUNK_SIZE / 2, 100.0f, CHUNK_SIZE / 2}, player.position);
+    glm_vec3_copy((vec3){0.0f, 100.0f, 0.0f}, player.position);
     player.speed = (struct PlayerSpeed) {
         30.0f,
         60.0f,
@@ -211,6 +211,7 @@ void player_destroyBlock() {
             world_remeshChunk(newPosition);
         }
 
-        world_remeshChunk(chunkToModify->position);
+        //world_remeshChunk(chunkToModify->position);
+        chunk_bind(world_getChunk(chunkToModify->position));
     }
 }

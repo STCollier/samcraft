@@ -18,7 +18,7 @@
 #include "block.h"
 
 #define CHUNK_SIZE 50
-#define WATER_HEIGHT 25
+#define WATER_HEIGHT 40
 #define CHUNK_AREA CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE
 
 typedef struct {
@@ -42,11 +42,12 @@ struct ChunkMesh {
 struct Chunk {
     uint8_t *voxels;
     ivec3 position; // chunk location relative to to other chunks e.g (0, 0, 0) origin
-    chunk_key_t key; // Key, represented as a 1D index in a 2D array
-    UT_hash_handle hh; // Makes this structure hashable s
+    chunk_key_t key; // Hashtable key
+    UT_hash_handle hh; // Makes this structure hashable
 
     struct ChunkMesh *mesh;
     enum ChunkPipelineState state;
+    bool addedToMeshQueue, addedToBindQueue;
 
     unsigned int arrayTexture;
     unsigned int VBO, VAO, EBO, tVBO, tVAO, tEBO;

@@ -93,8 +93,6 @@ void camera_use(shader_t shader) {
     glm_lookat(camera.position, result, camera.up, camera.view);
     shader_setMat4(shader, "view", camera.view);
 
-    shader_setVec3(shader, "eye_position", camera.position[0], camera.position[1], camera.position[2]);
-
     camera_handleKeyboard();
 }
 

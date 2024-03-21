@@ -10,6 +10,8 @@
 #include "engine/mesher.h"
 #include "engine/sprite2D.h"
 #include "engine/skybox.h"
+#include "engine/thpool.h"
+
 #include "world/world.h"
 #include "world/chunk.h"
 
@@ -31,7 +33,9 @@ int main() {
     stbi_set_flip_vertically_on_load(true);
     blockdata_loadLuaData();
     blockdata_loadArrayTexture();
-    world_init(10);
+    world_init(6);
+
+    threadpool thpool = thpool_init(8);
 
     player_init();
     
@@ -43,9 +47,10 @@ int main() {
         skybox_render(&sky, skyShader);
 
         camera_use(mainShader);
-        world_render(mainShader);
+        world_render(mainShader, thpool);
 
-        shader_setVec3(mainShader, "camera_position", player.position[0], player.position[1], player.position[2]);
+        shader_setVec3(mainShader, "camera_position", camera.position[0], camera.position[1], camera.position[2]);
+        shader_setVec3(mainShader, "camera_direction", camera.front[0], camera.front[1], camera.front[2]);
 
         if (window.leftClicked && !clicked) {
             player_destroyBlock();
@@ -65,6 +70,7 @@ int main() {
         glfwPollEvents();
     }
 
+    thpool_destroy(thpool);
     window_destroy();
 
     return 0;
