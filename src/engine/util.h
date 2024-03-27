@@ -8,11 +8,15 @@
 #include <lua/lualib.h>
 #include <limits.h>
 #include <time.h>
+#include <string.h>
 
 #include "cglm/cglm.h"
 #include "cglm/call.h"
 
 #include "types.h"
+
+void ivec3s_to_ivec3(ivec3s in, ivec3 out);
+void ivec2s_to_ivec2(ivec2s in, ivec2 out);
 
 #define _DEBUG true
 
@@ -35,6 +39,54 @@
 #define ARR_SIZE(arr) (sizeof((arr)) / sizeof((arr[0])))
 #define UNUSED(x) ((void) x)
 
+#define CONCAT_HELPER(A,B) A##B
+#define CONCAT(A,B) CONCAT_HELPER(A,B)
+#define STRINGIFY(A) #A
+ 
+#define DEFINE_ARRAY_IMPL(type) \
+    typedef struct { \
+        size_t length, capacity; \
+        type *data; \
+    } CONCAT(arr_, type); \
+\
+    static CONCAT(arr_, type) CONCAT(type, _array)() { \
+        type* data = malloc(sizeof(type)); \
+        CONCAT(arr_, type) arr = {.length = 0, .capacity = 1, .data = data}; \
+        return arr; \
+    } \
+\
+    static void CONCAT(CONCAT(type, _arr), _push)(CONCAT(arr_, type) *arr, type data) { \
+        if (arr->length < arr->capacity) { \
+            arr->data[arr->length] = data; \
+        } else { \
+            arr->capacity *= 2; \
+            arr->data = realloc(arr->data, arr->capacity * sizeof(type)); \
+            arr->data[arr->length] = data; \
+        } \
+\
+        arr->length++; \
+    } \
+\
+    static void CONCAT(CONCAT(type, _arr), _delete)(CONCAT(arr_, type) *arr) { \
+        arr->length = 0;\
+        arr->capacity = 0;\
+        free(arr->data); \
+        arr->data = NULL; \
+    } \
+\
+    static void CONCAT(CONCAT(type, _arr), _clear)(CONCAT(arr_, type) *arr) { \
+        memset(arr->data, 0, arr->length); \
+        arr->length = 0;\
+    } \
+
+DEFINE_ARRAY_IMPL(int);
+DEFINE_ARRAY_IMPL(float);
+DEFINE_ARRAY_IMPL(uint16_t);
+DEFINE_ARRAY_IMPL(uint32_t);
+DEFINE_ARRAY_IMPL(uint64_t);
+DEFINE_ARRAY_IMPL(ivec2s);
+DEFINE_ARRAY_IMPL(ivec3s);
+
 int getNumCores();
 void checkOpenGLErr(const char* stmt, const char* fname, int line);
 uint8_t hash8(const char* h);
@@ -43,6 +95,8 @@ int idist3d(ivec3 a, ivec3 b);
 int randInt(int min, int max);
 
 int lua_getInt(lua_State *L, const char* field, const char* err, const char* msg);
+bool lua_getBool(lua_State *L, const char* field, const char* err, const char* msg);
+float lua_getFloat(lua_State *L, const char* field, const char* err, const char* msg);
 const char* lua_getString(lua_State *L, const char* field, const char* err, const char* msg);
 void lua_getField(lua_State *L, const char* field, const char* err, const char* msg);
 void lua_getGlobal(lua_State *L, const char* field, const char* err, const char* msg);

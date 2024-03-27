@@ -15,11 +15,15 @@ struct Camera {
     vec3 front;
     vec3 up;
     vec3 right;
+    vec3 worldUp;
 
-    float near, far, sensitivity, speed, fov;
+    float speedValue[3];
+    float speed;
+
+    float near, far, sensitivity, fov;
 };
 
-void camera_init(float fov, float speed, float sensitivity, vec3 position);
+void camera_init(float fov, float sensitivity, vec3 position);
 void camera_use(shader_t shader);
 void camera_mouseCallback(double xposIn, double yposIn);
 

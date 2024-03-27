@@ -21,18 +21,14 @@
 
 struct ChunkList {
     struct Chunk **chunks;
-    size_t size;
-    size_t capacity;
-    size_t index;
-    size_t tick;
+    size_t size, capacity, index, tick;
 };
 
 struct ChunkQueue {
     struct ChunkList toGenerate;
     struct ChunkList toMesh;
-    struct ChunkList toBind;
     size_t passesPerFrame;
-    _Atomic bool running;
+    bool queuesComplete;
 };
 
 enum ChunkQueueState {
@@ -41,14 +37,17 @@ enum ChunkQueueState {
 
 struct World {
     struct Chunk *chunks;
+    struct ChunkQueue chunkQueue;
     int renderRadius, renderHeight;
 
-    struct ChunkQueue chunkQueue;
+    arr_ivec3s positionLoadQueue;
+    size_t positionLoadIndex;
 };
 
 void world_addChunk(ivec3 position);
 struct Chunk *world_getChunk(ivec3 position);
 void world_meshChunk(ivec3 position);
+void world_remeshChunk(ivec3 position);
 
 void world_init(int renderRadius);
 void world_render(shader_t shader, threadpool thpool);

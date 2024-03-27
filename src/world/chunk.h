@@ -18,7 +18,7 @@
 #include "block.h"
 
 #define CHUNK_SIZE 50
-#define WATER_HEIGHT 40
+#define WATER_HEIGHT 60
 #define CHUNK_AREA CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE
 
 typedef struct {
@@ -47,7 +47,8 @@ struct Chunk {
 
     struct ChunkMesh *mesh;
     enum ChunkPipelineState state;
-    bool addedToMeshQueue, addedToBindQueue;
+    bool addedToMeshQueue;
+    bool empty;
 
     unsigned int arrayTexture;
     unsigned int VBO, VAO, EBO, tVBO, tVAO, tEBO;
@@ -58,7 +59,7 @@ int blockIndex(int x, int y, int z);
 void chunk_init(struct Chunk *chunk, ivec3 pos);
 void chunk_generate(struct Chunk *chunk);
 void chunk_mesh(struct Chunk *chunk);
-void world_remeshChunk(ivec3 position);
+void chunk_remesh(struct Chunk *chunk, struct Chunk* cn_right, struct Chunk* cn_left, struct Chunk* cn_front, struct Chunk* cn_back, struct Chunk* cn_top, struct Chunk* cn_bottom);
 void chunk_bind(struct Chunk *chunk);
 void chunk_render(struct Chunk *chunk, shader_t shader, bool pass);
 

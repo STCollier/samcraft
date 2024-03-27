@@ -14,14 +14,14 @@ int randInRange(int min, int max) {
    return min + rand() / (RAND_MAX / (max - min + 1) + 1);
 }
 
-double octaveNoise(ivec2 pos, ivec2 offset, double spread, double size, int numOctaves, double persistence) {
+double octaveNoise(ivec3 pos, ivec3 offset, double spread, double size, int numOctaves, double persistence) {
     double total = 0;
     double frequency = 1;
     double amplitude = 1;
     double maxValue = 0;
 
     for (int i = 0; i < numOctaves; i++) {
-        total += open_simplex_noise2(ctx, (double)((pos[0] + offset[0]) / spread * frequency), (double)((pos[1] - offset[1]) / spread * frequency)) * amplitude;
+        total += open_simplex_noise3(ctx, (double)((pos[0] + offset[0]) / spread * frequency), (double)((pos[1] - offset[1]) / spread * frequency), (double)((pos[2] - offset[2]) / spread * frequency)) * amplitude;
 
         maxValue += amplitude;
         amplitude *= persistence;
@@ -32,14 +32,14 @@ double octaveNoise(ivec2 pos, ivec2 offset, double spread, double size, int numO
     return (total / maxValue) * size;
 }
 
-int noiseHeight(ivec2 pos, ivec2 offset) {
+int noiseHeight(ivec3 pos, ivec3 offset) {
     double spread = 75;
-    double size = 60;
+    double size = 150;
     int numOctaves = 3;
     double persistence = 0.5;
 
     double value = octaveNoise(pos, offset, spread, size, numOctaves, persistence);
-    value += 50;
+    value += 80;
 
-    return (int)value;
+    return (int) value;
 }

@@ -8,6 +8,6 @@
 
 void worldgenInit(int64_t seed);
 int randInRange(int min, int max);
-int noiseHeight(ivec2 pos, ivec2 offset);
+int noiseHeight(ivec3 pos, ivec3 offset);
 
 #endif

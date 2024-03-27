@@ -6,7 +6,7 @@
 struct Frustum createCameraFrustum() {
     struct Frustum frustum;
 
-   /*const float halfVSide = camera.far * tanf(camera.fov * .5f);
+    /*const float halfVSide = camera.far * tanf(camera.fov * .5f);
     const float halfHSide = halfVSide * window.aspectRatio;
     const vec3 frontMultFar;
     glm_vec3_mul((vec3){camera.far, camera.far, camera.far}, camera.front, frontMultFar);
@@ -26,27 +26,31 @@ struct Frustum createCameraFrustum() {
     glm_vec3_sub(frontMultFar, camera.right, rS);
     glm_vec3_mul(rS, (vec3){halfHSide, halfHSide, halfHSide}, rM);
     glm_vec3_cross(rM, camera.up, rC);
-    frustum.right = { camera.position, rC };
+    glm_vec3_copy(camera.position, frustum.right.normal);
+    glm_vec3_copy(frustum.right.distance, rC);
 
     vec3 lA, lM, lC;
     glm_vec3_add(frontMultFar, camera.right, lA);
     glm_vec3_mul(lA, (vec3){halfHSide, halfHSide, halfHSide}, lM);
     glm_vec3_cross(camera.up, lM, lC);
-    frustum.left = { camera.position, lC };
+    glm_vec3_copy(camera.position, frustum.left.normal);
+    glm_vec3_copy(lC, frustum.left.distance);
 
 
     vec3 tS, tM, tC;
     glm_vec3_sub(frontMultFar, camera.up, tS);
     glm_vec3_mul(tS, (vec3){halfVSide, halfVSide, halfVSide}, tM);
     glm_vec3_cross(camera.right, tM, tC);
-    frustum.top = { camera.position, tC };
+    glm_vec3_copy(frustum.top.normal, camera.position);
+    glm_vec3_copy(frustum.top.distance, tC);
 
 
     vec3 bA, bM, bC;
     glm_vec3_add(frontMultFar, camera.up, bA);
     glm_vec3_mul(bA, (vec3){halfVSide, halfVSide, halfVSide}, bM);
     glm_vec3_cross(camera.right, bM, bC);
-    frustum.bottom = { camera.position, bC };*/
+    glm_vec3_copy(frustum.bottom.normal, camera.position);
+    glm_vec3_copy(frustum.bottom.distance, bC);*/
 
     return frustum;
 }

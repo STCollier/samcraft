@@ -8,6 +8,7 @@
 #include "shader.h"
 #include "camera.h"
 #include "util.h"
+#include "globals.h"
 
 //Define globally
 struct Camera camera;
@@ -17,17 +18,23 @@ float pitch = 0.0f;
 float lastX = 0;
 float lastY = 0;
 
-void camera_init(float fov, float speed, float sensitivity, vec3 position) {
+void camera_init(float fov, float sensitivity, vec3 position) {
     camera.fov = fov;
-    camera.speed = speed;
     camera.sensitivity = sensitivity;
 
     camera.near = 0.1f;
     camera.far = 10000.0f;
 
+    camera.speedValue[0] = globals.playerSpeed.slow;
+    camera.speedValue[1] = globals.playerSpeed.normal;
+    camera.speedValue[2] = globals.playerSpeed.sprint;
+
+    camera.speed = camera.speedValue[1];
+
     glm_vec3_copy(position, camera.position);
     glm_vec3_copy((vec3){0.0f, 0.0f, 0.0f}, camera.front);
     glm_vec3_copy((vec3){0.0f, 1.0f, 0.0f}, camera.up);
+    glm_vec3_copy((vec3){0.0f, 1.0f, 0.0f}, camera.worldUp);
 
     lastX = window.width / 2.0;
     lastY = window.height / 2.0;
@@ -39,44 +46,35 @@ static void camera_handleKeyboard() {
     float cameraSpeed = camera.speed * window.dt;
 
     if (glfwGetKey(window.self, GLFW_KEY_W) == GLFW_PRESS) { // forward
-        vec3 forwardDir;
-        glm_vec3_scale(camera.front, cameraSpeed, forwardDir);
-        glm_vec3_add(camera.position, forwardDir, camera.position);
+        vec3 mult;
+        glm_vec3_scale(camera.front, cameraSpeed, mult);
+        glm_vec3_add(camera.position, mult, camera.position);
     }
 
     if (glfwGetKey(window.self, GLFW_KEY_S) == GLFW_PRESS) { // backward
-        vec3 backwardsDir;
-        glm_vec3_scale(camera.front, cameraSpeed, backwardsDir);
-        glm_vec3_sub(camera.position, backwardsDir, camera.position);
+        vec3 mult;
+        glm_vec3_scale(camera.front, cameraSpeed, mult);
+        glm_vec3_sub(camera.position, mult, camera.position);
     }
 
     if (glfwGetKey(window.self, GLFW_KEY_A) == GLFW_PRESS) { // left
-        vec3 leftDir;
-        glm_cross(camera.front, camera.up, leftDir);
-        glm_normalize(leftDir);
-
-        vec3 offset;
-        glm_vec3_scale(leftDir, cameraSpeed, offset);
-        glm_vec3_sub(camera.position, offset, camera.position);
+        vec3 mult;
+        glm_vec3_scale(camera.right, cameraSpeed, mult);
+        glm_vec3_sub(camera.position, mult, camera.position);
     }
 
     if (glfwGetKey(window.self, GLFW_KEY_D) == GLFW_PRESS) { // right
-        vec3 rightDir;
-        glm_cross(camera.front, camera.up, rightDir);
-        glm_normalize(rightDir);
-
-        vec3 offset;
-        glm_vec3_scale(rightDir, cameraSpeed, offset);
-
-        glm_vec3_add(camera.position, offset, camera.position);
+        vec3 mult;
+        glm_vec3_scale(camera.right, cameraSpeed, mult);
+        glm_vec3_add(camera.position, mult, camera.position);
     } 
 
     if (glfwGetKey(window.self, GLFW_KEY_E) == GLFW_PRESS) {
-        camera.speed = 300.0f;
+        camera.speed = camera.speedValue[2];
     } else if (glfwGetKey(window.self, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-        camera.speed = 30.0f;
+        camera.speed = camera.speedValue[0];
     } else {
-        camera.speed = 100.0f;
+        camera.speed = camera.speedValue[1];
     }
 }
 
@@ -125,9 +123,14 @@ void camera_mouseCallback(double xposIn, double yposIn) {
     glm_vec3_copy(front, camera.front);
 
     vec3 right;
-    glm_vec3_cross(camera.front, (vec3){0.0, 1.0, 0.0}, right);
+    glm_vec3_cross(camera.front, camera.worldUp, right);
     glm_vec3_normalize(right);
     glm_vec3_copy(right, camera.right);
+
+    vec3 up;
+    glm_vec3_cross(camera.right, camera.front, up);
+    glm_vec3_normalize(up);
+    glm_vec3_copy(up, camera.up);
 }
 
 /*float x = (2.0f * window.mouseX) / window.width - 1.0f;

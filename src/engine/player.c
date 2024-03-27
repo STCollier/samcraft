@@ -1,24 +1,20 @@
 #include "player.h"
+#include "globals.h"
 
 struct Player player; 
 
 void player_init() {
-    player.FOV = 60.0f;
-    glm_vec3_copy((vec3){0.0f, 100.0f, 0.0f}, player.position);
-    player.speed = (struct PlayerSpeed) {
-        30.0f,
-        60.0f,
-        90.0f
-    };
+    player.FOV = globals.FOV;
+    glm_vec3_copy((vec3){CHUNK_SIZE / 2, 100.0f, CHUNK_SIZE / 2}, player.position);
 
     glm_ivec3_copy((ivec3){player.position[0] / CHUNK_SIZE, player.position[1] / CHUNK_SIZE, player.position[2] / CHUNK_SIZE}, player.chunkPosition);
     glm_ivec3_copy((ivec3){0, 0, 0}, player.previousPosition);
 
-    camera_init(player.FOV, player.speed.normal, 0.1f, player.position);
+    camera_init(player.FOV, globals.mouseSensitivity, player.position);
     player.exitedChunk = false;
 
     player.selectedBlock = block_getID("dirt");
-    player.reach = 50.0f;
+    player.reach = globals.reach;
 }
 
 void player_update() {
@@ -211,7 +207,6 @@ void player_destroyBlock() {
             world_remeshChunk(newPosition);
         }
 
-        //world_remeshChunk(chunkToModify->position);
-        chunk_bind(world_getChunk(chunkToModify->position));
+        world_remeshChunk(chunkToModify->position);
     }
 }

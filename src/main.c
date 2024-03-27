@@ -11,6 +11,7 @@
 #include "engine/sprite2D.h"
 #include "engine/skybox.h"
 #include "engine/thpool.h"
+#include "engine/globals.h"
 
 #include "world/world.h"
 #include "world/chunk.h"
@@ -20,6 +21,8 @@ int main() {
     shader_t mainShader = shader_new("res/shaders/main.vert", "res/shaders/main.frag");
     shader_t shader2D = shader_new("res/shaders/2D.vert", "res/shaders/2D.frag");
     shader_t skyShader = shader_new("res/shaders/sky.vert", "res/shaders/sky.frag");
+
+    globals_init();
 
     shader_use(shader2D);
     mat4 projection2D;
@@ -33,9 +36,9 @@ int main() {
     stbi_set_flip_vertically_on_load(true);
     blockdata_loadLuaData();
     blockdata_loadArrayTexture();
-    world_init(6);
+    world_init(3);
 
-    threadpool thpool = thpool_init(8);
+    threadpool thpool = thpool_init(4);
 
     player_init();
     
@@ -51,6 +54,9 @@ int main() {
 
         shader_setVec3(mainShader, "camera_position", camera.position[0], camera.position[1], camera.position[2]);
         shader_setVec3(mainShader, "camera_direction", camera.front[0], camera.front[1], camera.front[2]);
+
+        shader_setFloat(mainShader, "fog_max", ((world.renderRadius - 1) * CHUNK_SIZE) - CHUNK_SIZE/2);
+        shader_setFloat(mainShader, "fog_min", (world.renderRadius / 2) * CHUNK_SIZE);
 
         if (window.leftClicked && !clicked) {
             player_destroyBlock();
