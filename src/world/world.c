@@ -186,9 +186,6 @@ void world_init(int renderRadius) {
     world.renderRadius = renderRadius;
     world.renderHeight = 5;
 
-    world.positionLoadQueue = ivec3s_array();
-    world.positionLoadIndex = 0;
-
     world.chunkQueue.passesPerFrame = 2;
     world.chunkQueue.queuesComplete = false;
 
@@ -282,12 +279,6 @@ void world_render(shader_t shader, threadpool thpool) {
     }
 
     world.chunkQueue.queuesComplete = (world.chunkQueue.toGenerate.size == 0 && world.chunkQueue.toMesh.size == 0);
-
-    if (world.chunkQueue.queuesComplete && world.positionLoadIndex < world.positionLoadQueue.length) {
-        renderPos = world.positionLoadQueue.data[world.positionLoadIndex];
-
-        world.positionLoadIndex++;
-    }
 
     for (int z = -world.renderRadius + player.chunkPosition[2]; z < world.renderRadius + player.chunkPosition[2]; z++) {
         for (int y = 0; y < world.renderHeight; y++) {

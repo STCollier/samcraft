@@ -182,9 +182,15 @@ void chunk_bind(struct Chunk *chunk) {
 }
 
 void chunk_render(struct Chunk *chunk, shader_t shader, bool pass) {
+    shader_use(shader);
+    shader_setInt(shader, "arrayTexture", 0);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, block_getArrayTexture());
+
     vec3 chunkTranslation;
     glm_vec3_copy((vec3){
-        chunk->position[0] * (CHUNK_SIZE), 
+        chunk->position[0] * (CHUNK_SIZE),
         chunk->position[1] * (CHUNK_SIZE), 
         chunk->position[2] * (CHUNK_SIZE)
     }, chunkTranslation);

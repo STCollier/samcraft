@@ -39,9 +39,6 @@ struct World {
     struct Chunk *chunks;
     struct ChunkQueue chunkQueue;
     int renderRadius, renderHeight;
-
-    arr_ivec3s positionLoadQueue;
-    size_t positionLoadIndex;
 };
 
 void world_addChunk(ivec3 position);

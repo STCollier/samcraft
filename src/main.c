@@ -12,6 +12,7 @@
 #include "engine/skybox.h"
 #include "engine/thpool.h"
 #include "engine/globals.h"
+#include "engine/block_overlay.h"
 
 #include "world/world.h"
 #include "world/chunk.h"
@@ -19,6 +20,7 @@
 int main() {
     window_create("samcraft", 1600, 900);
     shader_t mainShader = shader_new("res/shaders/main.vert", "res/shaders/main.frag");
+    shader_t blockOverlayShader = shader_new("res/shaders/block_overlay.vert", "res/shaders/block_overlay.frag");
     shader_t shader2D = shader_new("res/shaders/2D.vert", "res/shaders/2D.frag");
     shader_t skyShader = shader_new("res/shaders/sky.vert", "res/shaders/sky.frag");
 
@@ -36,19 +38,22 @@ int main() {
     stbi_set_flip_vertically_on_load(true);
     blockdata_loadLuaData();
     blockdata_loadArrayTexture();
-    world_init(3);
+    world_init(globals.renderRadius);
 
-    threadpool thpool = thpool_init(4);
+    threadpool thpool = thpool_init(globals.threads);
 
     player_init();
+    block_overlay_bind();
     
     bool clicked = false;
+
+    float breakTick = 0;
+    ivec3 oldPosition;
     while (!glfwWindowShouldClose(window.self)) {
         window_update();
         player_update();
 
         skybox_render(&sky, skyShader);
-
         camera_use(mainShader);
         world_render(mainShader, thpool);
 
@@ -58,19 +63,38 @@ int main() {
         shader_setFloat(mainShader, "fog_max", ((world.renderRadius - 1) * CHUNK_SIZE) - CHUNK_SIZE/2);
         shader_setFloat(mainShader, "fog_min", (world.renderRadius / 2) * CHUNK_SIZE);
 
-        if (window.leftClicked && !clicked) {
-            player_destroyBlock();
-            clicked = true;
+        if (window.leftClicked) {
+            player_raycast();
+            if (breakTick == 0) glm_ivec3_copy(player.ray.worldPosition, oldPosition);
+
+            if (oldPosition[0] == player.ray.worldPosition[0] && oldPosition[1] == player.ray.worldPosition[1] && oldPosition[2] == player.ray.worldPosition[2]) {
+                breakTick += window.dt;
+
+                if (player.ray.blockFound) block_overlay_use(blockOverlayShader);
+
+                shader_setInt(blockOverlayShader, "breakState", (int) (breakTick * 5.0));
+            } else {
+                breakTick = 0;
+            }
+
+            if (breakTick >= 1) {
+                player_destroyBlock();
+
+                breakTick = 0;
+            }
+        } else {
+            breakTick = 0;
         }
 
         if (window.rightClicked && !clicked) {
+            player_raycast();
             player_placeBlock();
             clicked = true;
         }
 
         clicked = !window.onMouseRelease;
 
-        sprite2D_render(&crosshair, shader2D);
+        sprite2D_render(&crosshair, shader2D); 
 
         glfwSwapBuffers(window.self);
         glfwPollEvents();

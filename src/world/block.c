@@ -7,6 +7,7 @@ const char* faces[6] = {"right", "left", "front", "back", "top", "bottom"};
 char texturePaths[256*6][300] = {0};
 char textureArray[256*6][300] = {0};
 unsigned int arrayTexture = 0;
+unsigned int blockBreakArrayTexture = 0;
 int numTextures = 0;
 int blockID = 2; // 0 and 1 are taken up by BLOCK_AIR and BLOCK_NULL, the rest are free
 
@@ -129,12 +130,49 @@ void blockdata_loadArrayTexture() {
         stbi_image_free(texture);
     }
 
+    GL_CHECK(glGenerateMipmap(GL_TEXTURE_2D_ARRAY));
 
-        GL_CHECK(glGenerateMipmap(GL_TEXTURE_2D_ARRAY));
+    /*--------------*/
+
+    GL_CHECK(glGenTextures(1, &blockBreakArrayTexture));
+    GL_CHECK(glBindTexture(GL_TEXTURE_2D_ARRAY, blockBreakArrayTexture));
+
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);    
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    // Allocate texture storage with GL_RGBA8 internal format
+    GL_CHECK(glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_SRGB8_ALPHA8, 16, 16, 5, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL));
+
+    int bwidth, bheight, bchannels;
+    char texSrc[64];
+    for (int i = 0; i < 5; i++) {
+        snprintf(texSrc, 64, "res/textures/break%d.png", i+1);
+        unsigned char* texture = stbi_load(texSrc, &bwidth, &bheight, &bchannels, 4);
+
+        if (!texture) {
+            ERROR_MSG("Failed to load texture at path", texSrc);
+            exit(EXIT_FAILURE);
+        } else {
+            LOG_MSG("Loaded block texture", texSrc);
+        }
+
+        // Upload each image as a 16x16x1 slice of the array
+        GL_CHECK(glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, 16, 16, 1, GL_RGBA, GL_UNSIGNED_BYTE, texture));
+        stbi_image_free(texture);
+    }
+
+    GL_CHECK(glGenerateMipmap(GL_TEXTURE_2D_ARRAY));
 }
 
 unsigned int block_getArrayTexture() {
     return arrayTexture;
+}
+
+unsigned int block_getBreakArrayTexture() {
+    return blockBreakArrayTexture;
 }
 
 static bool noBlockErr[256];

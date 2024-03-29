@@ -33,6 +33,7 @@ void blockdata_loadLuaData();
 void blockdata_loadArrayTexture();
 
 unsigned int block_getArrayTexture();
+unsigned int block_getBreakArrayTexture();
 int block_getID(const char* name);
 int block_getTextureIndex(int id, Direction dir);
 
