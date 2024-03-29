@@ -10,7 +10,8 @@ struct Globals {
     struct PlayerSpeed playerSpeed;
     float reach;
     float mouseSensitivity;
-    int renderRadius; 
+    int renderRadius;
+    int threads;
 };
 
 void globals_init();

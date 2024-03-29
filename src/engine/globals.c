@@ -23,6 +23,9 @@ void globals_init() {
     globals.reach = lua_getFloat(L, "reach", "The field 'reach' is invalid in", CONFIG_FILENAME);
     globals.mouseSensitivity = lua_getFloat(L, "mouse_sensitivity", "The field 'mouse_sensitivity' is invalid in", CONFIG_FILENAME);
 
+    globals.threads = lua_getInt(L, "threads", "The field 'threads' is invalid in", CONFIG_FILENAME);
+    globals.renderRadius = lua_getInt(L, "render_radius", "The field 'render_radius' is invalid in", CONFIG_FILENAME);
+
     lua_getField(L, "player_speed", "The field 'player_speed' is not a table at", CONFIG_FILENAME);
     globals.playerSpeed.slow = lua_getInt(L, "slow", "The field 'player_speed.slow' is invalid in", CONFIG_FILENAME);
     globals.playerSpeed.normal = lua_getInt(L, "normal", "The field 'player_speed.normal' is invalid in", CONFIG_FILENAME);

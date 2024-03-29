@@ -4,6 +4,7 @@
 #include "window.h"
 #include "raycast.h"
 #include "camera.h"
+#include "shader.h"
 #include "../world/world.h"
 
 struct PlayerSpeed {
@@ -26,6 +27,7 @@ struct Player {
 
 void player_init();
 void player_update();
+void player_raycast();
 void player_placeBlock();
 void player_destroyBlock();
 

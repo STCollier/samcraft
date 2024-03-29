@@ -52,8 +52,11 @@ void player_update() {
     }
 }
 
-void player_placeBlock() {
+void player_raycast() {
     player.ray = ray_cast(camera.position, camera.front, player.reach);
+}
+
+void player_placeBlock() {
     struct Chunk *chunkToModify = player.ray.chunkToModify;
 
     if (player.ray.blockFound) {
@@ -158,7 +161,6 @@ void player_placeBlock() {
 }
 
 void player_destroyBlock() {
-    player.ray = ray_cast(camera.position, camera.front, player.reach);
     struct Chunk *chunkToModify = player.ray.chunkToModify;
 
     if (player.ray.blockFound) {

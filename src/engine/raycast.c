@@ -37,7 +37,9 @@ struct Ray ray_cast(vec3 startPosition, vec3 rayDirection, float maxDistance) {
         currentDistance = rayLength1D[axis];
         rayLength1D[axis] += rayUnitStepSize[axis];
 
-      ivec3 chunkPos;
+        glm_ivec3_copy(check, ray.worldPosition);
+
+        ivec3 chunkPos;
         glm_ivec3_copy((ivec3) {
             check[0] / CHUNK_SIZE,
             check[1] / CHUNK_SIZE,

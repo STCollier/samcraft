@@ -58,6 +58,7 @@ struct Sprite2D sprite2D_new(const char* filename, ivec2 position, float scale) 
 
 void sprite2D_render(struct Sprite2D *sprite, shader_t shader) {
     shader_use(shader);
+    shader_setInt(shader, "image", 0);
 
     mat4 model;
     glm_mat4_identity(model);
@@ -67,10 +68,10 @@ void sprite2D_render(struct Sprite2D *sprite, shader_t shader) {
 
     shader_setMat4(shader, "model", model);
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, sprite->textureID);
+    GL_CHECK(glActiveTexture(GL_TEXTURE0));
+    GL_CHECK(glBindTexture(GL_TEXTURE_2D, sprite->textureID));
 
-    glBindVertexArray(sprite->VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-    glBindVertexArray(0);
+    GL_CHECK(glBindVertexArray(sprite->VAO));
+    GL_CHECK(glDrawArrays(GL_TRIANGLES, 0, 6));
+   GL_CHECK(glBindVertexArray(0));
 }

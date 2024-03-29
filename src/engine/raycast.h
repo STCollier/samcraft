@@ -17,6 +17,7 @@ struct Ray {
     int maxDistance; // Max distance that the DDA algorithm traverses before it stops
     struct Chunk *chunkToModify; // The chunk that we want to modify when breaking/placing
     ivec3 blockFoundPosition; // The relative block position within the chunk
+    ivec3 worldPosition;
     Direction placedDirection; // What direction the block is being placed
 };
 

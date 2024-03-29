@@ -69,6 +69,7 @@ int main() {
 
             if (oldPosition[0] == player.ray.worldPosition[0] && oldPosition[1] == player.ray.worldPosition[1] && oldPosition[2] == player.ray.worldPosition[2]) {
                 breakTick += window.dt;
+                printf("%d\n", (int)(breakTick * 5.0));
 
                 if (player.ray.blockFound) block_overlay_use(blockOverlayShader);
 
