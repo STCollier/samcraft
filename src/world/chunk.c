@@ -30,9 +30,6 @@ void chunk_generate(struct Chunk *chunk) {
     for (int x = 0; x < CS_P; x++) {
         for (int y = 0; y < CS_P; y++) {
             for (int z = 0; z < CS_P; z++) {
-
-                b += chunk->voxels[blockIndex(x, y, z)];
-
                 int height = noiseHeight((ivec3){x, y, z}, (ivec3){(chunk->position[0] * CHUNK_SIZE), -(chunk->position[1] * CHUNK_SIZE), -(chunk->position[2] * CHUNK_SIZE)});
 
                 int chunkHeight = (chunk->position[1] * CHUNK_SIZE) + y;
@@ -48,13 +45,13 @@ void chunk_generate(struct Chunk *chunk) {
                 if ((chunk->voxels[blockIndex(x, y, z)] == grass || chunk->voxels[blockIndex(x, y, z)] == dirt) && chunkHeight > 0 && chunkHeight < WATER_HEIGHT + 3) {
                     chunk->voxels[blockIndex(x, y, z)] = sand;
                 }
+
+                if (!b) b += chunk->voxels[blockIndex(x, y, z)];
             }
         }
     }
 
-    if (b == 0)
-        chunk->empty = true;
-    else chunk->empty = false;
+    chunk->empty = !b;
 
     //printf("Chunk Empty: [%d %d %d]: %s\n", chunk->position[0], chunk->position[1], chunk->position[2], chunk->empty ? "true" : "false");
 
@@ -185,8 +182,8 @@ void chunk_render(struct Chunk *chunk, shader_t shader, bool pass) {
     shader_use(shader);
     shader_setInt(shader, "arrayTexture", 0);
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, block_getArrayTexture());
+    GL_CHECK(glActiveTexture(GL_TEXTURE0));
+    GL_CHECK(glBindTexture(GL_TEXTURE_2D_ARRAY, block_getArrayTexture()));
 
     vec3 chunkTranslation;
     glm_vec3_copy((vec3){

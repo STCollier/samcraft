@@ -54,30 +54,30 @@ float block_overlay_vertices[] = {
 unsigned int VBO, VAO;
 
 void block_overlay_bind() {
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
+    GL_CHECK(glGenVertexArrays(1, &VAO));
+    GL_CHECK(glGenBuffers(1, &VBO));
 
-    glBindVertexArray(VAO);
+    GL_CHECK(glBindVertexArray(VAO));
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(block_overlay_vertices), block_overlay_vertices, GL_STATIC_DRAW);
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, VBO));
+    GL_CHECK(glBufferData(GL_ARRAY_BUFFER, sizeof(block_overlay_vertices), block_overlay_vertices, GL_STATIC_DRAW));
 
     // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
+    GL_CHECK(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0));
+    GL_CHECK(glEnableVertexAttribArray(0));
     // texture coord attribute
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
+    GL_CHECK(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float))));
+    GL_CHECK(glEnableVertexAttribArray(1));
 }
 
-void block_overlay_use(shader_t shader) {
+void block_overlay_use(shader_t shader, int idx) {
     glDisable(GL_CULL_FACE);
 
     shader_use(shader);
 
-    shader_setInt(shader, "blockBreakTexture", 0);
     GL_CHECK(glActiveTexture(GL_TEXTURE0));
     GL_CHECK(glBindTexture(GL_TEXTURE_2D_ARRAY, block_getBreakArrayTexture()));
+    shader_setInt(shader, "breakState", idx);
 
     shader_setMat4(shader, "projection", camera.projection);
     shader_setMat4(shader, "view", camera.view);

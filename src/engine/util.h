@@ -18,8 +18,6 @@
 void ivec3s_to_ivec3(ivec3s in, ivec3 out);
 void ivec2s_to_ivec2(ivec2s in, ivec2 out);
 
-#define _DEBUG true
-
 #ifdef _DEBUG
     #define GL_CHECK(stmt) do { \
         stmt; \
@@ -87,7 +85,6 @@ DEFINE_ARRAY_IMPL(uint64_t);
 DEFINE_ARRAY_IMPL(ivec2s);
 DEFINE_ARRAY_IMPL(ivec3s);
 
-int getNumCores();
 void checkOpenGLErr(const char* stmt, const char* fname, int line);
 uint8_t hash8(const char* h);
 int idist2d(ivec2 a, ivec2 b);

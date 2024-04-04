@@ -11,7 +11,7 @@ struct Camera {
     mat4 view;
     mat4 model;
 
-    vec3 position;
+    vec3 position, velocity, acceleration;
     vec3 front;
     vec3 up;
     vec3 right;
@@ -25,6 +25,7 @@ struct Camera {
 
 void camera_init(float fov, float sensitivity, vec3 position);
 void camera_use(shader_t shader);
+void camera_handlePhysics(bool collision, void (*collisionX)(ivec3), void (*collisionY)(ivec3), void (*collisionZ)(ivec3));
 void camera_mouseCallback(double xposIn, double yposIn);
 
 extern struct Camera camera;

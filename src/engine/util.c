@@ -1,6 +1,6 @@
 #include "util.h"
 
-void checkOpenGLErr(const char* stmt, const char* fname, int line) {
+void inline checkOpenGLErr(const char* stmt, const char* fname, int line) {
     GLenum err = glGetError();
     if (err != GL_NO_ERROR) {
         printf("OpenGL error %08x, at %s:%i - for %s\n", err, fname, line, stmt);
@@ -8,7 +8,7 @@ void checkOpenGLErr(const char* stmt, const char* fname, int line) {
     }
 }
 
-void ivec3s_to_ivec3(ivec3s in, ivec3 out) {
+void inline ivec3s_to_ivec3(ivec3s in, ivec3 out) {
     glm_ivec3_copy((ivec3){
         in.x,
         in.y,
@@ -16,14 +16,14 @@ void ivec3s_to_ivec3(ivec3s in, ivec3 out) {
     }, out);
 }
 
-void ivec2s_to_ivec2(ivec2s in, ivec2 out) {
+void inline ivec2s_to_ivec2(ivec2s in, ivec2 out) {
     glm_ivec3_copy((ivec2){
         in.x,
         in.y,
     }, out);
 }
 
-uint8_t hash8(const char* h) {
+uint8_t inline hash8(const char* h) {
     uint8_t hash = 0;
 
     const char* p = h;
@@ -35,15 +35,15 @@ uint8_t hash8(const char* h) {
     return hash;
 }
 
-int idist2d(ivec2 a, ivec2 b) {
+int inline idist2d(ivec2 a, ivec2 b) {
     return sqrt((b[0] - a[0])*(b[0] - a[0]) + (b[1] - a[1])*(b[1] - a[1]));
 }
 
-int idist3d(ivec3 a, ivec3 b) {
+int inline idist3d(ivec3 a, ivec3 b) {
     return sqrt((b[0] - a[0])*(b[0] - a[0]) + (b[1] - a[1])*(b[1] - a[1]) + (b[2] - a[2])*(b[2] - a[2]));
 }
 
-int randInt(int min, int max) {
+int inline randInt(int min, int max) {
    return min + rand() / (RAND_MAX / (max - min + 1) + 1);
 }
 

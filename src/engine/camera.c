@@ -32,6 +32,9 @@ void camera_init(float fov, float sensitivity, vec3 position) {
     camera.speed = camera.speedValue[1];
 
     glm_vec3_copy(position, camera.position);
+    glm_vec3_copy((vec3){0.0f, 0.0f, 0.0f}, camera.velocity);
+    glm_vec3_copy((vec3){0.0f, 0.0f, 0.0f}, camera.acceleration);
+
     glm_vec3_copy((vec3){0.0f, 0.0f, 0.0f}, camera.front);
     glm_vec3_copy((vec3){0.0f, 1.0f, 0.0f}, camera.up);
     glm_vec3_copy((vec3){0.0f, 1.0f, 0.0f}, camera.worldUp);
@@ -43,31 +46,47 @@ void camera_init(float fov, float sensitivity, vec3 position) {
 }
 
 static void camera_handleKeyboard() {
-    float cameraSpeed = camera.speed * window.dt;
-
-    if (glfwGetKey(window.self, GLFW_KEY_W) == GLFW_PRESS) { // forward
-        vec3 mult;
-        glm_vec3_scale(camera.front, cameraSpeed, mult);
-        glm_vec3_add(camera.position, mult, camera.position);
+    if (glfwGetKey(window.self, GLFW_KEY_S) == GLFW_PRESS && camera.velocity[2] > -camera.speed) {
+        camera.acceleration[2] = -0.1;
+    } else if (glfwGetKey(window.self, GLFW_KEY_W) == GLFW_PRESS && camera.velocity[2] < camera.speed) {
+        camera.acceleration[2] = 0.1;
+    } else if (fabsf(camera.velocity[2]) > 0.2) {
+        camera.acceleration[2] = (camera.velocity[2] < 0) ? 0.15 : -0.15;
+    } else {
+        camera.velocity[2] = 0;
+        camera.acceleration[2] = 0;
     }
 
-    if (glfwGetKey(window.self, GLFW_KEY_S) == GLFW_PRESS) { // backward
-        vec3 mult;
-        glm_vec3_scale(camera.front, cameraSpeed, mult);
-        glm_vec3_sub(camera.position, mult, camera.position);
+    vec3 m1;
+    camera.velocity[2] += camera.acceleration[2];
+    glm_vec3_scale(camera.front, camera.velocity[2] * window.dt, m1);
+    glm_vec3_add(camera.position, m1, camera.position);
+
+    /*if (glfwGetKey(window.self, GLFW_KEY_SPACE) == GLFW_PRESS && camera.velocity[1] == 0 && camera.acceleration[1] == 0) {
+        camera.velocity[1] = -7;
+    }
+    camera.acceleration[1] -= 0.7; // Gravity
+    camera.velocity[1] += camera.acceleration[1];
+    camera.position[1] += camera.velocity[1] * window.dt;
+    camera.acceleration[1] = 0; // Reset acceleration*/
+
+
+   if (glfwGetKey(window.self, GLFW_KEY_D) == GLFW_PRESS && camera.velocity[0] < camera.speed) {
+        camera.acceleration[0] = -0.1;
+    } else if (glfwGetKey(window.self, GLFW_KEY_A) == GLFW_PRESS && camera.velocity[0] > -camera.speed) {
+        camera.acceleration[0] = 0.1;
+    } else if (fabsf(camera.velocity[0]) > 0.2) {
+        camera.acceleration[0] = (camera.velocity[0] < 0) ? 0.15 : -0.15;
+    } else {
+        camera.velocity[0] = 0;
+        camera.acceleration[0] = 0;
     }
 
-    if (glfwGetKey(window.self, GLFW_KEY_A) == GLFW_PRESS) { // left
-        vec3 mult;
-        glm_vec3_scale(camera.right, cameraSpeed, mult);
-        glm_vec3_sub(camera.position, mult, camera.position);
-    }
+    vec3 m2;
+    camera.velocity[0] += camera.acceleration[0];
+    glm_vec3_scale(camera.right, camera.velocity[0] * window.dt, m2);
+    glm_vec3_sub(camera.position, m2, camera.position);
 
-    if (glfwGetKey(window.self, GLFW_KEY_D) == GLFW_PRESS) { // right
-        vec3 mult;
-        glm_vec3_scale(camera.right, cameraSpeed, mult);
-        glm_vec3_add(camera.position, mult, camera.position);
-    } 
 
     if (glfwGetKey(window.self, GLFW_KEY_E) == GLFW_PRESS) {
         camera.speed = camera.speedValue[2];

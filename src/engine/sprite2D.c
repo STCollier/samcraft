@@ -41,17 +41,17 @@ struct Sprite2D sprite2D_new(const char* filename, ivec2 position, float scale) 
 
     stbi_image_free(data);
 
-    glGenVertexArrays(1, &sprite.VAO);
-    glGenBuffers(1, &sprite.VBO);
+    GL_CHECK(glGenVertexArrays(1, &sprite.VAO));
+    GL_CHECK(glGenBuffers(1, &sprite.VBO));
 
-    glBindBuffer(GL_ARRAY_BUFFER, sprite.VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, sprite.VBO));
+    GL_CHECK(glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW));
 
-    glBindVertexArray(sprite.VAO);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);  
-    glBindVertexArray(0);
+    GL_CHECK(glBindVertexArray(sprite.VAO));
+    GL_CHECK(glEnableVertexAttribArray(0));
+    GL_CHECK(glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0));
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));  
+    GL_CHECK(glBindVertexArray(0));
 
     return sprite;
 };
@@ -73,5 +73,5 @@ void sprite2D_render(struct Sprite2D *sprite, shader_t shader) {
 
     GL_CHECK(glBindVertexArray(sprite->VAO));
     GL_CHECK(glDrawArrays(GL_TRIANGLES, 0, 6));
-   GL_CHECK(glBindVertexArray(0));
+    GL_CHECK(glBindVertexArray(0));
 }

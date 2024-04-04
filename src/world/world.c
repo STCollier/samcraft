@@ -1,6 +1,7 @@
 #include "world.h"
 #include "worldgen.h"
 #include "../engine/player.h"
+#include "../engine/globals.h"
 
 struct World world;
 
@@ -66,31 +67,55 @@ void world_meshChunk(ivec3 position) {
 void world_remeshChunk(ivec3 position) {
     struct Chunk *chunk = world_getChunk(position);
 
-    uint64_t_arr_delete(&chunk->mesh->opaque->vertices);
-    uint32_t_arr_delete(&chunk->mesh->opaque->indices);
+    if (!chunk->empty) {
+        uint64_t_arr_delete(&chunk->mesh->opaque->vertices);
+        uint32_t_arr_delete(&chunk->mesh->opaque->indices);
 
-    uint64_t_arr_delete(&chunk->mesh->transparent->vertices);
-    uint32_t_arr_delete(&chunk->mesh->transparent->indices);
+        uint64_t_arr_delete(&chunk->mesh->transparent->vertices);
+        uint32_t_arr_delete(&chunk->mesh->transparent->indices);
 
-    ivec3 positions[6] = {
-        {position[0] + 1, position[1], position[2]}, // Right
-        {position[0] - 1, position[1], position[2]}, // Left
-        {position[0], position[1], position[2] - 1}, // Front
-        {position[0], position[1], position[2] + 1}, // Back
-        {position[0], position[1] + 1, position[2]}, // Top
-        {position[0], position[1] - 1, position[2]}, // Bottom
-    };
+        ivec3 positions[6] = {
+            {position[0] + 1, position[1], position[2]}, // Right
+            {position[0] - 1, position[1], position[2]}, // Left
+            {position[0], position[1], position[2] - 1}, // Front
+            {position[0], position[1], position[2] + 1}, // Back
+            {position[0], position[1] + 1, position[2]}, // Top
+            {position[0], position[1] - 1, position[2]}, // Bottom
+        };
 
-    chunk_remesh(world_getChunk(position), 
-        world_getChunk(positions[RIGHT]),
-        world_getChunk(positions[LEFT]),
-        world_getChunk(positions[FRONT]),
-        world_getChunk(positions[BACK]),
-        world_getChunk(positions[TOP]),
-        world_getChunk(positions[BOTTOM])
-    );
+        chunk_remesh(world_getChunk(position), 
+            world_getChunk(positions[RIGHT]),
+            world_getChunk(positions[LEFT]),
+            world_getChunk(positions[FRONT]),
+            world_getChunk(positions[BACK]),
+            world_getChunk(positions[TOP]),
+            world_getChunk(positions[BOTTOM])
+        );
 
-    chunk_bind(world_getChunk(position));
+        chunk_bind(chunk);
+    } else {
+        chunk_mesh(chunk);
+
+        ivec3 positions[6] = {
+            {position[0] + 1, position[1], position[2]}, // Right
+            {position[0] - 1, position[1], position[2]}, // Left
+            {position[0], position[1], position[2] - 1}, // Front
+            {position[0], position[1], position[2] + 1}, // Back
+            {position[0], position[1] + 1, position[2]}, // Top
+            {position[0], position[1] - 1, position[2]}, // Bottom
+        };
+
+        chunk_remesh(world_getChunk(position), 
+            world_getChunk(positions[RIGHT]),
+            world_getChunk(positions[LEFT]),
+            world_getChunk(positions[FRONT]),
+            world_getChunk(positions[BACK]),
+            world_getChunk(positions[TOP]),
+            world_getChunk(positions[BOTTOM])
+        );
+
+        chunk_bind(chunk);
+    }
 }
 
 static void world_addChunkToQueue(struct Chunk *chunk, enum ChunkQueueState state) {
@@ -149,7 +174,7 @@ void thread_genchunk(void *arg) {
 
 void world_loadNewChunks() {
     for (int z = -world.renderRadius + player.chunkPosition[2]; z < world.renderRadius + player.chunkPosition[2]; z++) {
-        for (int y = 0; y < world.renderHeight; y++) {
+        for (int y = -world.renderHeight + player.chunkPosition[1]; y < world.renderHeight + player.chunkPosition[1]; y++) {
             for (int x = -world.renderRadius + player.chunkPosition[0]; x < world.renderRadius + player.chunkPosition[0]; x++) {
                 ivec2 origin = {player.chunkPosition[0], player.chunkPosition[2]};
                 ivec2 pos = {x, z};
@@ -165,13 +190,13 @@ void world_loadNewChunks() {
     }
 
     for (int z = -world.renderRadius + player.chunkPosition[2]; z < world.renderRadius + player.chunkPosition[2]; z++) {
-        for (int y = 0; y < world.renderHeight; y++) {
+        for (int y = -world.renderHeight + player.chunkPosition[1]; y < world.renderHeight + player.chunkPosition[1]; y++) {
             for (int x = -world.renderRadius + player.chunkPosition[0]; x < world.renderRadius + player.chunkPosition[0]; x++) {
                 ivec2 origin = {player.chunkPosition[0], player.chunkPosition[2]};
                 ivec2 pos = {x, z};
                 
                 if (idist2d(origin, pos) < world.renderRadius) {
-                    if (world_getChunk((ivec3){x, y, z})->state == ADDED && !world_getChunk((ivec3){x, y, z})->addedToMeshQueue) {
+                    if (world_getChunk((ivec3){x, y, z})->state == GENERATED && !world_getChunk((ivec3){x, y, z})->addedToMeshQueue && !world_getChunk((ivec3){x, y, z})->empty) {
                         world_getChunk((ivec3){x, y, z})->addedToMeshQueue = true;
                         world_addChunkToQueue(world_getChunk((ivec3){x, y, z}), MESH);
                     }
@@ -184,9 +209,9 @@ void world_loadNewChunks() {
 void world_init(int renderRadius) {
     world.chunks = NULL; // Initilize to NULL for hashtable
     world.renderRadius = renderRadius;
-    world.renderHeight = 5;
+    world.renderHeight = 3;
 
-    world.chunkQueue.passesPerFrame = 2;
+    world.chunkQueue.passesPerFrame = 1;
     world.chunkQueue.queuesComplete = false;
 
     world.chunkQueue.toGenerate.capacity = 16;
@@ -203,7 +228,7 @@ void world_init(int renderRadius) {
     world.chunkQueue.toMesh.chunks = malloc(sizeof(struct Chunk) * world.chunkQueue.toMesh.capacity);
     memset(world.chunkQueue.toMesh.chunks, 0, world.chunkQueue.toMesh.capacity);
     
-    worldgenInit(0xff);
+    worldgenInit(0x1);
 
     for (int z = -world.renderRadius; z < world.renderRadius; z++) {
         for (int y = -world.renderHeight; y < world.renderHeight; y++) {
@@ -225,7 +250,7 @@ void world_init(int renderRadius) {
                 ivec2 origin = {0, 0};
                 ivec2 pos = {x, z};
 
-                if (idist2d(origin, pos) < world.renderRadius) {
+                if (idist2d(origin, pos) < world.renderRadius && !world_getChunk((ivec3){x, y, z})->empty) {
                     world_meshChunk((ivec3){x, y, z});
                 }
             }
@@ -237,11 +262,23 @@ void world_init(int renderRadius) {
 
 ivec3s renderPos = (ivec3s){0, 0, 0};
 
+float t = 0;
+int fps = 0;
 void world_render(shader_t shader, threadpool thpool) {
     if (player.exitedChunk) {
         world_loadNewChunks();
 
         player.exitedChunk = false;
+    }
+
+    t += window.dt;
+    if (t >= 1) {
+        world_loadNewChunks();
+        printf("FPS: %d\n", fps);
+        t = 0;
+        fps = 0;
+    } else {
+        fps++;
     }
 
     //printf("gen size: %zu\nmesh size: %zu\n\n", world.chunkQueue.toGenerate.size, world.chunkQueue.toMesh.size);
@@ -281,12 +318,12 @@ void world_render(shader_t shader, threadpool thpool) {
     world.chunkQueue.queuesComplete = (world.chunkQueue.toGenerate.size == 0 && world.chunkQueue.toMesh.size == 0);
 
     for (int z = -world.renderRadius + player.chunkPosition[2]; z < world.renderRadius + player.chunkPosition[2]; z++) {
-        for (int y = 0; y < world.renderHeight; y++) {
+        for (int y = -world.renderHeight + player.chunkPosition[1]; y < world.renderHeight + player.chunkPosition[1]; y++) {
             for (int x = -world.renderRadius + player.chunkPosition[0]; x < world.renderRadius + player.chunkPosition[0]; x++) {
                 ivec2 origin = {player.chunkPosition[0], player.chunkPosition[2]};
                 ivec2 pos = {x, z};
 
-                if (idist2d(origin, pos) < world.renderRadius) {
+                if (idist2d(origin, pos) < world.renderRadius && world_getChunk((ivec3){x, y, z}) != NULL) {
                     if (world_getChunk((ivec3){x, y, z})->state == BOUND) chunk_render(world_getChunk((ivec3){x, y, z}), shader, 1);
                 }
             }
@@ -294,12 +331,12 @@ void world_render(shader_t shader, threadpool thpool) {
     }
 
     for (int z = -world.renderRadius + player.chunkPosition[2]; z < world.renderRadius + player.chunkPosition[2]; z++) {
-        for (int y = 0; y < world.renderHeight; y++) {
+        for (int y = -world.renderHeight + player.chunkPosition[1]; y < world.renderHeight + player.chunkPosition[1]; y++) {
             for (int x = -world.renderRadius + player.chunkPosition[0]; x < world.renderRadius + player.chunkPosition[0]; x++) {
                 ivec2 origin = {player.chunkPosition[0], player.chunkPosition[2]};
                 ivec2 pos = {x, z};
 
-                if (idist2d(origin, pos) < world.renderRadius) {
+                if (idist2d(origin, pos) < world.renderRadius && world_getChunk((ivec3){x, y, z}) != NULL) {
                     if (world_getChunk((ivec3){x, y, z})->state == BOUND) chunk_render(world_getChunk((ivec3){x, y, z}), shader, 0);
                 }
             }

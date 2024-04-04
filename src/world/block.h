@@ -27,6 +27,7 @@ struct BlockData {
     int id;
     const char* name;
     const char* textures[6];
+    float hardness;
 };
 
 void blockdata_loadLuaData();
@@ -36,6 +37,7 @@ unsigned int block_getArrayTexture();
 unsigned int block_getBreakArrayTexture();
 int block_getID(const char* name);
 int block_getTextureIndex(int id, Direction dir);
+float block_getHardnessValue(int blockID);
 
 
 extern struct BlockData blockData[256];

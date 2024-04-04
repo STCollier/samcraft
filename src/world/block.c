@@ -16,7 +16,6 @@ static void loadLuaFile(const char* filename) {
     luaL_openlibs(L);
 
     const char* blockTextures[6] = {0};
-    const char* blockName = 0;
 
     if (luaL_dofile(L, filename)) {
         ERROR_MSG("Error loading Lua block file:", lua_tostring(L, -1));
@@ -27,7 +26,8 @@ static void loadLuaFile(const char* filename) {
     }
 
     lua_getGlobal(L, "block", "The field 'block' is not a table at", filename);
-    blockName = lua_getString(L, "name", "The field 'name' is not a string at", filename);
+    const char* blockName = lua_getString(L, "name", "The field 'name' is invalid at", filename);
+    float blockHardness = lua_getFloat(L, "hardness", "The field 'hardness' is invalid at", filename);
     lua_getField(L, "textures", "The field 'textures' is not a table at", filename);
 
     lua_getfield(L, -1, "all");
@@ -47,6 +47,7 @@ static void loadLuaFile(const char* filename) {
     if (blockData[blockID].id == -1) {
         blockData[blockID].id = blockID;
         blockData[blockID].name = blockName;
+        blockData[blockID].hardness = blockHardness;
         for (int i = 0; i < 6; i++ ) {
             blockData[blockID].textures[i] = blockTextures[i];
         }
@@ -83,6 +84,7 @@ void blockdata_loadLuaData() {
 
     blockData[BLOCK_NULL].id = BLOCK_NULL;
     blockData[BLOCK_NULL].name = "null";
+    blockData[BLOCK_NULL].hardness = 1.0;
     for (int i = 0; i < 6; i++) {
         blockData[BLOCK_NULL].textures[i] = "null.png";
     }
@@ -105,11 +107,11 @@ void blockdata_loadArrayTexture() {
             numTextures++;
         }
     }
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);    
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT));    
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT));
 
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
 
     // Allocate texture storage with GL_RGBA8 internal format
     GL_CHECK(glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_SRGB8_ALPHA8, 16, 16, numTextures, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL));
@@ -137,11 +139,11 @@ void blockdata_loadArrayTexture() {
     GL_CHECK(glGenTextures(1, &blockBreakArrayTexture));
     GL_CHECK(glBindTexture(GL_TEXTURE_2D_ARRAY, blockBreakArrayTexture));
 
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);    
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT));    
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT));
 
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
+    GL_CHECK(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
 
     // Allocate texture storage with GL_RGBA8 internal format
     GL_CHECK(glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_SRGB8_ALPHA8, 16, 16, 5, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL));
@@ -208,4 +210,8 @@ int block_getTextureIndex(int blockID, Direction dir) {
     }
 
     return block_getTextureIndex(BLOCK_NULL, 0); // Setting to 0 because it doesn't matter; can be any arbitrary value due to all null textures being the same
-} 
+}
+
+float block_getHardnessValue(int blockID) {
+    return blockData[blockID].hardness;
+}

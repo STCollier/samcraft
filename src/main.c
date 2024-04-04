@@ -13,6 +13,7 @@
 #include "engine/thpool.h"
 #include "engine/globals.h"
 #include "engine/block_overlay.h"
+#include "engine/text.h"
 
 #include "world/world.h"
 #include "world/chunk.h"
@@ -23,17 +24,25 @@ int main() {
     shader_t blockOverlayShader = shader_new("res/shaders/block_overlay.vert", "res/shaders/block_overlay.frag");
     shader_t shader2D = shader_new("res/shaders/2D.vert", "res/shaders/2D.frag");
     shader_t skyShader = shader_new("res/shaders/sky.vert", "res/shaders/sky.frag");
+    shader_t textShader = shader_new("res/shaders/text.vert", "res/shaders/text.frag");
 
     globals_init();
 
     shader_use(shader2D);
     mat4 projection2D;
-    glUniform1i(glGetUniformLocation(shader2D.ID, "image"), 0);
     glm_ortho(0.0f, window.width, window.height, 0.0f, -1.0f, 1.0f, projection2D);
     shader_setMat4(shader2D, "projection", projection2D);
 
+    shader_use(textShader);
+    mat4 textProjection;
+    glm_ortho(0.0f, window.width, window.height, 0.0f, -1.0f, 1.0f, textProjection);
+    shader_setMat4(textShader, "projection", textProjection);
+
     struct Sprite2D crosshair = sprite2D_new("res/textures/crosshair.png", (ivec2){window.width / 2, window.height / 2}, 32.0f);
     struct Skybox sky = skybox_new();
+
+    struct Font font = font_load("res/textures/pixel-font.png", " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567890`~!@#$%^&*()-_+=[]{}\\|;:'\"<>,./?�", 32, textShader);
+    struct Text testText = text_new("aaa bcdef", (ivec2){100, 100}, font);
 
     stbi_set_flip_vertically_on_load(true);
     blockdata_loadLuaData();
@@ -48,6 +57,7 @@ int main() {
     bool clicked = false;
 
     float breakTick = 0;
+    int t = 0;
     ivec3 oldPosition;
     while (!glfwWindowShouldClose(window.self)) {
         window_update();
@@ -65,26 +75,9 @@ int main() {
 
         if (window.leftClicked) {
             player_raycast();
-            if (breakTick == 0) glm_ivec3_copy(player.ray.worldPosition, oldPosition);
-
-            if (oldPosition[0] == player.ray.worldPosition[0] && oldPosition[1] == player.ray.worldPosition[1] && oldPosition[2] == player.ray.worldPosition[2]) {
-                breakTick += window.dt;
-                printf("%d\n", (int)(breakTick * 5.0));
-
-                if (player.ray.blockFound) block_overlay_use(blockOverlayShader);
-
-                shader_setInt(blockOverlayShader, "breakState", (int) (breakTick * 5.0));
-            } else {
-                breakTick = 0;
-            }
-
-            if (breakTick >= 1) {
-                player_destroyBlock();
-
-                breakTick = 0;
-            }
+            player_destroyBlock(blockOverlayShader);
         } else {
-            breakTick = 0;
+            player.breakTime = 0;
         }
 
         if (window.rightClicked && !clicked) {
@@ -95,7 +88,8 @@ int main() {
 
         clicked = !window.onMouseRelease;
 
-        sprite2D_render(&crosshair, shader2D); 
+        text_draw(testText);
+        sprite2D_render(&crosshair, shader2D);
 
         glfwSwapBuffers(window.self);
         glfwPollEvents();

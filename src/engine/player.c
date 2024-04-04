@@ -1,18 +1,99 @@
 #include "player.h"
 #include "globals.h"
+#include "block_overlay.h"
 
 struct Player player; 
 
+static bool player_collision(ivec3 position) {
+    return (
+        player.position[0] <= position[0] + 1 &&
+        player.position[0] + player.dimensions[0] >= position[0] &&
+        player.position[1] <= position[1] + 1 &&
+        player.position[1] + player.dimensions[1] >= position[1] &&
+        player.position[2] <= position[2] + 1 &&
+        player.position[2] + player.dimensions[2] >= position[2]
+    );
+}
+
+static float player_AABB(ivec3 position, float* normalX, float* normalZ) {
+    float xInvEntry, zInvEntry; 
+    float xInvExit, zInvExit;
+
+    float xEntry, zEntry; 
+    float xExit, zExit;
+
+    if (camera.velocity[0] > 0.0f) { 
+        xInvEntry = position[0] - (camera.position[0] + player.dimensions[0]); 
+        xInvExit = (position[0] + 1) - camera.position[0];
+    } else  { 
+        xInvEntry = (position[0] + 1) - player.position[0];  
+        xInvExit = position[0] - (player.position[0] + player.dimensions[0]);  
+    } 
+
+    if (camera.velocity[2] > 0.0f) { 
+        zInvEntry = position[2] - (camera.position[2] + player.dimensions[2]); 
+        zInvExit = (position[2] + 1) - camera.position[2];
+    } else  { 
+        zInvEntry = (position[2] + 1) - player.position[2];  
+        zInvExit = position[2] - (player.position[2] + player.dimensions[2]);  
+    }
+
+    if (camera.velocity[0] == 0.0f) { 
+        xEntry = -INFINITY;
+        xExit = INFINITY;
+    } else {
+        xEntry = xInvEntry / camera.velocity[0]; 
+        xExit = xInvExit / camera.velocity[0]; 
+    } 
+
+    if (camera.velocity[2] == 0.0f) { 
+        zEntry = -INFINITY;
+        zExit = INFINITY;
+    } else {
+        zEntry = zInvEntry / camera.velocity[2]; 
+        zExit = zInvExit / camera.velocity[2]; 
+    } 
+
+    float entryTime = fmax(xEntry, zEntry); 
+    float exitTime = fmin(xExit, zExit);
+
+    if (entryTime > exitTime || xEntry < 0.0f && zEntry < 0.0f || xEntry > 1.0f || zEntry > 1.0f) { 
+        *normalX = 0.0f; 
+        *normalZ = 0.0f;
+        return 1.0f; 
+    } else {
+        if (xEntry > zEntry) { 
+            if (xInvEntry < 0.0f) { 
+                *normalX = 1.0f; 
+                *normalZ = 0.0f; 
+            } else { 
+                *normalX = -1.0f; 
+                *normalZ = 0.0f;
+            } 
+        } else { 
+            if (zInvEntry < 0.0f) { 
+                *normalX = 0.0f; 
+                *normalZ = 1.0f; 
+            } else { 
+                *normalX = 0.0f;
+                *normalZ = -1.0f;
+            } 
+        }
+        return entryTime; 
+    }
+}
+
 void player_init() {
     player.FOV = globals.FOV;
-    glm_vec3_copy((vec3){CHUNK_SIZE / 2, 100.0f, CHUNK_SIZE / 2}, player.position);
-
+    glm_vec3_copy((vec3){25.0f, 200.0f, 25.0f}, player.position);
+    glm_vec3_copy((vec3){0.6, 1.8, 0.6}, player.dimensions);
     glm_ivec3_copy((ivec3){player.position[0] / CHUNK_SIZE, player.position[1] / CHUNK_SIZE, player.position[2] / CHUNK_SIZE}, player.chunkPosition);
     glm_ivec3_copy((ivec3){0, 0, 0}, player.previousPosition);
 
     camera_init(player.FOV, globals.mouseSensitivity, player.position);
     player.exitedChunk = false;
 
+    player.breakTime = 0.0f;
     player.selectedBlock = block_getID("dirt");
     player.reach = globals.reach;
 }
@@ -20,6 +101,31 @@ void player_init() {
 void player_update() {
     glm_vec3_copy(camera.position, player.position);
     glm_ivec3_copy((ivec3){player.position[0] / CHUNK_SIZE, player.position[1] / CHUNK_SIZE, player.position[2] / CHUNK_SIZE}, player.chunkPosition);
+    for (int i = 0; i < 3; i++) {
+        if (player.position[i] < 0) {
+            player.chunkPosition[i] -= 1;
+        }
+    }
+
+    struct Chunk* chunk = world_getChunk(player.chunkPosition);
+
+    bool collision = false;
+    ivec3 blockCollisionPosition;
+    for (int x = 1; x < CS_P-1; x++) {
+        for (int y = 1; y < CS_P-1; y++) {
+            for (int z  = 1; z < CS_P-1; z++) { 
+                if (chunk != NULL && chunk->voxels[blockIndex(x, y, z)] != BLOCK_AIR) {
+                    glm_ivec3_copy((ivec3){
+                        x + player.chunkPosition[0] * CHUNK_SIZE,
+                        y + player.chunkPosition[1] * CHUNK_SIZE, 
+                        z + player.chunkPosition[2] * CHUNK_SIZE
+                    }, blockCollisionPosition);
+                }
+            }
+        }
+    }
+
+
 
     if ((player.chunkPosition[0] != player.previousPosition[0]) || 
         (player.chunkPosition[1] != player.previousPosition[1]) ||
@@ -160,55 +266,71 @@ void player_placeBlock() {
     }
 }
 
-void player_destroyBlock() {
+void player_destroyBlock(shader_t blockOverlayShader) {
     struct Chunk *chunkToModify = player.ray.chunkToModify;
 
     if (player.ray.blockFound) {
-        chunkToModify->voxels[blockIndex(player.ray.blockFoundPosition[0], player.ray.blockFoundPosition[1], player.ray.blockFoundPosition[2])] = BLOCK_AIR;
-        ivec3 newPosition;
+        float hardness = block_getHardnessValue(chunkToModify->voxels[blockIndex(player.ray.blockFoundPosition[0], player.ray.blockFoundPosition[1], player.ray.blockFoundPosition[2])]);
 
-        // X axis remeshing
-        if (player.ray.blockFoundPosition[0] == 1) {
-            glm_ivec3_copy((ivec3){chunkToModify->position[0] - 1, chunkToModify->position[1], chunkToModify->position[2]}, newPosition);
-            world_remeshChunk(newPosition);
-        } else if (player.ray.blockFoundPosition[0] == CHUNK_SIZE) {
-            glm_ivec3_copy((ivec3){chunkToModify->position[0] + 1, chunkToModify->position[1], chunkToModify->position[2]}, newPosition);
-            world_remeshChunk(newPosition);
+        if (player.breakTime == 0) glm_ivec3_copy(player.ray.worldPosition, player.previousRayLookAt);
+
+        if (player.previousRayLookAt[0] == player.ray.worldPosition[0] && player.previousRayLookAt[1] == player.ray.worldPosition[1] && player.previousRayLookAt[2] == player.ray.worldPosition[2]) {
+            player.breakTime += window.dt;
+
+            if (player.ray.blockFound) block_overlay_use(blockOverlayShader, (int) ((player.breakTime / hardness) * 5.0));
+        } else {
+            player.breakTime = 0;
         }
 
-        // Y axis remeshing
-        if (player.ray.blockFoundPosition[1] == 1) {
-            glm_ivec3_copy((ivec3){chunkToModify->position[0], chunkToModify->position[1] - 1, chunkToModify->position[2]}, newPosition);
-            world_remeshChunk(newPosition);
-        } else if (player.ray.blockFoundPosition[1] == CHUNK_SIZE) {
-            glm_ivec3_copy((ivec3){chunkToModify->position[0], chunkToModify->position[1] + 1, chunkToModify->position[2]}, newPosition);
-            world_remeshChunk(newPosition);
-        }
+        if (player.breakTime >= hardness) {
+            chunkToModify->voxels[blockIndex(player.ray.blockFoundPosition[0], player.ray.blockFoundPosition[1], player.ray.blockFoundPosition[2])] = BLOCK_AIR;
+            ivec3 newPosition;
 
-        // Z axis remeshing
-        if (player.ray.blockFoundPosition[2] == 1) {
-            glm_ivec3_copy((ivec3){chunkToModify->position[0], chunkToModify->position[1], chunkToModify->position[2] - 1}, newPosition);
-            world_remeshChunk(newPosition);
-        } else if (player.ray.blockFoundPosition[2] == CHUNK_SIZE) {
-            glm_ivec3_copy((ivec3){chunkToModify->position[0], chunkToModify->position[1], chunkToModify->position[2] + 1}, newPosition);
-            world_remeshChunk(newPosition);
-        }
+            // X axis remeshing
+            if (player.ray.blockFoundPosition[0] == 1) {
+                glm_ivec3_copy((ivec3){chunkToModify->position[0] - 1, chunkToModify->position[1], chunkToModify->position[2]}, newPosition);
+                world_remeshChunk(newPosition);
+            } else if (player.ray.blockFoundPosition[0] == CHUNK_SIZE) {
+                glm_ivec3_copy((ivec3){chunkToModify->position[0] + 1, chunkToModify->position[1], chunkToModify->position[2]}, newPosition);
+                world_remeshChunk(newPosition);
+            }
 
-        // Remesh to fix AO on diagonal chunks 
-        if (player.ray.blockFoundPosition[0] == CHUNK_SIZE && player.ray.blockFoundPosition[2] == CHUNK_SIZE) {
-            glm_ivec3_copy((ivec3){chunkToModify->position[0] + 1, chunkToModify->position[1], chunkToModify->position[2] + 1}, newPosition);
-            world_remeshChunk(newPosition);
-        } else if (player.ray.blockFoundPosition[0] == 1 && player.ray.blockFoundPosition[2] == 1) {
-            glm_ivec3_copy((ivec3){chunkToModify->position[0] - 1, chunkToModify->position[1], chunkToModify->position[2] - 1}, newPosition);
-            world_remeshChunk(newPosition);
-        } else if (player.ray.blockFoundPosition[0] == 1 && player.ray.blockFoundPosition[2] == CHUNK_SIZE) {
-            glm_ivec3_copy((ivec3){chunkToModify->position[0] - 1, chunkToModify->position[1], chunkToModify->position[2] + 1}, newPosition);
-            world_remeshChunk(newPosition);
-        } else if (player.ray.blockFoundPosition[0] == CHUNK_SIZE && player.ray.blockFoundPosition[2] == 1) {
-            glm_ivec3_copy((ivec3){chunkToModify->position[0] + 1, chunkToModify->position[1], chunkToModify->position[2] - 1}, newPosition);
-            world_remeshChunk(newPosition);
-        }
+            // Y axis remeshing
+            if (player.ray.blockFoundPosition[1] == 1) {
+                glm_ivec3_copy((ivec3){chunkToModify->position[0], chunkToModify->position[1] - 1, chunkToModify->position[2]}, newPosition);
+                world_remeshChunk(newPosition);
+            } else if (player.ray.blockFoundPosition[1] == CHUNK_SIZE) {
+                glm_ivec3_copy((ivec3){chunkToModify->position[0], chunkToModify->position[1] + 1, chunkToModify->position[2]}, newPosition);
+                world_remeshChunk(newPosition);
+            }
 
-        world_remeshChunk(chunkToModify->position);
+            // Z axis remeshing
+            if (player.ray.blockFoundPosition[2] == 1) {
+                glm_ivec3_copy((ivec3){chunkToModify->position[0], chunkToModify->position[1], chunkToModify->position[2] - 1}, newPosition);
+                world_remeshChunk(newPosition);
+            } else if (player.ray.blockFoundPosition[2] == CHUNK_SIZE) {
+                glm_ivec3_copy((ivec3){chunkToModify->position[0], chunkToModify->position[1], chunkToModify->position[2] + 1}, newPosition);
+                world_remeshChunk(newPosition);
+            }
+
+            // Remesh to fix AO on diagonal chunks 
+            if (player.ray.blockFoundPosition[0] == CHUNK_SIZE && player.ray.blockFoundPosition[2] == CHUNK_SIZE) {
+                glm_ivec3_copy((ivec3){chunkToModify->position[0] + 1, chunkToModify->position[1], chunkToModify->position[2] + 1}, newPosition);
+                world_remeshChunk(newPosition);
+            } else if (player.ray.blockFoundPosition[0] == 1 && player.ray.blockFoundPosition[2] == 1) {
+                glm_ivec3_copy((ivec3){chunkToModify->position[0] - 1, chunkToModify->position[1], chunkToModify->position[2] - 1}, newPosition);
+                world_remeshChunk(newPosition);
+            } else if (player.ray.blockFoundPosition[0] == 1 && player.ray.blockFoundPosition[2] == CHUNK_SIZE) {
+                glm_ivec3_copy((ivec3){chunkToModify->position[0] - 1, chunkToModify->position[1], chunkToModify->position[2] + 1}, newPosition);
+                world_remeshChunk(newPosition);
+            } else if (player.ray.blockFoundPosition[0] == CHUNK_SIZE && player.ray.blockFoundPosition[2] == 1) {
+                glm_ivec3_copy((ivec3){chunkToModify->position[0] + 1, chunkToModify->position[1], chunkToModify->position[2] - 1}, newPosition);
+                world_remeshChunk(newPosition);
+            }
+
+            world_remeshChunk(chunkToModify->position);
+
+            player.breakTime = 0;
+        }
     }
 }
