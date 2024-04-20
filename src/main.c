@@ -14,6 +14,7 @@
 #include "engine/globals.h"
 #include "engine/block_overlay.h"
 #include "engine/text.h"
+#include "engine/debugblock.h"
 
 #include "world/world.h"
 #include "world/chunk.h"
@@ -27,6 +28,7 @@ int main() {
     shader_t textShader = shader_new("res/shaders/text.vert", "res/shaders/text.frag");
 
     globals_init();
+    debugblock_init();
 
     shader_use(shader2D);
     mat4 projection2D;
@@ -55,9 +57,6 @@ int main() {
     block_overlay_bind();
     
     bool clicked = false;
-
-    float breakTick = 0;
-    int t = 0;
     ivec3 oldPosition;
     while (!glfwWindowShouldClose(window.self)) {
         window_update();

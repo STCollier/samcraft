@@ -17,6 +17,12 @@ struct Camera {
     vec3 right;
     vec3 worldUp;
 
+    vec3 direction;
+
+    vec3 motion;
+
+    vec2 angle;
+
     float speedValue[3];
     float speed;
 

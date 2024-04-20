@@ -13,7 +13,6 @@ void worldgenInit(int64_t seed) {
 int randInRange(int min, int max) {
    return min + rand() / (RAND_MAX / (max - min + 1) + 1);
 }
-
 double octaveNoise(ivec3 pos, ivec3 offset, double spread, double size, int numOctaves, double persistence) {
     double total = 0;
     double frequency = 1;
@@ -39,7 +38,7 @@ int noiseHeight(ivec3 pos, ivec3 offset) {
     double persistence = 0.5;
 
     double value = octaveNoise(pos, offset, spread, size, numOctaves, persistence);
-    value += 125;
+    value += 80;
 
     return (int) value;
 }

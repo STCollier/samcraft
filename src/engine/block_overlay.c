@@ -7,7 +7,7 @@
 #include "player.h"
 #include "util.h"
 
-float block_overlay_vertices[] = {
+static float block_overlay_vertices[] = {
     -0.001f, -0.001f, -0.001f,  -0.001f, -0.001f,
     1.001f, -0.001f, -0.001f,  1.001f, -0.001f,
     1.001f,  1.001f, -0.001f,  1.001f, 1.001f,

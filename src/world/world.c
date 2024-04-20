@@ -228,7 +228,7 @@ void world_init(int renderRadius) {
     world.chunkQueue.toMesh.chunks = malloc(sizeof(struct Chunk) * world.chunkQueue.toMesh.capacity);
     memset(world.chunkQueue.toMesh.chunks, 0, world.chunkQueue.toMesh.capacity);
     
-    worldgenInit(0x1);
+    worldgenInit(123);
 
     for (int z = -world.renderRadius; z < world.renderRadius; z++) {
         for (int y = -world.renderHeight; y < world.renderHeight; y++) {

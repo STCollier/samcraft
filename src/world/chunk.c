@@ -36,14 +36,8 @@ void chunk_generate(struct Chunk *chunk) {
 
                 if (chunkHeight <= height) {
                     chunk->voxels[blockIndex(x, y, z)] = dirt;
-                } else if (chunk->voxels[blockIndex(x, y, z)] == BLOCK_AIR && chunkHeight < WATER_HEIGHT) {
-                    chunk->voxels[blockIndex(x, y, z)] = water;
                 } else {
                     chunk->voxels[blockIndex(x, y, z)] = BLOCK_AIR;
-                }
-
-                if ((chunk->voxels[blockIndex(x, y, z)] == grass || chunk->voxels[blockIndex(x, y, z)] == dirt) && chunkHeight > 0 && chunkHeight < WATER_HEIGHT + 3) {
-                    chunk->voxels[blockIndex(x, y, z)] = sand;
                 }
 
                 if (!b) b += chunk->voxels[blockIndex(x, y, z)];
@@ -66,7 +60,6 @@ void chunk_generate(struct Chunk *chunk) {
             }
         }
     }
-
 
     chunk->state = GENERATED;
 }

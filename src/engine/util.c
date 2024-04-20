@@ -43,6 +43,20 @@ int inline idist3d(ivec3 a, ivec3 b) {
     return sqrt((b[0] - a[0])*(b[0] - a[0]) + (b[1] - a[1])*(b[1] - a[1]) + (b[2] - a[2])*(b[2] - a[2]));
 }
 
+int inline sign(float x) {
+    return (x > 0) - (x < 0);
+}
+
+float inline clamp(float value, float min, float max) {
+    if (value < min) {
+        return min;
+    } else if (value > max) {
+        return max;
+    } else {
+        return value;
+    }
+}
+
 int inline randInt(int min, int max) {
    return min + rand() / (RAND_MAX / (max - min + 1) + 1);
 }

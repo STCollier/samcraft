@@ -24,7 +24,7 @@ struct Window {
     bool rightClicked;
     bool onMouseRelease;
 
-    int keyPressed[256];
+    int keyPressed[1028];
 
     double mouseX;
     double mouseY;

@@ -40,6 +40,9 @@ void ivec2s_to_ivec2(ivec2s in, ivec2 out);
 #define CONCAT_HELPER(A,B) A##B
 #define CONCAT(A,B) CONCAT_HELPER(A,B)
 #define STRINGIFY(A) #A
+
+#define TAU (M_PI * 2)
+#define EPSILON 0.00001
  
 #define DEFINE_ARRAY_IMPL(type) \
     typedef struct { \
@@ -90,6 +93,8 @@ uint8_t hash8(const char* h);
 int idist2d(ivec2 a, ivec2 b);
 int idist3d(ivec3 a, ivec3 b);
 int randInt(int min, int max);
+int sign(float x);
+float clamp(float value, float min, float max);
 
 int lua_getInt(lua_State *L, const char* field, const char* err, const char* msg);
 bool lua_getBool(lua_State *L, const char* field, const char* err, const char* msg);

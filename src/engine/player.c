@@ -1,96 +1,78 @@
 #include "player.h"
 #include "globals.h"
 #include "block_overlay.h"
+#include "debugblock.h"
 
-struct Player player; 
+struct Player player;
+
+void reflect(vec3 velocity, ivec3 normal, vec3 out) {
+    const float dot = velocity[0] * normal[0] + velocity[1] * normal[1] + velocity[2] * normal[2];
+    const float ux = normal[0] * dot;
+    const float uy = normal[1] * dot;
+    const float uz = normal[2] * dot;
+    const float wx = velocity[0] - ux;
+    const float wy = velocity[1] - uy;
+    const float wz = velocity[2] - uz;
+    out[0] = wx - ux;
+    out[1] = wy - uy;
+    out[2] = wz - uz;
+}
+
 
 static bool player_collision(ivec3 position) {
     return (
-        player.position[0] <= position[0] + 1 &&
-        player.position[0] + player.dimensions[0] >= position[0] &&
-        player.position[1] <= position[1] + 1 &&
-        player.position[1] + player.dimensions[1] >= position[1] &&
-        player.position[2] <= position[2] + 1 &&
-        player.position[2] + player.dimensions[2] >= position[2]
+        camera.position[0] - player.dimensions[0] <= position[0] + 1 &&
+        camera.position[0] + player.dimensions[0] >= position[0] &&
+        camera.position[1] - player.dimensions[1] <= position[1] + 1 &&
+        camera.position[1] + player.dimensions[1] >= position[1] &&
+        camera.position[2] - player.dimensions[2] <= position[2] + 1 &&
+        camera.position[2] + player.dimensions[2] >= position[2]
     );
 }
 
-static float player_AABB(ivec3 position, float* normalX, float* normalZ) {
-    float xInvEntry, zInvEntry; 
-    float xInvExit, zInvExit;
+struct Chunk* getChunkFromPosition(int x, int y, int z) {
+    ivec3 blockPosition, chunkPosition;
+    glm_ivec3_copy((ivec3){x, y, z}, blockPosition);
 
-    float xEntry, zEntry; 
-    float xExit, zExit;
-
-    if (camera.velocity[0] > 0.0f) { 
-        xInvEntry = position[0] - (camera.position[0] + player.dimensions[0]); 
-        xInvExit = (position[0] + 1) - camera.position[0];
-    } else  { 
-        xInvEntry = (position[0] + 1) - player.position[0];  
-        xInvExit = position[0] - (player.position[0] + player.dimensions[0]);  
-    } 
-
-    if (camera.velocity[2] > 0.0f) { 
-        zInvEntry = position[2] - (camera.position[2] + player.dimensions[2]); 
-        zInvExit = (position[2] + 1) - camera.position[2];
-    } else  { 
-        zInvEntry = (position[2] + 1) - player.position[2];  
-        zInvExit = position[2] - (player.position[2] + player.dimensions[2]);  
-    }
-
-    if (camera.velocity[0] == 0.0f) { 
-        xEntry = -INFINITY;
-        xExit = INFINITY;
-    } else {
-        xEntry = xInvEntry / camera.velocity[0]; 
-        xExit = xInvExit / camera.velocity[0]; 
-    } 
-
-    if (camera.velocity[2] == 0.0f) { 
-        zEntry = -INFINITY;
-        zExit = INFINITY;
-    } else {
-        zEntry = zInvEntry / camera.velocity[2]; 
-        zExit = zInvExit / camera.velocity[2]; 
-    } 
-
-    float entryTime = fmax(xEntry, zEntry); 
-    float exitTime = fmin(xExit, zExit);
-
-    if (entryTime > exitTime || xEntry < 0.0f && zEntry < 0.0f || xEntry > 1.0f || zEntry > 1.0f) { 
-        *normalX = 0.0f; 
-        *normalZ = 0.0f;
-        return 1.0f; 
-    } else {
-        if (xEntry > zEntry) { 
-            if (xInvEntry < 0.0f) { 
-                *normalX = 1.0f; 
-                *normalZ = 0.0f; 
-            } else { 
-                *normalX = -1.0f; 
-                *normalZ = 0.0f;
-            } 
-        } else { 
-            if (zInvEntry < 0.0f) { 
-                *normalX = 0.0f; 
-                *normalZ = 1.0f; 
-            } else { 
-                *normalX = 0.0f;
-                *normalZ = -1.0f;
-            } 
+    glm_ivec3_copy((ivec3){blockPosition[0] / CHUNK_SIZE, blockPosition[1] / CHUNK_SIZE, blockPosition[2] / CHUNK_SIZE}, chunkPosition);
+    for (int i = 0; i < 3; i++) {
+        if (blockPosition[i] < 0) {
+            chunkPosition[i] -= 1;
         }
-        return entryTime; 
     }
+
+    return world_getChunk(chunkPosition);
+}
+
+int getBlockIndexFromWorldPosition(int x, int y, int z) {
+    ivec3 worldPosition, blockPosition;
+    glm_ivec3_copy((ivec3){x, y, z}, worldPosition);
+    glm_ivec3_copy((ivec3) {
+        (worldPosition[0] % CHUNK_SIZE) + 1,
+        (worldPosition[1] % CHUNK_SIZE) + 1,
+        (worldPosition[2] % CHUNK_SIZE) + 1},
+    blockPosition);
+
+    for (int i = 0; i < 3; i++) {
+        if (blockPosition[i] < 1) {
+            blockPosition[i] += CHUNK_SIZE;
+        }
+    }
+
+    return blockIndex(blockPosition[0], blockPosition[1], blockPosition[2]);
 }
 
 void player_init() {
     player.FOV = globals.FOV;
-    glm_vec3_copy((vec3){25.0f, 200.0f, 25.0f}, player.position);
+    glm_vec3_copy((vec3){25.0f, 125.0f, 25.0f}, camera.position);
     glm_vec3_copy((vec3){0.6, 1.8, 0.6}, player.dimensions);
-    glm_ivec3_copy((ivec3){player.position[0] / CHUNK_SIZE, player.position[1] / CHUNK_SIZE, player.position[2] / CHUNK_SIZE}, player.chunkPosition);
+    glm_ivec3_copy((ivec3){camera.position[0] / CHUNK_SIZE, camera.position[1] / CHUNK_SIZE, camera.position[2] / CHUNK_SIZE}, player.chunkPosition);
     glm_ivec3_copy((ivec3){0, 0, 0}, player.previousPosition);
 
-    camera_init(player.FOV, globals.mouseSensitivity, player.position);
+    glm_vec3_copy(camera.position, player.aabb.position);
+    glm_vec3_copy((vec3){player.dimensions[0] / 2, player.dimensions[1] / 2, player.dimensions[2] / 2}, player.aabb.half);
+
+    camera_init(player.FOV, globals.mouseSensitivity, camera.position);
     player.exitedChunk = false;
 
     player.breakTime = 0.0f;
@@ -98,34 +80,71 @@ void player_init() {
     player.reach = globals.reach;
 }
 
+struct AABB colliders[512];
+size_t numColliders = 0;
+
 void player_update() {
-    glm_vec3_copy(camera.position, player.position);
-    glm_ivec3_copy((ivec3){player.position[0] / CHUNK_SIZE, player.position[1] / CHUNK_SIZE, player.position[2] / CHUNK_SIZE}, player.chunkPosition);
+    glm_vec3_copy(camera.position, camera.position);
+    glm_ivec3_copy((ivec3){camera.position[0] / CHUNK_SIZE, camera.position[1] / CHUNK_SIZE, camera.position[2] / CHUNK_SIZE}, player.chunkPosition);
     for (int i = 0; i < 3; i++) {
-        if (player.position[i] < 0) {
+        if (camera.position[i] < 0) {
             player.chunkPosition[i] -= 1;
         }
     }
 
-    struct Chunk* chunk = world_getChunk(player.chunkPosition);
+    for (int z = floor(camera.position[2] - 2); z <= ceil(camera.position[2] + 2); z++) {
+        for (int y = floor(camera.position[1] - 3); y <= ceil(camera.position[1] + 3); y++) {
+            for (int x = floor(camera.position[0] - 2); x <= ceil(camera.position[0] + 2); x++) {
+                struct Chunk* chunk = getChunkFromPosition(x, y, z);
 
-    bool collision = false;
-    ivec3 blockCollisionPosition;
-    for (int x = 1; x < CS_P-1; x++) {
-        for (int y = 1; y < CS_P-1; y++) {
-            for (int z  = 1; z < CS_P-1; z++) { 
-                if (chunk != NULL && chunk->voxels[blockIndex(x, y, z)] != BLOCK_AIR) {
-                    glm_ivec3_copy((ivec3){
-                        x + player.chunkPosition[0] * CHUNK_SIZE,
-                        y + player.chunkPosition[1] * CHUNK_SIZE, 
-                        z + player.chunkPosition[2] * CHUNK_SIZE
-                    }, blockCollisionPosition);
+                if (chunk->voxels[getBlockIndexFromWorldPosition(x, y, z)] != BLOCK_AIR) {
+                    struct AABB voxelAABB = {
+                        .position = {x + 1.0, y + 1.0, z + 1.0},
+                        .half = {0.5, 0.5, 0.5}
+                    };
+
+                    colliders[numColliders] = voxelAABB;
+                    numColliders++;
                 }
             }
         }
     }
 
+    for (int i = 0; i < 3; i++) {
+        struct Sweep sweep = sweepInto(player.aabb, colliders, numColliders, camera.motion);
+        if (sweep.hit.result) {
+            //puts("hit!");
+            vec3 v;
+            float p = glm_vec3_dot(camera.motion, (vec3){sweep.hit.normal[0], sweep.hit.normal[1], sweep.hit.normal[2]});
 
+            for (int i = 0; i < 3; i++) {
+                if (sweep.hit.normal[i] == 1)
+                    glm_vec3_sub(camera.motion, (vec3){p, p, p}, v);
+                else if (sweep.hit.normal[i] == -1)
+                    glm_vec3_add(camera.motion, (vec3){p, p, p}, v);
+            }
+
+            //camera.speed = 10;
+            for (int i = 0; i < 3; i++) {
+                if (sweep.hit.normal[i] != 0) {
+                    camera.motion[i] = v[i];
+                }
+            }
+        }
+    }
+
+    //printf("%zu\n", numColliders);
+
+    numColliders = 0;
+
+    glm_vec3_add(camera.position, camera.motion, camera.position);
+    //printf("%f %f %f\n", camera.position[0], camera.position[1], camera.position[2]);
+
+    glm_vec3_copy((vec3){
+        camera.position[0] + player.dimensions[0],
+        camera.position[1] - player.aabb.half[1]/2,
+        camera.position[2] + player.dimensions[2],
+    }, player.aabb.position);
 
     if ((player.chunkPosition[0] != player.previousPosition[0]) || 
         (player.chunkPosition[1] != player.previousPosition[1]) ||
@@ -159,7 +178,7 @@ void player_update() {
 }
 
 void player_raycast() {
-    player.ray = ray_cast(camera.position, camera.front, player.reach);
+    player.ray = ray_cast(camera.position, camera.direction, player.reach);
 }
 
 void player_placeBlock() {
