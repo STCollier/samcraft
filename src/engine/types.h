@@ -29,4 +29,10 @@ typedef enum {
     WEST
 } CardinalDirection;
 
+typedef enum {
+    AXIS_X,
+    AXIS_Y,
+    AXIS_Z
+} Axis;
+
 #endif

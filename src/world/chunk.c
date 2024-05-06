@@ -136,37 +136,37 @@ void chunk_remesh(struct Chunk *chunk, struct Chunk* cn_right, struct Chunk* cn_
 }
 
 void chunk_bind(struct Chunk *chunk) {
-    GL_CHECK(glGenVertexArrays(1, &chunk->VAO));
-    GL_CHECK(glGenBuffers(1, &chunk->VBO));
-    GL_CHECK(glGenBuffers(1, &chunk->EBO));
+    glGenVertexArrays(1, &chunk->VAO);
+    glGenBuffers(1, &chunk->VBO);
+    glGenBuffers(1, &chunk->EBO);
 
-    GL_CHECK(glBindVertexArray(chunk->VAO));
-    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, chunk->VBO));
-    GL_CHECK(glBufferData(GL_ARRAY_BUFFER, chunk->mesh->opaque->vertices.length * sizeof(uint64_t), chunk->mesh->opaque->vertices.data, GL_STATIC_DRAW));
+    glBindVertexArray(chunk->VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, chunk->VBO);
+    glBufferData(GL_ARRAY_BUFFER, chunk->mesh->opaque->vertices.length * sizeof(uint64_t), chunk->mesh->opaque->vertices.data, GL_STATIC_DRAW);
 
-    GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, chunk->EBO));
-    GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, chunk->mesh->opaque->indices.length * sizeof(uint32_t), chunk->mesh->opaque->indices.data, GL_STATIC_DRAW));
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, chunk->EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, chunk->mesh->opaque->indices.length * sizeof(uint32_t), chunk->mesh->opaque->indices.data, GL_STATIC_DRAW);
     
-    GL_CHECK(glVertexAttribIPointer(0, 2, GL_UNSIGNED_INT, 0, (void*)0));
-    GL_CHECK(glEnableVertexAttribArray(0));
-    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
-    GL_CHECK(glBindVertexArray(0));
+    glVertexAttribIPointer(0, 2, GL_UNSIGNED_INT, 0, (void*)0);
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 
-    GL_CHECK(glGenVertexArrays(1, &chunk->tVAO));
-    GL_CHECK(glGenBuffers(1, &chunk->tVBO));
-    GL_CHECK(glGenBuffers(1, &chunk->tEBO));
+    glGenVertexArrays(1, &chunk->tVAO);
+    glGenBuffers(1, &chunk->tVBO);
+    glGenBuffers(1, &chunk->tEBO);
 
-    GL_CHECK(glBindVertexArray(chunk->tVAO));
-    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, chunk->tVBO));
-    GL_CHECK(glBufferData(GL_ARRAY_BUFFER, chunk->mesh->transparent->vertices.length * sizeof(uint64_t), chunk->mesh->transparent->vertices.data, GL_STATIC_DRAW));
+    glBindVertexArray(chunk->tVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, chunk->tVBO);
+    glBufferData(GL_ARRAY_BUFFER, chunk->mesh->transparent->vertices.length * sizeof(uint64_t), chunk->mesh->transparent->vertices.data, GL_STATIC_DRAW);
 
-    GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, chunk->tEBO));
-    GL_CHECK(glBufferData(GL_ELEMENT_ARRAY_BUFFER, chunk->mesh->transparent->indices.length * sizeof(uint32_t), chunk->mesh->transparent->indices.data, GL_STATIC_DRAW));
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, chunk->tEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, chunk->mesh->transparent->indices.length * sizeof(uint32_t), chunk->mesh->transparent->indices.data, GL_STATIC_DRAW);
     
-    GL_CHECK(glVertexAttribIPointer(0, 2, GL_UNSIGNED_INT, 0, (void*)0));
-    GL_CHECK(glEnableVertexAttribArray(0));
-    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
-    GL_CHECK(glBindVertexArray(0));
+    glVertexAttribIPointer(0, 2, GL_UNSIGNED_INT, 0, (void*)0);
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 
     chunk->state = BOUND;
 }
@@ -175,8 +175,8 @@ void chunk_render(struct Chunk *chunk, shader_t shader, bool pass) {
     shader_use(shader);
     shader_setInt(shader, "arrayTexture", 0);
 
-    GL_CHECK(glActiveTexture(GL_TEXTURE0));
-    GL_CHECK(glBindTexture(GL_TEXTURE_2D_ARRAY, block_getArrayTexture()));
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, block_getArrayTexture());
 
     vec3 chunkTranslation;
     glm_vec3_copy((vec3){
@@ -189,18 +189,18 @@ void chunk_render(struct Chunk *chunk, shader_t shader, bool pass) {
     glm_translate(camera.model, chunkTranslation);
     shader_setMat4(shader, "model", camera.model);
 
-    GL_CHECK(glBindVertexArray(chunk->VAO));
-    GL_CHECK(glDrawElements(GL_TRIANGLES, chunk->mesh->opaque->indices.length, GL_UNSIGNED_INT, 0));
+    glBindVertexArray(chunk->VAO);
+    glDrawElements(GL_TRIANGLES, chunk->mesh->opaque->indices.length, GL_UNSIGNED_INT, 0);
 
     if (pass) {
-        GL_CHECK(glBindVertexArray(chunk->VAO));
-        GL_CHECK(glDrawElements(GL_TRIANGLES, chunk->mesh->opaque->indices.length, GL_UNSIGNED_INT, 0));
+        glBindVertexArray(chunk->VAO);
+        glDrawElements(GL_TRIANGLES, chunk->mesh->opaque->indices.length, GL_UNSIGNED_INT, 0);
     } else {
         glm_mat4_identity(camera.model);
         glm_translate(camera.model, (vec3){chunkTranslation[0], chunkTranslation[1] - 0.25, chunkTranslation[2]});
         shader_setMat4(shader, "model", camera.model);
 
-        GL_CHECK(glBindVertexArray(chunk->tVAO));
-        GL_CHECK(glDrawElements(GL_TRIANGLES, chunk->mesh->transparent->indices.length, GL_UNSIGNED_INT, 0));
+        glBindVertexArray(chunk->tVAO);
+        glDrawElements(GL_TRIANGLES, chunk->mesh->transparent->indices.length, GL_UNSIGNED_INT, 0);
     }
 }

@@ -57,6 +57,41 @@ struct Chunk *world_getChunk(ivec3 position) {
     return chunk;
 }
 
+uint8_t getBlockFromWorldPosition(int x, int y, int z) {
+    ivec3 worldPosition, chunkPosition, blockPosition;
+    glm_ivec3_copy((ivec3){x, y, z}, worldPosition);
+    glm_ivec3_copy((ivec3) {
+        worldPosition[0] / CHUNK_SIZE,
+        worldPosition[1] / CHUNK_SIZE,
+        worldPosition[2] / CHUNK_SIZE},
+    chunkPosition);
+
+    for (int i = 0; i < 3; i++) {
+        if (blockPosition[i] < 1) {
+            blockPosition[i] += CHUNK_SIZE;
+        }
+    }
+
+    glm_ivec3_copy((ivec3) {
+        (worldPosition[0] % CHUNK_SIZE) + 1,
+        (worldPosition[1] % CHUNK_SIZE) + 1,
+        (worldPosition[2] % CHUNK_SIZE) + 1},
+    blockPosition);
+
+    for (int i = 0; i < 3; i++) {
+        if (blockPosition[i] < 1) {
+            blockPosition[i] += CHUNK_SIZE;
+            chunkPosition[i] -= 1;
+        }
+    }
+
+    struct Chunk* chunk = world_getChunk(chunkPosition);
+    if (chunk == NULL)
+        return BLOCK_AIR; // this is fine (just means chunks and thus colliders haven't loaded yet)
+
+    return chunk->voxels[blockIndex(blockPosition[0], blockPosition[1], blockPosition[2])];
+}
+
 void world_meshChunk(ivec3 position) {
     struct Chunk *chunk = world_getChunk(position);
 
@@ -68,11 +103,11 @@ void world_remeshChunk(ivec3 position) {
     struct Chunk *chunk = world_getChunk(position);
 
     if (!chunk->empty) {
-        uint64_t_arr_delete(&chunk->mesh->opaque->vertices);
+        /*uint64_t_arr_delete(&chunk->mesh->opaque->vertices);
         uint32_t_arr_delete(&chunk->mesh->opaque->indices);
 
         uint64_t_arr_delete(&chunk->mesh->transparent->vertices);
-        uint32_t_arr_delete(&chunk->mesh->transparent->indices);
+        uint32_t_arr_delete(&chunk->mesh->transparent->indices);*/
 
         ivec3 positions[6] = {
             {position[0] + 1, position[1], position[2]}, // Right
@@ -210,6 +245,7 @@ void world_init(int renderRadius) {
     world.chunks = NULL; // Initilize to NULL for hashtable
     world.renderRadius = renderRadius;
     world.renderHeight = 3;
+    world.loaded = false;
 
     world.chunkQueue.passesPerFrame = 1;
     world.chunkQueue.queuesComplete = false;
@@ -230,6 +266,7 @@ void world_init(int renderRadius) {
     
     worldgenInit(123);
 
+    int c = 0;
     for (int z = -world.renderRadius; z < world.renderRadius; z++) {
         for (int y = -world.renderHeight; y < world.renderHeight; y++) {
             for (int x = -world.renderRadius; x < world.renderRadius; x++) {
@@ -239,6 +276,7 @@ void world_init(int renderRadius) {
                 if (idist2d(origin, pos) < world.renderRadius) {
                     world_addChunk((ivec3){x, y, z});
                     world_generateChunk((ivec3){x, y, z});
+                    c++;
                 }
             }
         }
@@ -249,7 +287,6 @@ void world_init(int renderRadius) {
             for (int x = -world.renderRadius; x < world.renderRadius; x++) {
                 ivec2 origin = {0, 0};
                 ivec2 pos = {x, z};
-
                 if (idist2d(origin, pos) < world.renderRadius && !world_getChunk((ivec3){x, y, z})->empty) {
                     world_meshChunk((ivec3){x, y, z});
                 }
@@ -257,10 +294,9 @@ void world_init(int renderRadius) {
         }
     }
 
-    LOG("World loaded!");
+    world.loaded = true;
+    LOG_IMSG("World loaded, Chunk count: ", c);
 }
-
-ivec3s renderPos = (ivec3s){0, 0, 0};
 
 float t = 0;
 int fps = 0;
@@ -271,7 +307,7 @@ void world_render(shader_t shader, threadpool thpool) {
         player.exitedChunk = false;
     }
 
-    t += window.dt;
+    /*t += window.dt;
     if (t >= 1) {
         world_loadNewChunks();
         printf("FPS: %d\n", fps);
@@ -279,7 +315,7 @@ void world_render(shader_t shader, threadpool thpool) {
         fps = 0;
     } else {
         fps++;
-    }
+    }*/
 
     //printf("gen size: %zu\nmesh size: %zu\n\n", world.chunkQueue.toGenerate.size, world.chunkQueue.toMesh.size);
 

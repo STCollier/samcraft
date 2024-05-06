@@ -27,7 +27,7 @@ void globals_init() {
     globals.renderRadius = lua_getInt(L, "render_radius", "The field 'render_radius' is invalid in", CONFIG_FILENAME);
 
     lua_getField(L, "player_speed", "The field 'player_speed' is not a table at", CONFIG_FILENAME);
-    globals.playerSpeed.slow = lua_getInt(L, "slow", "The field 'player_speed.slow' is invalid in", CONFIG_FILENAME);
-    globals.playerSpeed.normal = lua_getInt(L, "normal", "The field 'player_speed.normal' is invalid in", CONFIG_FILENAME);
-    globals.playerSpeed.sprint = lua_getInt(L, "sprint", "The field 'player_speed.sprint' is invalid in", CONFIG_FILENAME);
+    globals.playerSpeed.slow = lua_getFloat(L, "slow", "The field 'player_speed.slow' is invalid in", CONFIG_FILENAME);
+    globals.playerSpeed.normal = lua_getFloat(L, "normal", "The field 'player_speed.normal' is invalid in", CONFIG_FILENAME);
+    globals.playerSpeed.sprint = lua_getFloat(L, "sprint", "The field 'player_speed.sprint' is invalid in", CONFIG_FILENAME);
 }

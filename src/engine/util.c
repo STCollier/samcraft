@@ -61,6 +61,14 @@ int inline randInt(int min, int max) {
    return min + rand() / (RAND_MAX / (max - min + 1) + 1);
 }
 
+bool inline vec3_nequal(vec3 a, vec3 b) {
+    return (a[0] != b[0]) || (a[1] != b[1]) || (a[2] != b[2]);
+}
+
+bool inline ivec3_nequal(ivec3 a, ivec3 b) {
+    return (a[0] != b[0]) || (a[1] != b[1]) || (a[2] != b[2]);
+}
+
 int lua_getInt(lua_State *L, const char* field, const char* err, const char* msg) {
     lua_getfield(L, -1, field);
     if (!lua_isnumber(L, -1)) {

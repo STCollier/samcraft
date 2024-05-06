@@ -32,22 +32,22 @@ static void _checkCompileErrors(unsigned int shader, enum ShaderType type) {
 }
 
 static char* _getFileContent(FILE* const inputFile) {
-  size_t chunkSize = 1;
-  size_t resultSize = 0;
-  char* result = malloc(chunkSize);
-  while (true) {
-    const size_t bytesRead = fread(result + resultSize, sizeof(char), chunkSize, inputFile);
-    if (bytesRead == chunkSize) {
-      resultSize += chunkSize;
-      chunkSize *= 2;
-      result = realloc(result, resultSize + chunkSize);
-    } else {
-      result[resultSize + bytesRead] = '\0';
-      break;
-    }
-  }
+	size_t chunkSize = 1;
+	size_t resultSize = 0;
+	char* result = malloc(chunkSize);
+	while (true) {
+		const size_t bytesRead = fread(result + resultSize, sizeof(char), chunkSize, inputFile);
+		if (bytesRead == chunkSize) {
+			resultSize += chunkSize;
+			chunkSize *= 2;
+			result = realloc(result, resultSize + chunkSize);
+		} else {
+			result[resultSize + bytesRead] = '\0';
+			break;
+		}
+	}
 
-  return result;
+	return result;
 }
 
 shader_t shader_new(const char* vertexPath, const char* fragmentPath) {

@@ -18,6 +18,8 @@
 void ivec3s_to_ivec3(ivec3s in, ivec3 out);
 void ivec2s_to_ivec2(ivec2s in, ivec2 out);
 
+#define _DEBUG
+
 #ifdef _DEBUG
     #define GL_CHECK(stmt) do { \
         stmt; \
@@ -92,6 +94,8 @@ void checkOpenGLErr(const char* stmt, const char* fname, int line);
 uint8_t hash8(const char* h);
 int idist2d(ivec2 a, ivec2 b);
 int idist3d(ivec3 a, ivec3 b);
+bool vec3_nequal(vec3 a, vec3 b);
+bool ivec3_nequal(ivec3 a, ivec3 b);
 int randInt(int min, int max);
 int sign(float x);
 float clamp(float value, float min, float max);

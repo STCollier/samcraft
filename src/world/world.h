@@ -36,10 +36,13 @@ enum ChunkQueueState {
 };
 
 struct World {
+    bool loaded;
     struct Chunk *chunks;
     struct ChunkQueue chunkQueue;
     int renderRadius, renderHeight;
 };
+
+uint8_t getBlockFromWorldPosition(int x, int y, int z);
 
 void world_addChunk(ivec3 position);
 struct Chunk *world_getChunk(ivec3 position);

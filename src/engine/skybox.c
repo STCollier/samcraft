@@ -4,9 +4,9 @@
 struct Skybox skybox_new() {
 	struct Skybox self;
 
-    GL_CHECK(glGenVertexArrays(1, &self.VAO));
-    GL_CHECK(glGenBuffers(1, &self.VBO));
-    GL_CHECK(glBindVertexArray(self.VAO));
+    glGenVertexArrays(1, &self.VAO);
+    glGenBuffers(1, &self.VBO);
+    glBindVertexArray(self.VAO);
 
 	return self;
 }
@@ -24,9 +24,9 @@ void skybox_render(struct Skybox *skybox, shader_t shader) {
     shader_setMat4(shader, "inv_view_projection", i);
     shader_setMat4(shader, "view", camera.view);
 
-	GL_CHECK(glBindVertexArray(skybox->VAO));
-	GL_CHECK(glDrawArrays(GL_TRIANGLES, 0, 3));
-	GL_CHECK(glBindVertexArray(0));
+	glBindVertexArray(skybox->VAO);
+	glDrawArrays(GL_TRIANGLES, 0, 3);
+	glBindVertexArray(0);
     glEnable(GL_CULL_FACE);
     glDepthMask(GL_TRUE);
 }

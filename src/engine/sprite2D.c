@@ -19,20 +19,19 @@ struct Sprite2D sprite2D_new(const char* filename, ivec2 position, float scale) 
     glm_ivec2_copy(position, sprite.position);
     sprite.scale = scale;
 
-    GL_CHECK(glGenTextures(1, &sprite.textureID));
-    GL_CHECK(glBindTexture(GL_TEXTURE_2D, sprite.textureID));
+    glGenTextures(1, &sprite.textureID);
+    glBindTexture(GL_TEXTURE_2D, sprite.textureID);
 
-    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));    
-    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
-    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
-    GL_CHECK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);    
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     int width, height, channels;
     unsigned char *data = stbi_load(sprite.textureName, &width, &height, &channels, 0);
-    if (data) { 
-
-        GL_CHECK(glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB8_ALPHA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data));
-        GL_CHECK(glGenerateMipmap(GL_TEXTURE_2D));
+    if (data) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB8_ALPHA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
 
         sprite.textureData = data;
     } else {
@@ -41,17 +40,17 @@ struct Sprite2D sprite2D_new(const char* filename, ivec2 position, float scale) 
 
     stbi_image_free(data);
 
-    GL_CHECK(glGenVertexArrays(1, &sprite.VAO));
-    GL_CHECK(glGenBuffers(1, &sprite.VBO));
+    glGenVertexArrays(1, &sprite.VAO);
+    glGenBuffers(1, &sprite.VBO);
 
-    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, sprite.VBO));
-    GL_CHECK(glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW));
+    glBindBuffer(GL_ARRAY_BUFFER, sprite.VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    GL_CHECK(glBindVertexArray(sprite.VAO));
-    GL_CHECK(glEnableVertexAttribArray(0));
-    GL_CHECK(glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0));
-    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));  
-    GL_CHECK(glBindVertexArray(0));
+    glBindVertexArray(sprite.VAO);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);  
+    glBindVertexArray(0);
 
     return sprite;
 };
@@ -68,10 +67,10 @@ void sprite2D_render(struct Sprite2D *sprite, shader_t shader) {
 
     shader_setMat4(shader, "model", model);
 
-    GL_CHECK(glActiveTexture(GL_TEXTURE0));
-    GL_CHECK(glBindTexture(GL_TEXTURE_2D, sprite->textureID));
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, sprite->textureID);
 
-    GL_CHECK(glBindVertexArray(sprite->VAO));
-    GL_CHECK(glDrawArrays(GL_TRIANGLES, 0, 6));
-    GL_CHECK(glBindVertexArray(0));
+    glBindVertexArray(sprite->VAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
 }

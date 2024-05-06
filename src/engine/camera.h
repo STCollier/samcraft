@@ -7,31 +7,16 @@
 #include "shader.h"
 
 struct Camera {
-    mat4 projection;
-    mat4 view;
-    mat4 model;
-
-    vec3 position, velocity, acceleration;
-    vec3 front;
-    vec3 up;
-    vec3 right;
-    vec3 worldUp;
-
-    vec3 direction;
-
-    vec3 motion;
-
-    vec2 angle;
-
-    float speedValue[3];
-    float speed;
-
+    mat4 projection, view, model;
+    vec3 position, tempPosition, oldPosition, delta;
+    vec3 velocity, acceleration, motion;
+    vec3 front, up, right;
+    float speedValue[3], speed;
     float near, far, sensitivity, fov;
 };
 
 void camera_init(float fov, float sensitivity, vec3 position);
 void camera_use(shader_t shader);
-void camera_handlePhysics(bool collision, void (*collisionX)(ivec3), void (*collisionY)(ivec3), void (*collisionZ)(ivec3));
 void camera_mouseCallback(double xposIn, double yposIn);
 
 extern struct Camera camera;

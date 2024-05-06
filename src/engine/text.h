@@ -10,33 +10,21 @@
 #include "shader.h"
 #include "util.h"
 
-struct Font {
-    const char* glyphs;
-    const char* bitmap;
-    size_t glyphSize, numGlyphs;
-    shader_t shader;
-
-    unsigned int bitmapArrayTexture;
-};
-
 struct Character {
-    ivec2 position;
+    unsigned int textureID; // ID handle of the glyph texture
+    ivec2 size; // Size of glyph
+    ivec2 bearing; // Offset from baseline to left/top of glyph
+    unsigned int advance; // Offset to advance to next glyph
+};
+
+struct Font {
+    struct Character characters[256];
     unsigned int VBO, VAO;
-    size_t charIndex;
+    const char* src;
+    unsigned int size;
 };
 
-struct Text {
-    struct Font font;
-    ivec2 position;
-    char* string;
-    size_t length;
-
-    struct Character *characters;
-};
-
-struct Font font_load(const char* bitmap, const char* glyphs, size_t glyphSize, shader_t shader);
-struct Text text_new(char* string, ivec2 position, struct Font font);
-void text_update(struct Text text, char* newString);
-void text_draw(struct Text text);
+struct Font font_load(const char* src, unsigned int size);
+void text_render(struct Font* font, shader_t shader, char* text, float x, float y, float scale, vec3 color);
 
 #endif
