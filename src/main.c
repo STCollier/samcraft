@@ -42,7 +42,7 @@ int main() {
     struct Sprite2D crosshair = sprite2D_new("res/textures/crosshair.png", (ivec2){window.width / 2, window.height / 2}, 32.0f);
     struct Skybox sky = skybox_new();
 
-    struct Font robotoFont = font_load("res/fonts/roboto.ttf", 48);
+    //struct Font robotoFont = font_load("res/fonts/roboto.ttf", 48);
 
     stbi_set_flip_vertically_on_load(true);
     blockdata_loadLuaData();
@@ -52,6 +52,7 @@ int main() {
     threadpool thpool = thpool_init(globals.threads);
 
     player_init();
+
     
     bool clicked = false;
     while (!glfwWindowShouldClose(window.self)) {
@@ -72,7 +73,7 @@ int main() {
         player_update(blockOverlayShader);
 
         sprite2D_render(&crosshair, shader2D);
-        text_render(&robotoFont, textShader, "TEST", 25.0f, 25.0f, 1.0f, (vec3){0.5, 0.8f, 0.2f});
+        //text_render(&robotoFont, textShader, "TEST", 25.0f, 25.0f, 1.0f, (vec3){0.5, 0.8f, 0.2f});
 
         glfwSwapBuffers(window.self);
         glfwPollEvents();

@@ -50,6 +50,11 @@
 #define THPOOL_THREAD_NAME thpool
 #endif
 
+#ifdef _WIN32 
+	#define SIGUSR1 30
+	#define SA_ONSTACK 0x0001
+#endif
+
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
 
@@ -104,9 +109,6 @@ typedef struct thpool_{
 	pthread_cond_t  threads_all_idle;    /* signal to thpool_wait     */
 	jobqueue  jobqueue;                  /* job queue                 */
 } thpool_;
-
-
-
 
 
 /* ========================== PROTOTYPES ============================ */
@@ -355,13 +357,9 @@ static void* thread_do(struct thread* thread_p){
 	thpool_* thpool_p = thread_p->thpool_p;
 
 	/* Register signal handler */
-	struct sigaction act;
-	sigemptyset(&act.sa_mask);
-	act.sa_flags = SA_ONSTACK;
-	act.sa_handler = thread_hold;
-	if (sigaction(SIGUSR1, &act, NULL) == -1) {
-		err("thread_do(): cannot handle SIGUSR1");
-	}
+	if (signal(SIGUSR1, thread_hold) == SIG_ERR) {	
+        err("thread_do(): cannot handle SIGUSR1");
+    }
 
 	/* Mark thread as alive (initialized) */
 	pthread_mutex_lock(&thpool_p->thcount_lock);

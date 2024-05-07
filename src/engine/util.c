@@ -17,7 +17,7 @@ void inline ivec3s_to_ivec3(ivec3s in, ivec3 out) {
 }
 
 void inline ivec2s_to_ivec2(ivec2s in, ivec2 out) {
-    glm_ivec3_copy((ivec2){
+    glm_ivec2_copy((ivec2){
         in.x,
         in.y,
     }, out);
