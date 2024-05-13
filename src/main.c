@@ -3,20 +3,22 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include "engine/window.h"
-#include "engine/shader.h"
-#include "engine/camera.h"
-#include "engine/player.h"
-#include "engine/mesher.h"
-#include "engine/sprite2D.h"
-#include "engine/skybox.h"
-#include "engine/thpool.h"
-#include "engine/globals.h"
-#include "engine/text.h"
-#include "engine/debugblock.h"
+#include "engine/core/window.h"
+#include "engine/core/shader.h"
+#include "engine/core/camera.h"
+#include "engine/core/globals.h"
+
+#include "engine/func/player.h"
+#include "engine/func/mesher.h"
+#include "engine/gfx/sprite.h"
+#include "engine/gfx/skybox.h"
+#include "engine/gfx/text.h"
+
+#include "engine/util/thpool.h"
 
 #include "world/world.h"
 #include "world/chunk.h"
+#include "world/block.h"
 
 int main() {
     window_create("samcraft", /*1920, 1080*/ 1600, 900);
@@ -27,22 +29,20 @@ int main() {
     shader_t textShader = shader_new("res/shaders/text.vert", "res/shaders/text.frag");
 
     globals_init();
-    debugblock_init();
 
     mat4 projection2D;
     glm_ortho(0.0f, window.width, window.height, 0.0f, -1.0f, 1.0f, projection2D);
+
+    shader_use(textShader);
+    shader_setMat4(textShader, "projection", projection2D);
     shader_use(shader2D);
     shader_setMat4(shader2D, "projection", projection2D);
 
-    mat4 textProjection;
-    glm_ortho(0.0f, window.width, window.height, 0.0f, -1.0f, 1.0f, textProjection);
-    shader_use(textShader);
-    shader_setMat4(textShader, "projection", textProjection);
-
-    struct Sprite2D crosshair = sprite2D_new("res/textures/crosshair.png", (ivec2){window.width / 2, window.height / 2}, 32.0f);
+    struct Sprite2D crosshair = sprite2D_new("res/textures/crosshair.png", (ivec2){window.width / 2, window.height / 2}, 2.0f);
+    struct Sprite2D uipanel = sprite2D_new("res/textures/panel.png", (ivec2){25, 25}, 0.5f);
     struct Skybox sky = skybox_new();
 
-    //struct Font robotoFont = font_load("res/fonts/roboto.ttf", 48);
+    struct Font robotoFont = font_load("res/fonts/roboto.ttf", 32);
 
     stbi_set_flip_vertically_on_load(true);
     blockdata_loadLuaData();
@@ -55,8 +55,29 @@ int main() {
 
     
     bool clicked = false;
+    char ft[64], fps[64], pos[64];
+    float t, t2 = 0;
+    int fpsc = 0;
     while (!glfwWindowShouldClose(window.self)) {
         window_update();
+        t += window.dt;
+        if (t >= 0.5) {
+            sprintf(ft, "Frame Time: %.2f", window.dt * 1000);
+            t = 0;
+        }
+
+        t2 += window.dt;
+        if (t2 >= 1) {
+            sprintf(fps, "FPS: %d", fpsc);
+            t2 = 0;
+            fpsc = 0;
+        } else {
+            fpsc++;
+        }
+
+        sprintf(pos, "Position: %d, %d, %d", (int) camera.position[0], (int) camera.position[1], (int) camera.position[2]);
+
+
 
         //printf("%f %f %f\n", camera.position[0], camera.position[1], camera.position[2]);
 
@@ -72,8 +93,15 @@ int main() {
 
         player_update(blockOverlayShader);
 
-        sprite2D_render(&crosshair, shader2D);
-        //text_render(&robotoFont, textShader, "TEST", 25.0f, 25.0f, 1.0f, (vec3){0.5, 0.8f, 0.2f});
+        glDisable(GL_DEPTH_TEST);
+
+        sprite2D_render(&uipanel, ALIGN_LEFT, shader2D);
+        sprite2D_render(&crosshair, ALIGN_CENTER, shader2D);
+
+        text_render(&robotoFont, textShader, ft, 50.0f, 75.0f, 1.0f, (vec3){0, 0, 0});
+        text_render(&robotoFont, textShader, fps, 50.0f, 125.0f, 1.0f, (vec3){0, 0, 0});
+
+        glEnable(GL_DEPTH_TEST);
 
         glfwSwapBuffers(window.self);
         glfwPollEvents();

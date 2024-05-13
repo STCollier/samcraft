@@ -1,13 +1,6 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include "cglm/cglm.h"
-#include "cglm/call.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include "shader.h"
 
 static void _checkCompileErrors(unsigned int shader, enum ShaderType type) {

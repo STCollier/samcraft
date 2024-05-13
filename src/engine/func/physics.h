@@ -1,10 +1,7 @@
 #ifndef PHYSICS_H
 #define PHYSICS_H
 
-#include "cglm/cglm.h"
-#include "cglm/call.h"
-
-#include "util.h"
+#include "../util/common.h"
 
 struct AABB {
     vec3 position;

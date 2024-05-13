@@ -1,6 +1,6 @@
+#include "../../world/chunk.h"
+#include "../../world/block.h"
 #include "mesher.h"
-#include "../world/chunk.h"
-#include "../world/block.h"
 
 #ifdef _MSC_VER
     static const int CTZ(uint64_t &x) {

@@ -1,8 +1,7 @@
 #ifndef FRUSTUM_H
 #define FRUSTUM_H
 
-#include "cglm/cglm.h"
-#include "cglm/call.h"
+#include "../util/common.h"
 
 struct Plane {
     vec3 normal; // Unit vector

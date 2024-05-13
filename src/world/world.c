@@ -1,7 +1,19 @@
-#include "world.h"
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+#include "uthash/uthash.h"
+
+#include "../engine/core/shader.h"
+#include "../engine/core/camera.h"
+#include "../engine/core/globals.h"
+#include "../engine/util/util.h"
+#include "../engine/util/types.h"
+#include "../engine/util/thpool.h"
+#include "../engine/func/player.h" 
+
 #include "worldgen.h"
-#include "../engine/player.h"
-#include "../engine/globals.h"
+#include "chunk.h"
+#include "block.h"
+#include "world.h"
 
 struct World world;
 
@@ -298,24 +310,12 @@ void world_init(int renderRadius) {
     LOG_IMSG("World loaded, Chunk count: ", c);
 }
 
-float t = 0;
-int fps = 0;
 void world_render(shader_t shader, threadpool thpool) {
     if (player.exitedChunk) {
         world_loadNewChunks();
 
         player.exitedChunk = false;
     }
-
-    /*t += window.dt;
-    if (t >= 1) {
-        world_loadNewChunks();
-        printf("FPS: %d\n", fps);
-        t = 0;
-        fps = 0;
-    } else {
-        fps++;
-    }*/
 
     //printf("gen size: %zu\nmesh size: %zu\n\n", world.chunkQueue.toGenerate.size, world.chunkQueue.toMesh.size);
 
@@ -360,7 +360,9 @@ void world_render(shader_t shader, threadpool thpool) {
                 ivec2 pos = {x, z};
 
                 if (idist2d(origin, pos) < world.renderRadius && world_getChunk((ivec3){x, y, z}) != NULL) {
-                    if (world_getChunk((ivec3){x, y, z})->state == BOUND) chunk_render(world_getChunk((ivec3){x, y, z}), shader, 1);
+                    if (world_getChunk((ivec3){x, y, z})->state == BOUND) {
+                        chunk_render(world_getChunk((ivec3){x, y, z}), shader, 1);
+                    }
                 }
             }
         }

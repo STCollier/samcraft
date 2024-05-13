@@ -6,14 +6,14 @@ LDFLAGS = -L/opt/homebrew/lib/ -lglfw -llua -lm -lpthread -lfreetype
 
 run:
 	mkdir -p bin
-	${CC} src/main.c lib/glad/glad.c lib/noise/osnoise.c -Ilib src/engine/*.c src/world/*.c -o ${BIN_DIR}/main ${CFLAGS} ${LDFLAGS} -O3 -std=c2x
+	${CC} src/main.c lib/glad/glad.c lib/noise/osnoise.c -Ilib src/engine/core/*.c src/engine/func/*.c src/engine/gfx/*.c src/engine/util/*.c src/world/*.c -o ${BIN_DIR}/main ${CFLAGS} ${LDFLAGS} -O3 -std=c2x
 	${BIN_DIR}/main
 
 win:
 	mkdir -p bin
-	x86_64-w64-mingw32-gcc src/main.c lib/glad/glad.c lib/noise/osnoise.c -Ilib src/engine/*.c src/world/*.c -o ${BIN_DIR}/main ${CFLAGS} -Llib/mingw -lglfw3 -lgdi -llua54 -lfreetype-6 -O3
+	x86_64-w64-mingw32-gcc src/main.c lib/glad/glad.c lib/noise/osnoise.c -Ilib src/engine/core/*.c src/engine/func/*.c src/engine/gfx/*.c src/engine/util/*.c src/world/*.c -o ${BIN_DIR}/main ${CFLAGS} -Llib/mingw -lglfw3 -lgdi -llua54 -O3
 
 debug:
 	mkdir -p bin
-	${CC} src/main.c lib/glad/glad.c lib/noise/osnoise.c -Ilib src/engine/*.c src/world/*.c -o ${BIN_DIR}/main ${CFLAGS} ${LDFLAGS} -g -fsanitize=address -fsanitize=undefined -Og -std=c2x
+	${CC} src/main.c lib/glad/glad.c lib/noise/osnoise.c -Ilib src/engine/core/*.c src/engine/func/*.c src/engine/gfx/*.c src/engine/util/*.c src/world/*.c -o ${BIN_DIR}/main ${CFLAGS} ${LDFLAGS} -g -fsanitize=address -fsanitize=undefined -Og -std=c2x
 	${BIN_DIR}/main

@@ -1,8 +1,9 @@
+#include "../func/player.h"
+
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
-#include "util.h"
-#include "player.h"
+#include "../util/common.h"
 
 struct Globals {
     bool debug;

@@ -1,8 +1,7 @@
 #ifndef SHADER_H
 #define SHADER_H
 
-#include "cglm/cglm.h"
-#include "cglm/call.h"
+#include "../util/common.h"
 
 typedef struct {
   unsigned int ID;

@@ -1,4 +1,14 @@
-#include <stb/stb_image.h>
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+#include <lua/lua.h>
+#include <lua/lauxlib.h>
+#include <lua/lualib.h>
+#include <dirent.h>
+#include "stb/stb_image.h"
+
+#include "../engine/util/util.h"
+#include "../engine/util/types.h"
+
 #include "block.h"
 
 struct BlockData blockData[256];

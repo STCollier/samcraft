@@ -1,6 +1,3 @@
-#ifndef UTIL_H
-#define UTIL_H
-
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <lua/lua.h>
@@ -14,6 +11,9 @@
 #include "cglm/call.h"
 
 #include "types.h"
+
+#ifndef UTIL_H
+#define UTIL_H
 
 void ivec3s_to_ivec3(ivec3s in, ivec3 out);
 void ivec2s_to_ivec2(ivec2s in, ivec2 out);

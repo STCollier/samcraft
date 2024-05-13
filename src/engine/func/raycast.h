@@ -1,16 +1,7 @@
 #ifndef RAYCAST_H
 #define RAYCAST_H
 
-#include "cglm/cglm.h"
-#include "cglm/call.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "../world/chunk.h"
-#include "../world/block.h"
-#include "../world/world.h"
+#include "../util/common.h"
 
 struct Ray {
     bool blockFound; // If we hit a block

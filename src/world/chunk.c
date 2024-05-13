@@ -1,6 +1,17 @@
-#include <stb/stb_image.h>
-#include "chunk.h"
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+#include "stb/stb_image.h"
+#include "uthash/uthash.h"
+
+#include "../engine/core/shader.h"
+#include "../engine/core/camera.h"
+#include "../engine/util/util.h"
+#include "../engine/util/types.h"
+#include "../engine/func/mesher.h"
+
 #include "worldgen.h"
+#include "block.h"
+#include "chunk.h"
 
 int blockIndex(int x, int y, int z) {
   return z + (x * CS_P) + (y * CS_P2);

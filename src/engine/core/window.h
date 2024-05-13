@@ -4,12 +4,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-
-#include "camera.h"
-#include "util.h"
+#include "../util/common.h"
 
 struct Window {
     GLFWwindow* self;

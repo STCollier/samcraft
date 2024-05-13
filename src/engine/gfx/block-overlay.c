@@ -1,11 +1,11 @@
-#include "glad/glad.h"
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include "block_overlay.h"
-#include "../world/block.h"
-#include "camera.h"
-#include "player.h"
-#include "util.h"
+#include "../core/camera.h"
+#include "../func/player.h"
+#include "../../world/block.h"
+
+#include "block-overlay.h"
 
 static float block_overlay_vertices[] = {
     -0.001f, -0.001f, -0.001f,  -0.001f, -0.001f,

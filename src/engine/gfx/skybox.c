@@ -1,5 +1,12 @@
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
+#include "../core/shader.h"
+#include "../core/camera.h"
+#include "../core/window.h"
+#include "../func/player.h"
+
 #include "skybox.h"
-#include "player.h"
 
 struct Skybox skybox_new() {
 	struct Skybox self;

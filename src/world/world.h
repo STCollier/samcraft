@@ -1,23 +1,8 @@
 #ifndef WORLD_H
 #define WORLD_H
 
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <pthread.h>
-#include "cglm/cglm.h"
-#include "cglm/call.h"
-#include "uthash/uthash.h"
-
-#include <stdbool.h>
-#include <string.h>
-
-#include "../engine/shader.h"
-#include "../engine/camera.h"
-#include "../engine/util.h"
-#include "../engine/types.h"
-#include "../engine/thpool.h"
-#include "chunk.h"
-#include "block.h"
+#include "../engine/util/common.h"
+#include "../engine/util/thpool.h"
 
 struct ChunkList {
     struct Chunk **chunks;

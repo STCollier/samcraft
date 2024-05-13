@@ -35,4 +35,10 @@ typedef enum {
     AXIS_Z
 } Axis;
 
+typedef enum {
+    ALIGN_CENTER,
+    ALIGN_LEFT,
+    ALIGN_RIGHT
+} AlignMode;
+
 #endif

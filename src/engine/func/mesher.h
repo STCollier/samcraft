@@ -1,7 +1,7 @@
 #ifndef MESHER_H
 #define MESHER_H
 
-#include "util.h"
+#include "../util/common.h"
 
 #define CS (CHUNK_SIZE)
 

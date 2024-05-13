@@ -1,16 +1,11 @@
-#include <stb/stb_image.h>
-#include "sprite2D.h"
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+#include "stb/stb_image.h"
 
-const float vertices[] = { 
-    // pos      // tex
-    0.0f, 1.0f, 0.0f, 1.0f,
-    1.0f, 0.0f, 1.0f, 0.0f,
-    0.0f, 0.0f, 0.0f, 0.0f, 
+#include "../util/util.h"
+#include "../core/shader.h"
 
-    0.0f, 1.0f, 0.0f, 1.0f,
-    1.0f, 1.0f, 1.0f, 1.0f,
-    1.0f, 0.0f, 1.0f, 0.0f
-};
+#include "sprite.h"
 
 struct Sprite2D sprite2D_new(const char* filename, ivec2 position, float scale) {
     struct Sprite2D sprite;
@@ -38,6 +33,19 @@ struct Sprite2D sprite2D_new(const char* filename, ivec2 position, float scale) 
         ERROR_MSG("Failed to load Sprite2D texture", sprite.textureName);
     }
 
+    glm_vec2_copy((vec2){width, height}, sprite.dimensions);
+
+    const float vertices[] = { 
+        // pos      // tex
+        0.0f, sprite.dimensions[1], 0.0f, 1.0f,
+        sprite.dimensions[0], 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f, 
+
+        0.0f, sprite.dimensions[1], 0.0f, 1.0f,
+        sprite.dimensions[0], sprite.dimensions[1], 1.0f, 1.0f,
+        sprite.dimensions[0], 0.0f, 1.0f, 0.0f
+    };
+
     stbi_image_free(data);
 
     glGenVertexArrays(1, &sprite.VAO);
@@ -55,13 +63,18 @@ struct Sprite2D sprite2D_new(const char* filename, ivec2 position, float scale) 
     return sprite;
 };
 
-void sprite2D_render(struct Sprite2D *sprite, shader_t shader) {
+void sprite2D_render(struct Sprite2D *sprite, AlignMode align, shader_t shader) {
     shader_use(shader);
-    shader_setInt(shader, "image", 0);
 
     mat4 model;
     glm_mat4_identity(model);
-    glm_translate(model, (vec3){sprite->position[0], sprite->position[1], 0.0f});
+    if (align == ALIGN_LEFT) {
+        glm_translate(model, (vec3){sprite->position[0], sprite->position[1], 0.0f});
+    } else if (align == ALIGN_RIGHT) {
+        glm_translate(model, (vec3){sprite->position[0] - sprite->dimensions[0] * sprite->scale, sprite->position[1] - sprite->dimensions[1] * sprite->scale, 0.0f});
+    } else { // Center
+        glm_translate(model, (vec3){sprite->position[0] - (sprite->dimensions[0] / 2) * sprite->scale, sprite->position[1] - (sprite->dimensions[1] / 2) * sprite->scale, 0.0f});
+    }
     glm_translate(model, (vec3){-sprite->scale / 2, -sprite->scale / 2, 0.0f});
     glm_scale(model, (vec3){sprite->scale, sprite->scale, 1.0f});
 

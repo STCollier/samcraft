@@ -1,13 +1,12 @@
+#include "../util/lerp.h"
+#include "../core/shader.h"
+#include "../func/physics.h"
+#include "../func/raycast.h"
+
 #ifndef PLAYER_H
 #define PLAYER_H
 
-#include "window.h"
-#include "raycast.h"
-#include "camera.h"
-#include "shader.h"
-#include "physics.h"
-#include "lerp.h"
-#include "../world/world.h"
+#include "../util/common.h"
 
 struct PlayerSpeed {
     float slow;

@@ -1,7 +1,15 @@
+#include "../core/window.h"
+#include "../core/camera.h"
+#include "../core/shader.h"
+#include "../core/globals.h"
+#include "../util/lerp.h"
+#include "../gfx/block-overlay.h"
+#include "../../world/world.h"
+#include "../../world/chunk.h"
+#include "../../world/block.h"
+#include "raycast.h"
+#include "physics.h"
 #include "player.h"
-#include "globals.h"
-#include "block_overlay.h"
-#include "debugblock.h"
 
 struct Player player;
 
@@ -239,7 +247,7 @@ void player_update(shader_t blockOverlayShader) {
         };
 
         if (player.ray.blockFound) {
-            if (!sweepAABB(player.aabb, voxel, (vec3){0, 0, 0}).hit.result) {
+            if (!sweepAABB(player.aabb, voxel, camera.motion).hit.result) {
                 player_placeBlock();
                 clicked = true;
             }

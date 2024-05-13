@@ -1,3 +1,6 @@
+#include "../../world/chunk.h"
+#include "../../world/block.h"
+#include "../../world/world.h"
 #include "raycast.h"
 
 // Blocks that can be edited range from 1 to CHUNK_SIZE

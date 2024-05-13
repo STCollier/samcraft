@@ -1,17 +1,12 @@
-#include "glad/glad.h"
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
-
-#include <stdio.h>
-#include <math.h>
 
 #include "window.h"
 #include "shader.h"
-#include "camera.h"
-#include "util.h"
 #include "globals.h"
+#include "camera.h"
 
-//Define globally
-struct Camera camera;
+struct Camera camera; // Define globally
 
 float yaw = 45.0f;
 float pitch = 0.0f;
@@ -32,10 +27,10 @@ void camera_init(float fov, float sensitivity, vec3 position) {
     camera.speed = camera.speedValue[1];
 
     glm_vec3_copy(position, camera.position);
-    glm_vec3_copy((vec3){0.0f, 0.0f, 0.0f}, camera.velocity);
-    glm_vec3_copy((vec3){0.0f, 0.0f, 0.0f}, camera.acceleration);
+    glm_vec3_copy(GLM_VEC3_ZERO, camera.velocity);
+    glm_vec3_copy(GLM_VEC3_ZERO, camera.acceleration);
 
-    glm_vec3_copy((vec3){0.0f, 0.0f, 0.0f}, camera.front);
+    glm_vec3_copy(GLM_VEC3_ZERO, camera.front);
     glm_vec3_copy((vec3){0.0f, 1.0f, 0.0f}, camera.up);
 
     lastX = window.width / 2.0;
@@ -96,26 +91,3 @@ void camera_mouseCallback(double xposIn, double yposIn) {
     glm_vec3_normalize(up);
     glm_vec3_copy(up, camera.up);
 }
-
-/*float x = (2.0f * window.mouseX) / window.width - 1.0f;
-float y = 1.0f - (2.0f * window.mouseY) / window.height;
-float z = 1.0f;
-vec3 rayNDS = {x, y, z}; // Normalized device coordinate space
-vec4 rayClip = {rayNDS[0], rayNDS[1], -1.0, 1.0};
-
-mat4 inverseProjection;
-glm_mat4_inv(camera.projection, inverseProjection);
-
-vec4 rayEye;
-glm_mat4_mulv(inverseProjection, rayClip, rayEye);
-glm_vec4_copy((vec4){rayEye[0], rayEye[1], -1.0, 0.0}, rayEye);
-
-mat4 inverseView;
-glm_mat4_inv(camera.view, inverseView);
-
-vec4 rayW;
-glm_mat4_mulv(inverseView, rayEye, rayW);
-vec3 rayWorld;
-glm_vec3_normalize_to((vec3){rayW[0], rayW[1], rayW[2]}, rayWorld);
-
-printf("%f %f %f\n", rayWorld[0], rayWorld[1], rayWorld[2]);*/

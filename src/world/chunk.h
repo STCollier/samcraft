@@ -1,21 +1,9 @@
 #ifndef CHUNK_H
 #define CHUNK_H
 
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include "cglm/cglm.h"
-#include "cglm/call.h"
+#include "../engine/core/shader.h"
+#include "../engine/util/common.h"
 #include "uthash/uthash.h"
-
-#include <stdbool.h>
-#include <string.h>
-
-#include "../engine/shader.h"
-#include "../engine/camera.h"
-#include "../engine/util.h"
-#include "../engine/types.h"
-#include "../engine/mesher.h"
-#include "block.h"
 
 #define CHUNK_SIZE 50
 #define WATER_HEIGHT 0

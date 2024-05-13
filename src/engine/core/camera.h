@@ -1,10 +1,9 @@
+#include "shader.h"
+
 #ifndef CAMERA_H
 #define CAMERA_H
 
-#include "cglm/cglm.h"
-#include "cglm/call.h"
-
-#include "shader.h"
+#include "../util/common.h"
 
 struct Camera {
     mat4 projection, view, model;

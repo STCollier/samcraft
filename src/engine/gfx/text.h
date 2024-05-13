@@ -1,14 +1,7 @@
 #ifndef TEXT_H
 #define TEXT_H
 
-#include <stdlib.h>
-#include <string.h>
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include "cglm/cglm.h"
-#include "cglm/call.h"
-#include "shader.h"
-#include "util.h"
+#include "../util/common.h"
 
 struct Character {
     unsigned int textureID; // ID handle of the glyph texture

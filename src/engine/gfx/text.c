@@ -1,5 +1,11 @@
-#include "text.h"
 #include <freetype/freetype.h>
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
+#include "../core/shader.h"
+#include "../util/util.h"
+
+#include "text.h"
 
 struct Font font_load(const char* src, unsigned int size) {
     struct Font font;
@@ -31,6 +37,12 @@ struct Font font_load(const char* src, unsigned int size) {
         unsigned int glyphTexture;
         glGenTextures(1, &glyphTexture);
         glBindTexture(GL_TEXTURE_2D, glyphTexture);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
         glTexImage2D(
             GL_TEXTURE_2D,
             0,
@@ -43,12 +55,7 @@ struct Font font_load(const char* src, unsigned int size) {
             face->glyph->bitmap.buffer
         );
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        //glGenerateMipmap(GL_TEXTURE_2D);
+        glGenerateMipmap(GL_TEXTURE_2D);
 
         struct Character character;
         character.textureID = glyphTexture;
@@ -59,13 +66,12 @@ struct Font font_load(const char* src, unsigned int size) {
         font.characters[c] = character;
     }
 
-    glBindTexture(GL_TEXTURE_2D, 0);
-
     FT_Done_Face(face);
     FT_Done_FreeType(ft);
 
     glGenVertexArrays(1, &font.VAO);
     glGenBuffers(1, &font.VBO);
+
     glBindVertexArray(font.VAO);
     glBindBuffer(GL_ARRAY_BUFFER, font.VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
@@ -82,28 +88,30 @@ struct Font font_load(const char* src, unsigned int size) {
 void text_render(struct Font* font, shader_t shader, char* text, float x, float y, float scale, vec3 color) {
     shader_use(shader);
     shader_setVec3(shader, "textColor", color[0], color[1], color[2]);
+
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(font->VAO);
 
     for (int c = 0; c < strlen(text); c++) {
         struct Character ch = font->characters[*(text + c)];
 
+
         float xpos = x + ch.bearing[0] * scale;
-        float ypos = y - (ch.size[1] - ch.bearing[1]) * scale;
+        float ypos = (y - ch.size[1]) * scale;
 
         float w = ch.size[0] * scale;
         float h = ch.size[1] * scale;
 
         float vertices[6][4] = {
-            { xpos, ypos + h, 0.0f, 0.0f },            
-            { xpos, ypos, 0.0f, 1.0f },
-            { xpos + w, ypos, 1.0f, 1.0f },
+            { xpos, ypos + h, 0.0f, 1.0f },
+            { xpos + w, ypos, 1.0f, 0.0f },
+            { xpos, ypos, 0.0f, 0.0f },
 
-            { xpos, ypos + h, 0.0f, 0.0f },
-            { xpos + w, ypos, 1.0f, 1.0f },
-            { xpos + w, ypos + h, 1.0f, 0.0f }           
+            { xpos, ypos + h, 0.0f, 1.0f },
+            { xpos + w, ypos + h, 1.0f, 1.0f },
+            { xpos + w, ypos, 1.0f, 0.0f }
         };
-
+ 
         // render glyph texture over quad
         glBindTexture(GL_TEXTURE_2D, ch.textureID);
 
@@ -118,6 +126,7 @@ void text_render(struct Font* font, shader_t shader, char* text, float x, float 
         x += (ch.advance >> 6) * scale; // bitshift by 6 to get value in pixels (2^6 = 64)
     }
 
+    glFrontFace(GL_CCW);
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
 }

@@ -1,7 +1,7 @@
+#include <math.h>
+
 #ifndef LERP_H
 #define LERP_H
-
-#include <math.h>
 
 enum EASINGS {
     LINEAR,

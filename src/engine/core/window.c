@@ -1,3 +1,4 @@
+#include "camera.h"
 #include "window.h"
 
 struct Window window;
@@ -88,11 +89,11 @@ void window_create(const char* title, int width, int height) {
     }
 
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
     glEnable(GL_CULL_FACE);
     glEnable(GL_FRAMEBUFFER_SRGB);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
+    glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glfwSetFramebufferSizeCallback(window.self, _sizeCallback);
