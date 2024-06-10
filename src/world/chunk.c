@@ -121,12 +121,12 @@ void chunk_remesh(struct Chunk *chunk, struct Chunk* cn_right, struct Chunk* cn_
         for (int y = 0; y < CS_P; y++) {
             for (int z = 0; z < CS_P; z++) {
                 int idx = blockIndex(x, y, z);
-                    if (x == CS + 1)   chunk->voxels[blockIndex(CS + 1, y, z)] = cn_right->voxels[blockIndex(1, y, z)];
-                    if (x == 0)    chunk->voxels[blockIndex(0, y, z)] = cn_left->voxels[blockIndex(CS, y, z)];
-                    if (z == CS + 1)    chunk->voxels[blockIndex(x, y, CS + 1)] = cn_back->voxels[blockIndex(x, y, 1)];
-                    if (z == 0)   chunk->voxels[blockIndex(x, y, 0)] = cn_front->voxels[blockIndex(x, y, CS)];
-                    if (y == CS + 1)     chunk->voxels[blockIndex(x, CS + 1, z)] = cn_top->voxels[blockIndex(x, 1, z)];
-                    if (y == 0)  chunk->voxels[blockIndex(x, 0, z)] = cn_bottom->voxels[blockIndex(x, CS, z)];
+                if (x == CS + 1)   chunk->voxels[blockIndex(CS + 1, y, z)] = cn_right->voxels[blockIndex(1, y, z)];
+                if (x == 0)    chunk->voxels[blockIndex(0, y, z)] = cn_left->voxels[blockIndex(CS, y, z)];
+                if (z == CS + 1)    chunk->voxels[blockIndex(x, y, CS + 1)] = cn_back->voxels[blockIndex(x, y, 1)];
+                if (z == 0)   chunk->voxels[blockIndex(x, y, 0)] = cn_front->voxels[blockIndex(x, y, CS)];
+                if (y == CS + 1)     chunk->voxels[blockIndex(x, CS + 1, z)] = cn_top->voxels[blockIndex(x, 1, z)];
+                if (y == 0)  chunk->voxels[blockIndex(x, 0, z)] = cn_bottom->voxels[blockIndex(x, CS, z)];
                 // Sort opaque and transparent blocks into separate arrays to mesh
                 if (chunk->voxels[idx] == water) {
                     transparent[idx] = chunk->voxels[idx];

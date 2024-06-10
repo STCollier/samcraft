@@ -82,7 +82,7 @@ void blockdata_loadLuaData() {
 
     if (d) {
         while ((dir = readdir(d)) != NULL) {
-            if (strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0 || strcmp(strrchr(dir->d_name, '.') + 1, "lua") != 0) continue;
+            if (dir->d_type == DT_DIR || strcmp(strrchr(dir->d_name, '.') + 1, "lua") != 0) continue;
             
             char filename[64] = "./client/blocks/";
             strcat(filename, dir->d_name);
@@ -110,7 +110,7 @@ void blockdata_loadArrayTexture() {
     d = opendir("./res/textures");
     if (d) {
         while ((dir = readdir(d)) != NULL) {
-            if (strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0 || strcmp(strrchr(dir->d_name, '.') + 1, "png") != 0) continue;
+            if (dir->d_type == DT_DIR || strcmp(strrchr(dir->d_name, '.') + 1, "png") != 0) continue;
     
             snprintf(textureArray[numTextures], sizeof(textureArray[numTextures]), "%s", dir->d_name);
             snprintf(texturePaths[numTextures], sizeof(texturePaths[numTextures]), "res/textures/%s", dir->d_name);

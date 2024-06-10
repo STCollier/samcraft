@@ -49,7 +49,7 @@ void ivec2s_to_ivec2(ivec2s in, ivec2 out);
 #define DEFINE_ARRAY_IMPL(type) \
     typedef struct { \
         size_t length, capacity; \
-        type *data; \
+        type* data; \
     } CONCAT(arr_, type); \
 \
     static CONCAT(arr_, type) CONCAT(type, _array)() { \
@@ -58,7 +58,7 @@ void ivec2s_to_ivec2(ivec2s in, ivec2 out);
         return arr; \
     } \
 \
-    static void CONCAT(CONCAT(type, _arr), _push)(CONCAT(arr_, type) *arr, type data) { \
+    static void CONCAT(CONCAT(type, _arr), _push)(CONCAT(arr_, type)* arr, type data) { \
         if (arr->length < arr->capacity) { \
             arr->data[arr->length] = data; \
         } else { \
@@ -84,6 +84,7 @@ void ivec2s_to_ivec2(ivec2s in, ivec2 out);
 
 DEFINE_ARRAY_IMPL(int);
 DEFINE_ARRAY_IMPL(float);
+DEFINE_ARRAY_IMPL(uint8_t);
 DEFINE_ARRAY_IMPL(uint16_t);
 DEFINE_ARRAY_IMPL(uint32_t);
 DEFINE_ARRAY_IMPL(uint64_t);
@@ -99,6 +100,9 @@ bool ivec3_nequal(ivec3 a, ivec3 b);
 int randInt(int min, int max);
 int sign(float x);
 float clamp(float value, float min, float max);
+float dot4(vec4 a, vec4 b);
+float dot3(vec3 a, vec3 b);
+float packRGBA(ivec4 color);
 
 int lua_getInt(lua_State *L, const char* field, const char* err, const char* msg);
 bool lua_getBool(lua_State *L, const char* field, const char* err, const char* msg);

@@ -5,6 +5,7 @@
 #include <GLFW/glfw3.h>
 
 #include "../util/common.h"
+#include "../util/timer.h"
 
 struct Window {
     GLFWwindow* self;
@@ -18,6 +19,9 @@ struct Window {
     bool leftClicked;
     bool rightClicked;
     bool onMouseRelease;
+
+    struct Timer FPSTimer;
+    int FPS;
 
     int keyPressed[1028];
 

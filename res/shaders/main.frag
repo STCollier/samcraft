@@ -46,5 +46,5 @@ void main() {
 		discard;
 	} else {*/
 		frag_color = color;
-	//}
+	//}m
 }

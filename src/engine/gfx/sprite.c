@@ -1,89 +1,133 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include "stb/stb_image.h"
+#include <stb/stb_image.h>
+#include <dirent.h>
 
-#include "../util/util.h"
 #include "../core/shader.h"
 
 #include "sprite.h"
 
-struct Sprite2D sprite2D_new(const char* filename, ivec2 position, float scale) {
-    struct Sprite2D sprite;
+struct SpriteData sprite_loadAtlas() {
+    struct SpriteData spriteData;
+
+    struct dirent *dir;
+    size_t len = 0;
+
+    DIR *dcount = opendir("res/textures/ui");
+
+    if (dcount) {
+        while ((dir = readdir(dcount)) != NULL) {
+            if (dir->d_type == DT_DIR || strcmp(strrchr(dir->d_name, '.') + 1, "png") != 0) continue;
+            len++;
+        }
+        closedir(dcount);
+    }
+
+    spriteData.numSprites = len;
+
+    DIR *dload = opendir("res/textures/ui");
+
+    struct Image sprites[len];
+    spriteData.spriteLookup = malloc(len * sizeof(struct SpriteLookup));
+
+    if (dload) {
+        int i = 0;
+        while ((dir = readdir(dload)) != NULL) {
+            if (dir->d_type == DT_DIR || strcmp(strrchr(dir->d_name, '.') + 1, "png") != 0) continue;
+            char path[64] = "res/textures/ui/";
+            strcat(path, dir->d_name);
+
+            sprites[i] = image_new(path);
+            spriteData.spriteLookup[i].texture = sprites[i];
+            strcpy(spriteData.spriteLookup[i].src, path);
+
+            i++;
+        }
+        closedir(dload);
+    }
+
+    spriteData.textureAtlas = data_spritesheet_new(len, sprites);
+
+    size_t offset = 0;
+    for (int i = 0; i < len; i++) {
+        float uvx = offset == 0 ? 0.0 : (float) offset / spriteData.textureAtlas.width;
+        vec2 uvoffset = {(float) sprites[i].width / spriteData.textureAtlas.width, (float) sprites[i].height / spriteData.textureAtlas.height};
+
+        vec2 uv[4] = {
+            {uvx, 0.0},
+            {uvx + uvoffset[0], 0.0},
+            {uvx + uvoffset[0], uvoffset[1]},
+            {uvx, uvoffset[1]}
+        };
+
+        for (int j = 0; j < 4; j++) glm_vec2_copy(uv[j], spriteData.spriteLookup[i].uv[j]);
     
-    sprite.textureName = filename;
-    glm_ivec2_copy(position, sprite.position);
-    sprite.scale = scale;
+        offset += sprites[i].width + 1; // + 1 pixel padding
+    }
 
-    glGenTextures(1, &sprite.textureID);
-    glBindTexture(GL_TEXTURE_2D, sprite.textureID);
+    glGenTextures(1, &spriteData.textureID);
+    glBindTexture(GL_TEXTURE_2D, spriteData.textureID);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);    
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    int width, height, channels;
-    unsigned char *data = stbi_load(sprite.textureName, &width, &height, &channels, 0);
-    if (data) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB8_ALPHA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
+    glTexImage2D(
+        GL_TEXTURE_2D, 
+        0, 
+        GL_SRGB8_ALPHA8,
+        spriteData.textureAtlas.width, 
+        spriteData.textureAtlas.height, 
+        0, 
+        GL_RGBA, 
+        GL_UNSIGNED_BYTE, 
+        spriteData.textureAtlas.texture
+    );
 
-        sprite.textureData = data;
+    return spriteData;
+}
+
+struct SpriteLookup sprite_lookup(struct SpriteData spriteData, const char src[64]) {
+    struct SpriteLookup sprite;
+
+    bool found = false;
+    for (int i = 0; i < spriteData.numSprites; i++) {
+        if (strcmp(spriteData.spriteLookup[i].src, src) == 0) {
+            strcpy(sprite.src, src);
+            sprite.texture = spriteData.spriteLookup[i].texture;
+            for (int j = 0; j < 4; j++) glm_vec2_copy(spriteData.spriteLookup[i].uv[j], sprite.uv[j]);
+            found = true; break;
+        }
+    }
+
+    if (found) {
+        return sprite;
     } else {
-        ERROR_MSG("Failed to load Sprite2D texture", sprite.textureName);
+        ERROR_MSG("Failed to find sprite", src);
+        exit(EXIT_FAILURE);
+    }
+}
+
+void sprite_new(struct QuadMesh* qm, struct SpriteData spriteData, struct Sprite sprite, AlignMode align) {
+    struct SpriteLookup sl = sprite_lookup(spriteData, sprite.filename);
+
+    if (glm_vec2_eq(sprite.dimensions, -1)) {
+        sprite.dimensions[0] = sl.texture.width;
+        sprite.dimensions[1] = sl.texture.height;
     }
 
-    glm_vec2_copy((vec2){width, height}, sprite.dimensions);
+    vec2 dimensions = {sprite.dimensions[0] * sprite.scale, sprite.dimensions[1] * sprite.scale};
 
-    const float vertices[] = { 
-        // pos      // tex
-        0.0f, sprite.dimensions[1], 0.0f, 1.0f,
-        sprite.dimensions[0], 0.0f, 1.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 0.0f, 
-
-        0.0f, sprite.dimensions[1], 0.0f, 1.0f,
-        sprite.dimensions[0], sprite.dimensions[1], 1.0f, 1.0f,
-        sprite.dimensions[0], 0.0f, 1.0f, 0.0f
-    };
-
-    stbi_image_free(data);
-
-    glGenVertexArrays(1, &sprite.VAO);
-    glGenBuffers(1, &sprite.VBO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, sprite.VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glBindVertexArray(sprite.VAO);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);  
-    glBindVertexArray(0);
-
-    return sprite;
-};
-
-void sprite2D_render(struct Sprite2D *sprite, AlignMode align, shader_t shader) {
-    shader_use(shader);
-
-    mat4 model;
-    glm_mat4_identity(model);
     if (align == ALIGN_LEFT) {
-        glm_translate(model, (vec3){sprite->position[0], sprite->position[1], 0.0f});
+        // Already left aligned
     } else if (align == ALIGN_RIGHT) {
-        glm_translate(model, (vec3){sprite->position[0] - sprite->dimensions[0] * sprite->scale, sprite->position[1] - sprite->dimensions[1] * sprite->scale, 0.0f});
+        sprite.x = sprite.x - sprite.dimensions[0] * sprite.scale;
+        sprite.y = sprite.y - sprite.dimensions[1] * sprite.scale;
     } else { // Center
-        glm_translate(model, (vec3){sprite->position[0] - (sprite->dimensions[0] / 2) * sprite->scale, sprite->position[1] - (sprite->dimensions[1] / 2) * sprite->scale, 0.0f});
+        sprite.x = sprite.x - (sprite.dimensions[0] / 2) * sprite.scale;
+        sprite.y = sprite.y - (sprite.dimensions[1] / 2) * sprite.scale;
     }
-    glm_translate(model, (vec3){-sprite->scale / 2, -sprite->scale / 2, 0.0f});
-    glm_scale(model, (vec3){sprite->scale, sprite->scale, 1.0f});
 
-    shader_setMat4(shader, "model", model);
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, sprite->textureID);
-
-    glBindVertexArray(sprite->VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-    glBindVertexArray(0);
+    quad_add(qm, (vec2){sprite.x, sprite.y}, dimensions, sl.uv, sprite.color, sprite.scale);
 }

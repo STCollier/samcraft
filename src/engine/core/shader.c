@@ -12,14 +12,14 @@ static void _checkCompileErrors(unsigned int shader, enum ShaderType type) {
 
     if (!success) {
       glGetShaderInfoLog(shader, 1024, NULL, infoLog);
-      printf("Error compiling %s shader.\n%s\n", !type ? "program" : type ? "vertex" : "fragment", infoLog);
+      printf("Error compiling %s shader.\n%s\n", type == 0 ? "program" : type == 1 ? "vertex" : "fragment", infoLog);
     }
   } else {
     glGetProgramiv(shader, GL_LINK_STATUS, &success);
 
     if (!success) {
       glGetProgramInfoLog(shader, 1024, NULL, infoLog);
-      printf("Error linking %s shader.\n%s\n", !type ? "program" : type ? "vertex" : "fragment", infoLog);
+      printf("Error linking %s shader.\n%s\n", type == 0 ? "program" : type == 1 ? "vertex" : "fragment", infoLog);
     } 
   }
 }

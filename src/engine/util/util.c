@@ -35,6 +35,18 @@ uint8_t inline hash8(const char* h) {
     return hash;
 }
 
+inline float dot4(vec4 a, vec4 b) {
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3];
+}
+
+inline float dot3(vec3 a, vec3 b) {
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}
+
+float packRGBA(ivec4 color) {
+    return (color[3] << 24) | (color[2] << 16) | (color[1] << 8) | (color[0]);
+}
+
 int inline idist2d(ivec2 a, ivec2 b) {
     return sqrt((b[0] - a[0])*(b[0] - a[0]) + (b[1] - a[1])*(b[1] - a[1]));
 }

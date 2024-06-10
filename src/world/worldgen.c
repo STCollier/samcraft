@@ -36,9 +36,9 @@ int noiseHeight(ivec3 pos, ivec3 offset) {
     int numOctaves = 3;
     double persistence = 0.5;
 
-    double value = octaveNoise(pos, offset, spread, size, numOctaves, persistence);
-    //double value = 0;
-    value += 50;
+    //double value = octaveNoise(pos, offset, spread, size, numOctaves, persistence);
+    double value = 0;
+    value += 125;
 
     return (int) value;
 }

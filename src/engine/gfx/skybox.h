@@ -8,6 +8,6 @@ struct Skybox {
 };
 
 struct Skybox skybox_new();
-void skybox_render(struct Skybox *skybox, shader_t shader);
+void skybox_render(struct Skybox skybox, shader_t shader);
 
 #endif

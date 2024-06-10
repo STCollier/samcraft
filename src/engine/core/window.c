@@ -11,8 +11,9 @@ static void _sizeCallback(GLFWwindow* win, int w, int h) {
 }
 
 static void _keyboardCallback(GLFWwindow* w, int key, int scancode, int action, int mods) {
-    if (glfwGetKey(window.self, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    if (glfwGetKey(window.self, GLFW_KEY_Q) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window.self, 1);
+    }
 
     if (glfwGetKey(window.self, GLFW_KEY_TAB) == GLFW_PRESS) {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -59,6 +60,8 @@ void window_create(const char* title, int width, int height) {
     window.dt = 0.0f;
     window.lastFrame = 0.0f;
 
+    window.FPSTimer = timer_new(1.0);
+
     window.leftClicked = false;
     window.rightClicked = false;
     window.onMouseRelease = true;
@@ -67,6 +70,7 @@ void window_create(const char* title, int width, int height) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
     #ifdef __APPLE__
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -105,7 +109,7 @@ void window_create(const char* title, int width, int height) {
 
     glfwGetFramebufferSize(window.self, &window.width, &window.height);
 
-    glfwSwapInterval(1);
+    //glfwSwapInterval(1);
 }
 
 void window_destroy() {
@@ -113,10 +117,25 @@ void window_destroy() {
     glfwTerminate();
 }
 
+static int fpsc = 0;
 void window_update() {
     float currentFrame = glfwGetTime();
     window.dt = currentFrame - window.lastFrame;
     window.lastFrame = currentFrame;
+
+    timer_update(&window.FPSTimer);
+    
+    if (window.FPSTimer.ended) {
+        timer_reset(&window.FPSTimer);
+        window.FPS = fpsc;
+        fpsc = 0;
+    } else {
+        fpsc++;
+    }
+    
+    if (glfwGetKey(window.self, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        glfwSetInputMode(window.self, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    }
 
     // Render
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
