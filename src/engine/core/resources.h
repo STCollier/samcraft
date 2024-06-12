@@ -8,12 +8,14 @@
 #include "../gfx/sprite.h"
 #include "../gfx/text.h"
 #include "../gfx/skybox.h"
+#include "../func/frustum.h"
 
 #include "shader.h"
 
 struct Resources {
     threadpool thpool;
     struct Skybox skybox;
+    struct Frustum cameraFrustum;
 
     struct {
         shader_t main;
@@ -35,6 +37,8 @@ struct Resources {
 
     struct {
         struct Timer FPSTimer;
+        struct Timer _100ms;
+        struct Timer _500ms;
     } timers;
 };
 

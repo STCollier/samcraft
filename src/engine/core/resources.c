@@ -49,6 +49,8 @@ void resources_load() {
     res.thpool = thpool_init(globals.threads);
 
     res.timers.FPSTimer = timer_new(1.0);
+    res.timers._100ms = timer_new(0.1);
+    res.timers._500ms = timer_new(0.5);
 }
 
 static char FPSt[64];
@@ -56,6 +58,7 @@ static char playerPositiont[128];
 void resources_update() {
     camera_use(res.shaders.main);
     player_update(res.shaders.blockOverlay);
+    res.cameraFrustum = updateCameraFrustum();
 
     timer_update(&res.timers.FPSTimer);
     if (res.timers.FPSTimer.ended) {
@@ -64,14 +67,19 @@ void resources_update() {
         timer_reset(&res.timers.FPSTimer);
     }
 
-    snprintf(playerPositiont, 128, "Position: (%.2f %.2f %.2f)", camera.position[0], camera.position[1], camera.position[2]);
-    ui_updateText(res.text.playerPosition, playerPositiont, res.text.playerPosition.x, res.text.playerPosition.y, res.text.playerPosition.scale, res.text.playerPosition.color);
-    ui_set(TEXT_LAYER);
+    timer_update(&res.timers._100ms);
+    if (res.timers._100ms.ended) {
+        snprintf(playerPositiont, 128, "Position: (%.2f %.2f %.2f)", camera.position[0], camera.position[1], camera.position[2]);
+        ui_updateText(res.text.playerPosition, playerPositiont, res.text.playerPosition.x, res.text.playerPosition.y, res.text.playerPosition.scale, res.text.playerPosition.color);
+
+        ui_set(TEXT_LAYER);
+        timer_reset(&res.timers._100ms);
+    }
 }
 
 void resources_render() {
     skybox_render(res.skybox, res.shaders.sky);
-    world_render(res.shaders.main, res.thpool);
+    world_render(res.shaders.main, res.thpool, res.cameraFrustum);
 
     // Set shader uniforms
     shader_setVec3(res.shaders.main, "camera_position", camera.position[0], camera.position[1], camera.position[2]);

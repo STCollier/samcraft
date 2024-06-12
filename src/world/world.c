@@ -8,7 +8,7 @@
 #include "../engine/util/util.h"
 #include "../engine/util/types.h"
 #include "../engine/util/thpool.h"
-#include "../engine/func/player.h" 
+#include "../engine/func/player.h"
 
 #include "worldgen.h"
 #include "chunk.h"
@@ -16,6 +16,26 @@
 #include "world.h"
 
 struct World world;
+
+static bool chunkPlaneIsVisible(size_t index, struct Chunk* chunk) {
+    if (index == 0) {
+        return player.chunkPosition[1] >= chunk->position[1];
+    } else if (index == 1) {
+        return player.chunkPosition[1] <= chunk->position[1];
+    } else if (index == 2) {
+        return player.chunkPosition[0] >= chunk->position[0];
+    } else if (index == 3) {
+        return player.chunkPosition[0] <= chunk->position[0];
+    } else if (index == 4) {
+        return player.chunkPosition[2] >= chunk->position[2];
+    } else if (index == 5) {
+        return player.chunkPosition[2] <= chunk->position[2];
+    }
+
+    puts("h");
+    
+    return 1;
+}
 
 void world_addChunk(ivec3 position) {
     struct Chunk *chunk = malloc(sizeof(struct Chunk));
@@ -310,7 +330,7 @@ void world_init(int renderRadius) {
     LOG_IMSG("World loaded, Chunk count: ", c);
 }
 
-void world_render(shader_t shader, threadpool thpool) {
+void world_render(shader_t shader, threadpool thpool, struct Frustum frustum) {
     if (player.exitedChunk) {
         world_loadNewChunks();
 
@@ -321,7 +341,7 @@ void world_render(shader_t shader, threadpool thpool) {
 
     if (world.chunkQueue.toGenerate.size > 0) {
         if (world.chunkQueue.toGenerate.index < world.chunkQueue.toGenerate.size) {
-            if (world.chunkQueue.toGenerate.tick) {
+            if (world.chunkQueue.toGenerate.tick % 2) {
                 for (int i = 0; i < world.chunkQueue.passesPerFrame; i++) {
                     if (world.chunkQueue.toGenerate.index + i < world.chunkQueue.toGenerate.size) {
                         thpool_add_work(thpool, thread_genchunk, world.chunkQueue.toGenerate.chunks[world.chunkQueue.toGenerate.index + i]);
@@ -353,20 +373,37 @@ void world_render(shader_t shader, threadpool thpool) {
 
     world.chunkQueue.queuesComplete = (world.chunkQueue.toGenerate.size == 0 && world.chunkQueue.toMesh.size == 0);
 
+    // pass = 1 (opaque)
+    // pass = 0 (transparent)
+
+    int passed = 0, total = 0, culled = 0;
     for (int z = -world.renderRadius + player.chunkPosition[2]; z < world.renderRadius + player.chunkPosition[2]; z++) {
         for (int y = -world.renderHeight + player.chunkPosition[1]; y < world.renderHeight + player.chunkPosition[1]; y++) {
             for (int x = -world.renderRadius + player.chunkPosition[0]; x < world.renderRadius + player.chunkPosition[0]; x++) {
                 ivec2 origin = {player.chunkPosition[0], player.chunkPosition[2]};
                 ivec2 pos = {x, z};
 
-                if (idist2d(origin, pos) < world.renderRadius && world_getChunk((ivec3){x, y, z}) != NULL) {
-                    if (world_getChunk((ivec3){x, y, z})->state == BOUND) {
-                        chunk_render(world_getChunk((ivec3){x, y, z}), shader, 1);
+                struct Chunk* chunk = world_getChunk((ivec3){x, y, z});
+
+                if (idist2d(origin, pos) < world.renderRadius && chunk != NULL && chunk->state == BOUND) {
+                    if (boxInFrustum(frustum, *chunk)) {
+                        bool draw[6];
+                        for (int i = 0; i < 6; i++) {
+                            bool willRender = chunkPlaneIsVisible(i, chunk);
+                            draw[i] = willRender;
+                            if (willRender) culled++;
+                        }
+
+                        chunk_render(chunk, shader, draw, 1);
+                        passed++;
                     }
+                    total++;
                 }
             }
         }
     }
+    
+    printf("Rendered: %d/%d   Culled: %d/%d chunk faces\n", passed, total, culled, passed*6);
 
     for (int z = -world.renderRadius + player.chunkPosition[2]; z < world.renderRadius + player.chunkPosition[2]; z++) {
         for (int y = -world.renderHeight + player.chunkPosition[1]; y < world.renderHeight + player.chunkPosition[1]; y++) {
@@ -374,8 +411,17 @@ void world_render(shader_t shader, threadpool thpool) {
                 ivec2 origin = {player.chunkPosition[0], player.chunkPosition[2]};
                 ivec2 pos = {x, z};
 
-                if (idist2d(origin, pos) < world.renderRadius && world_getChunk((ivec3){x, y, z}) != NULL) {
-                    if (world_getChunk((ivec3){x, y, z})->state == BOUND) chunk_render(world_getChunk((ivec3){x, y, z}), shader, 0);
+                struct Chunk* chunk = world_getChunk((ivec3){x, y, z});
+
+                if (idist2d(origin, pos) < world.renderRadius && chunk != NULL && chunk->state == BOUND) {
+                    if (boxInFrustum(frustum, *chunk)) {
+                        bool draw[6];
+                        for (int i = 0; i < 6; i++) {
+                            draw[i] = chunkPlaneIsVisible(i, chunk);
+                        }
+
+                        chunk_render(chunk, shader, draw, 0);
+                    }
                 }
             }
         }

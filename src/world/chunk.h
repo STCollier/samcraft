@@ -3,6 +3,7 @@
 
 #include "../engine/core/shader.h"
 #include "../engine/util/common.h"
+#include "../engine/func/mesher.h"
 #include "uthash/uthash.h"
 
 #define CHUNK_SIZE 50
@@ -23,8 +24,8 @@ enum ChunkPipelineState {
 };
 
 struct ChunkMesh {
-    struct MeshData *opaque;
-    struct MeshData *transparent;
+    struct MeshData opaque;
+    struct MeshData transparent;
 };
 
 struct Chunk {
@@ -33,13 +34,13 @@ struct Chunk {
     chunk_key_t key; // Hashtable key
     UT_hash_handle hh; // Makes this structure hashable
 
-    struct ChunkMesh *mesh;
+    struct ChunkMesh mesh;
     enum ChunkPipelineState state;
     bool addedToMeshQueue;
     bool empty;
 
     unsigned int arrayTexture;
-    unsigned int VBO, VAO, EBO, tVBO, tVAO, tEBO;
+    unsigned int VBO[6], VAO[6], EBO[6], tVBO[6], tVAO[6], tEBO[6];
 };
 
 int blockIndex(int x, int y, int z);
@@ -49,6 +50,6 @@ void chunk_generate(struct Chunk *chunk);
 void chunk_mesh(struct Chunk *chunk);
 void chunk_remesh(struct Chunk *chunk, struct Chunk* cn_right, struct Chunk* cn_left, struct Chunk* cn_front, struct Chunk* cn_back, struct Chunk* cn_top, struct Chunk* cn_bottom);
 void chunk_bind(struct Chunk *chunk);
-void chunk_render(struct Chunk *chunk, shader_t shader, bool pass);
+void chunk_render(struct Chunk *chunk, shader_t shader, bool draw[6], bool pass);
 
 #endif

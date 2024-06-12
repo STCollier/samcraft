@@ -25,8 +25,6 @@ void chunk_init(struct Chunk *chunk, ivec3 pos) {
     chunk->voxels = malloc(CS_P3);
     memset(chunk->voxels, 0, CS_P3);
 
-    chunk->mesh = malloc(sizeof(struct ChunkMesh));
-
     chunk->state = ADDED;
     chunk->addedToMeshQueue = false;
 }
@@ -99,8 +97,8 @@ void chunk_mesh(struct Chunk *chunk) {
         }
     }
 
-    chunk->mesh->opaque = mesh(opaque, true);
-    chunk->mesh->transparent = mesh(transparent, false);
+    chunk->mesh.opaque = mesh(opaque, true);
+    chunk->mesh.transparent = mesh(transparent, false);
 
     free(opaque);
     free(transparent);
@@ -137,8 +135,8 @@ void chunk_remesh(struct Chunk *chunk, struct Chunk* cn_right, struct Chunk* cn_
         }
     }
 
-    chunk->mesh->opaque = mesh(opaque, true);
-    chunk->mesh->transparent = mesh(transparent, false);
+    chunk->mesh.opaque = mesh(opaque, true);
+    chunk->mesh.transparent = mesh(transparent, false);
 
     free(opaque);
     free(transparent);
@@ -147,42 +145,45 @@ void chunk_remesh(struct Chunk *chunk, struct Chunk* cn_right, struct Chunk* cn_
 }
 
 void chunk_bind(struct Chunk *chunk) {
-    glGenVertexArrays(1, &chunk->VAO);
-    glGenBuffers(1, &chunk->VBO);
-    glGenBuffers(1, &chunk->EBO);
 
-    glBindVertexArray(chunk->VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, chunk->VBO);
-    glBufferData(GL_ARRAY_BUFFER, chunk->mesh->opaque->vertices.length * sizeof(uint64_t), chunk->mesh->opaque->vertices.data, GL_STATIC_DRAW);
+    for (int i = 0; i < 6; i++) {
+        glGenVertexArrays(1, &chunk->VAO[i]);
+        glGenBuffers(1, &chunk->VBO[i]);
+        glGenBuffers(1, &chunk->EBO[i]);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, chunk->EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, chunk->mesh->opaque->indices.length * sizeof(uint32_t), chunk->mesh->opaque->indices.data, GL_STATIC_DRAW);
-    
-    glVertexAttribIPointer(0, 2, GL_UNSIGNED_INT, 0, (void*)0);
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+        glBindVertexArray(chunk->VAO[i]);
+        glBindBuffer(GL_ARRAY_BUFFER, chunk->VBO[i]);
+        glBufferData(GL_ARRAY_BUFFER, chunk->mesh.opaque.meshes[i].vertices.length * sizeof(uint64_t), chunk->mesh.opaque.meshes[i].vertices.data, GL_STATIC_DRAW);
 
-    glGenVertexArrays(1, &chunk->tVAO);
-    glGenBuffers(1, &chunk->tVBO);
-    glGenBuffers(1, &chunk->tEBO);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, chunk->EBO[i]);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, chunk->mesh.opaque.meshes[i].indices.length * sizeof(uint32_t), chunk->mesh.opaque.meshes[i].indices.data, GL_STATIC_DRAW);
+        
+        glVertexAttribIPointer(0, 2, GL_UNSIGNED_INT, 0, (void*)0);
+        glEnableVertexAttribArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
 
-    glBindVertexArray(chunk->tVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, chunk->tVBO);
-    glBufferData(GL_ARRAY_BUFFER, chunk->mesh->transparent->vertices.length * sizeof(uint64_t), chunk->mesh->transparent->vertices.data, GL_STATIC_DRAW);
+        glGenVertexArrays(1, &chunk->tVAO[i]);
+        glGenBuffers(1, &chunk->tVBO[i]);
+        glGenBuffers(1, &chunk->tEBO[i]);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, chunk->tEBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, chunk->mesh->transparent->indices.length * sizeof(uint32_t), chunk->mesh->transparent->indices.data, GL_STATIC_DRAW);
-    
-    glVertexAttribIPointer(0, 2, GL_UNSIGNED_INT, 0, (void*)0);
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+        glBindVertexArray(chunk->tVAO[i]);
+        glBindBuffer(GL_ARRAY_BUFFER, chunk->tVBO[i]);
+        glBufferData(GL_ARRAY_BUFFER, chunk->mesh.transparent.meshes[i].vertices.length * sizeof(uint64_t), chunk->mesh.transparent.meshes[i].vertices.data, GL_STATIC_DRAW);
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, chunk->tEBO[i]);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, chunk->mesh.transparent.meshes[i].indices.length * sizeof(uint32_t), chunk->mesh.transparent.meshes[i].indices.data, GL_STATIC_DRAW);
+        
+        glVertexAttribIPointer(0, 2, GL_UNSIGNED_INT, 0, (void*)0);
+        glEnableVertexAttribArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
+    }
 
     chunk->state = BOUND;
 }
 
-void chunk_render(struct Chunk *chunk, shader_t shader, bool pass) {
+void chunk_render(struct Chunk *chunk, shader_t shader, bool draw[6], bool pass) {
     shader_use(shader);
     shader_setInt(shader, "arrayTexture", 0);
 
@@ -200,18 +201,21 @@ void chunk_render(struct Chunk *chunk, shader_t shader, bool pass) {
     glm_translate(camera.model, chunkTranslation);
     shader_setMat4(shader, "model", camera.model);
 
-    glBindVertexArray(chunk->VAO);
-    glDrawElements(GL_TRIANGLES, chunk->mesh->opaque->indices.length, GL_UNSIGNED_INT, 0);
+    for (int i = 0; i < 6; i++) {
+        bool toRender = draw[i];
 
-    if (pass) {
-        glBindVertexArray(chunk->VAO);
-        glDrawElements(GL_TRIANGLES, chunk->mesh->opaque->indices.length, GL_UNSIGNED_INT, 0);
-    } else {
-        glm_mat4_identity(camera.model);
-        glm_translate(camera.model, (vec3){chunkTranslation[0], chunkTranslation[1] - 0.25, chunkTranslation[2]});
-        shader_setMat4(shader, "model", camera.model);
+        if (toRender) {
+            if (pass) {
+                glBindVertexArray(chunk->VAO[i]);
+                glDrawElements(GL_TRIANGLES, chunk->mesh.opaque.meshes[i].indices.length, GL_UNSIGNED_INT, 0);
+            } else {
+                glm_mat4_identity(camera.model);
+                glm_translate(camera.model, (vec3){chunkTranslation[i], chunkTranslation[1] - 0.25, chunkTranslation[2]});
+                shader_setMat4(shader, "model", camera.model);
 
-        glBindVertexArray(chunk->tVAO);
-        glDrawElements(GL_TRIANGLES, chunk->mesh->transparent->indices.length, GL_UNSIGNED_INT, 0);
+                glBindVertexArray(chunk->tVAO[i]);
+                glDrawElements(GL_TRIANGLES, chunk->mesh.transparent.meshes[i].indices.length, GL_UNSIGNED_INT, 0);
+            }
+        }
     }
 }

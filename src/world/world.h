@@ -3,6 +3,7 @@
 
 #include "../engine/util/common.h"
 #include "../engine/util/thpool.h"
+#include "../engine/func/frustum.h"
 
 struct ChunkList {
     struct Chunk **chunks;
@@ -35,7 +36,7 @@ void world_meshChunk(ivec3 position);
 void world_remeshChunk(ivec3 position);
 
 void world_init(int renderRadius);
-void world_render(shader_t shader, threadpool thpool);
+void world_render(shader_t shader, threadpool thpool, struct Frustum frustum);
 
 extern struct World world;
 

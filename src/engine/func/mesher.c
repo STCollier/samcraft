@@ -22,7 +22,7 @@ static const int get_axis_i(const int axis, const int a, const int b, const int 
 
 // Add checks to this function to skip culling against grass for example
 static inline const bool solid_check(int voxel) {
-  return voxel != BLOCK_AIR;
+	return voxel != BLOCK_AIR;
 }
 
 const ivec2 ao_dirs[8] = {
@@ -37,7 +37,7 @@ const ivec2 ao_dirs[8] = {
 };
 
 static inline const int vertexAO(int side1, int side2, int corner) {
-  return (side1 && side2) ? 0 : (3 - (side1 + side2 + corner));
+  	return (side1 && side2) ? 0 : (3 - (side1 + side2 + corner));
 }
 
 static inline int arr_at(uint8_t *arr, size_t idx) {
@@ -83,16 +83,16 @@ static inline void insert_quad(arr_uint64_t* vertices, arr_uint32_t* indices, ui
 		uint32_t_arr_push(indices, offset + 0);
 		uint32_t_arr_push(indices, offset + 1);
 		uint32_t_arr_push(indices, offset + 3);
-    uint32_t_arr_push(indices, offset + 3);
-    uint32_t_arr_push(indices, offset + 1);
-    uint32_t_arr_push(indices, offset + 2);
+		uint32_t_arr_push(indices, offset + 3);
+		uint32_t_arr_push(indices, offset + 1);
+		uint32_t_arr_push(indices, offset + 2);
   } else {
-    uint32_t_arr_push(indices, offset + 0);
-    uint32_t_arr_push(indices, offset + 1);
-    uint32_t_arr_push(indices, offset + 2);
-    uint32_t_arr_push(indices, offset + 2);
-    uint32_t_arr_push(indices, offset + 3);
-    uint32_t_arr_push(indices, offset + 0);
+		uint32_t_arr_push(indices, offset + 0);
+		uint32_t_arr_push(indices, offset + 1);
+		uint32_t_arr_push(indices, offset + 2);
+		uint32_t_arr_push(indices, offset + 2);
+		uint32_t_arr_push(indices, offset + 3);
+		uint32_t_arr_push(indices, offset + 0);
   	}
 }
 
@@ -100,14 +100,16 @@ static inline const uint64_t get_vertex(uint64_t x, uint64_t y, uint64_t z, uint
 	return (opaque << 63) | (ao << 61) | (normal << 58) | (v << 50) | (type << 32) | (u << 24) | ((z - 1) << 16) | ((y - 1) << 8) | (x - 1);
 }
 
-struct MeshData *mesh(uint8_t *voxels, bool opaque) {
-	struct MeshData *mesh_data = malloc(sizeof(struct MeshData));
+struct MeshData mesh(uint8_t* voxels, bool opaque) {
+	struct MeshData mesh_data;
 
 	uint64_t axis_cols[CS_P2 * 3] = { 0 };
 	uint64_t col_face_masks[CS_P2 * 6];
 
-	mesh_data->vertices = uint64_t_array();
-	mesh_data->indices = uint32_t_array();
+	for (int i = 0; i < 6; i++) {
+		mesh_data.meshes[i].vertices = uint64_t_array();
+		mesh_data.meshes[i].indices = uint32_t_array();
+	}
 
   // Step 1: Convert to binary representation for each direction
   int voxelIdx = 0;
@@ -256,7 +258,7 @@ struct MeshData *mesh(uint8_t *voxels, bool opaque) {
             v4 = get_vertex(mesh_back, mesh_right, mesh_up, type, 0, mesh_right - mesh_left, face, ao_RB, opaque);
           }
 
-          insert_quad(&mesh_data->vertices, &mesh_data->indices, v1, v2, v3, v4, ao_LB + ao_RF > ao_RB + ao_LF);
+          insert_quad(&mesh_data.meshes[face].vertices, &mesh_data.meshes[face].indices, v1, v2, v3, v4, ao_LB + ao_RF > ao_RB + ao_LF);
         }
       }
     }

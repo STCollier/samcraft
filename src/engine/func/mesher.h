@@ -11,11 +11,15 @@
 #define CS_P2 (CS_P * CS_P)
 #define CS_P3 (CS_P * CS_P * CS_P)
 
-struct MeshData {
+struct Mesh {
     arr_uint64_t vertices;
     arr_uint32_t indices;
 };
 
-struct MeshData *mesh(uint8_t *voxels, bool opaque);
+struct MeshData {
+    struct Mesh meshes[6];
+};
+
+struct MeshData mesh(uint8_t *voxels, bool opaque);
 
 #endif

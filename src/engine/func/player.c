@@ -22,7 +22,7 @@ void player_init() {
     player.FOV = globals.FOV;
     player.currentFOV = globals.FOV;
 
-    glm_vec3_copy((vec3){2.25f, 150.0f, 2.25f}, camera.position);
+    glm_vec3_copy((vec3){25.0f, 150.0f, 25.0f}, camera.position);
     glm_vec3_copy((vec3){0.6, 1.8, 0.6}, player.dimensions);
     glm_ivec3_copy((ivec3){camera.position[0] / CHUNK_SIZE, camera.position[1] / CHUNK_SIZE, camera.position[2] / CHUNK_SIZE}, player.chunkPosition);
     glm_ivec3_copy((ivec3){0, 0, 0}, player.previousPosition);
