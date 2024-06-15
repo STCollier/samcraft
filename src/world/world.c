@@ -403,7 +403,7 @@ void world_render(shader_t shader, threadpool thpool, struct Frustum frustum) {
         }
     }
     
-    printf("Rendered: %d/%d   Culled: %d/%d chunk faces\n", passed, total, culled, passed*6);
+    //printf("Rendered: %d/%d   Culled: %d/%d chunk faces\n", passed, total, culled, passed*6);
 
     for (int z = -world.renderRadius + player.chunkPosition[2]; z < world.renderRadius + player.chunkPosition[2]; z++) {
         for (int y = -world.renderHeight + player.chunkPosition[1]; y < world.renderHeight + player.chunkPosition[1]; y++) {

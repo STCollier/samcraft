@@ -210,7 +210,7 @@ void chunk_render(struct Chunk *chunk, shader_t shader, bool draw[6], bool pass)
                 glDrawElements(GL_TRIANGLES, chunk->mesh.opaque.meshes[i].indices.length, GL_UNSIGNED_INT, 0);
             } else {
                 glm_mat4_identity(camera.model);
-                glm_translate(camera.model, (vec3){chunkTranslation[i], chunkTranslation[1] - 0.25, chunkTranslation[2]});
+                glm_translate(camera.model, chunkTranslation);
                 shader_setMat4(shader, "model", camera.model);
 
                 glBindVertexArray(chunk->tVAO[i]);

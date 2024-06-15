@@ -32,6 +32,7 @@ struct Resources {
 
     struct {
         struct Text FPS;
+        struct Text frameTime;
         struct Text playerPosition;
     } text;
 

@@ -36,6 +36,12 @@ void camera_init(float fov, float sensitivity, vec3 position) {
     lastX = window.width / 2.0;
     lastY = window.height / 2.0;
 
+    glGenBuffers(1, &camera.matrixUBO);
+    glBindBuffer(GL_UNIFORM_BUFFER, camera.matrixUBO);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(mat4), NULL, GL_STATIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glBindBufferRange(GL_UNIFORM_BUFFER, 0, camera.matrixUBO, 0, sizeof(mat4));
+
     LOG("Camera successfully loaded!");
 }
 
@@ -44,13 +50,20 @@ void camera_use(shader_t shader) {
 
     glm_mat4_identity(camera.projection);
     glm_perspective(glm_rad(camera.fov), (float) window.width / (float) window.height, camera.near, camera.far, camera.projection); // Make sure to convert to floats for float division
-    shader_setMat4(shader, "projection", camera.projection);
+    //shader_setMat4(shader, "projection", camera.projection);
 
     glm_mat4_identity(camera.view);
     vec3 result;
     glm_vec3_add(camera.position, camera.front, result);
     glm_lookat(camera.position, result, camera.up, camera.view);
-    shader_setMat4(shader, "view", camera.view);
+    //shader_setMat4(shader, "view", camera.view);
+
+    mat4 projectionView;
+    glm_mat4_mul(camera.projection, camera.view, projectionView);
+
+    glBindBuffer(GL_UNIFORM_BUFFER, camera.matrixUBO);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(mat4), &projectionView[0][0]);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
 void camera_mouseCallback(double xposIn, double yposIn) {

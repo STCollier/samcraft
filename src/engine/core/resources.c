@@ -22,6 +22,8 @@ void resources_load() {
     res.shaders.sprite = shader_new("res/shaders/sprite.vert", "res/shaders/sprite.frag");
     res.shaders.text = shader_new("res/shaders/text.vert", "res/shaders/text.frag");
 
+    shader_setUniformBlock(res.shaders.main, "CameraMatrix", 0);
+
     mat4 projection2D;
     glm_ortho(0.0f, window.width, window.height, 0.0f, -1.0f, 1.0f, projection2D);
 
@@ -37,12 +39,13 @@ void resources_load() {
     world_init(globals.renderRadius);
     player_init();
 
-    res.text.FPS = ui_newText("FPS: 120", 50.0, 75.0, 0.4, (ivec4){0, 0, 0, 255});
-    res.text.playerPosition = ui_newText("Position: (0, 0, 0)", 50.0, 200.0, 0.4, (ivec4){0, 0, 0, 255});
+    res.text.frameTime = ui_newText("Frame Time: 0 ms", 50.0, 75.0, 0.4, (ivec4){0, 0, 0, 255});
+    res.text.FPS = ui_newText("FPS: 0", 50.0, 200.0, 0.4, (ivec4){0, 0, 0, 255});
+    res.text.playerPosition = ui_newText("Position: (0, 0, 0)", 50.0, 325.0, 0.4, (ivec4){0, 0, 0, 255});
     ui_set(TEXT_LAYER);
 
     res.sprites.crosshair = ui_newSprite("res/textures/ui/crosshair.png", window.width / 2, window.height / 2, 2.0, INHERIT, CLEAR_COLOR, ALIGN_CENTER);
-    res.sprites.textPanel = ui_newSprite("res/textures/ui/panel.png", 25, 25, 1.0, (vec2){600, 125}, CLEAR_COLOR, ALIGN_LEFT);
+    res.sprites.textPanel = ui_newSprite("res/textures/ui/panel.png", 25, 25, 1.0, (vec2){600, 175}, CLEAR_COLOR, ALIGN_LEFT);
     ui_set(SPRITE_LAYER);
 
     res.skybox = skybox_new();
@@ -54,20 +57,32 @@ void resources_load() {
 }
 
 static char FPSt[64];
+static char frameTimet[64];
 static char playerPositiont[128];
+static float averageFrameTime = 0.0;
+
 void resources_update() {
     camera_use(res.shaders.main);
     player_update(res.shaders.blockOverlay);
     res.cameraFrustum = updateCameraFrustum();
 
     timer_update(&res.timers.FPSTimer);
+    averageFrameTime += window.dt * 1000;
+
     if (res.timers.FPSTimer.ended) {
         snprintf(FPSt, 64, "FPS: %d", window.FPS);
         ui_updateText(res.text.FPS, FPSt, res.text.FPS.x, res.text.FPS.y, res.text.FPS.scale, res.text.FPS.color);
+
+        snprintf(frameTimet, 64, "Frame Time: %.2f ms", window.dt * 1000);
+        ui_updateText(res.text.frameTime, frameTimet, res.text.frameTime.x, res.text.frameTime.y, res.text.frameTime.scale, res.text.frameTime.color);
+
+        averageFrameTime = 0;
+
         timer_reset(&res.timers.FPSTimer);
     }
 
     timer_update(&res.timers._100ms);
+
     if (res.timers._100ms.ended) {
         snprintf(playerPositiont, 128, "Position: (%.2f %.2f %.2f)", camera.position[0], camera.position[1], camera.position[2]);
         ui_updateText(res.text.playerPosition, playerPositiont, res.text.playerPosition.x, res.text.playerPosition.y, res.text.playerPosition.scale, res.text.playerPosition.color);

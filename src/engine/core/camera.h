@@ -12,6 +12,8 @@ struct Camera {
     vec3 front, up, right;
     float speedValue[3], speed;
     float near, far, sensitivity, fov;
+
+    unsigned int matrixUBO;
 };
 
 void camera_init(float fov, float sensitivity, vec3 position);

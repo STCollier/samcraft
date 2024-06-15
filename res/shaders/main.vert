@@ -2,11 +2,14 @@
 
 layout (location = 0) in uvec2 data;
 
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
+layout (std140) uniform CameraMatrix {
+    mat4 projection_view;
+};
 
-out vec4 frag_viewspace;
+uniform mat4 model;
+/*uniform mat4 view;
+uniform mat4 projection;*/
+
 out vec3 frag_pos;
 out vec3 frag_normal;
 out vec2 frag_uv;
@@ -24,9 +27,9 @@ vec3 NORMALS[6] = vec3[6](
 );
 
 void main() {
-	float x = float(data.x & 255u);
-	float y = float((data.x >> 8) & 255u);
-	float z = float((data.x >> 16) & 255u);
+	uint x = data.x & 255u;
+	uint y = (data.x >> 8) & 255u;
+	uint z = (data.x >> 16) & 255u;
 	uint u = (data.x >> 24) & 255u;
 
 	uint type = data.y & 262143u;
@@ -35,14 +38,13 @@ void main() {
 	uint ao = (data.y >> 29) & 3u;
 	uint opaque = (data.y >> 31) & 1u;
   
-	frag_ao = clamp(float(ao) / 3.0, 0.5, 1.0);
+	frag_ao = clamp(float(ao) * 0.33, 0.5, 1.0);
 
 	frag_pos = vec3(x, y, z);
-	frag_viewspace = view * model * vec4(frag_pos, 1);
 	frag_normal = NORMALS[norm];
 	frag_uv = vec2(u, v);
 	frag_opaque = opaque;
 	frag_type = type;
 	
-	gl_Position = projection * frag_viewspace;
+	gl_Position = projection_view * vec4(frag_pos, 1);
 }

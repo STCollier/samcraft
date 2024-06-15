@@ -2,7 +2,6 @@
 
 out vec4 frag_color;
 
-in vec4 frag_viewspace;
 in vec3 frag_pos;
 in vec3 frag_normal;
 in vec2 frag_uv;
@@ -29,17 +28,17 @@ void main() {
 	vec4 color;
 
 	// Calculate fog
-	float dist = length(frag_viewspace.xyz);
+	/*float dist = length(frag_viewspace.xyz);
 	float fog_factor = (fog_max - dist) / (fog_max - fog_min);
-	fog_factor = clamp(fog_factor, 0.0, 1.0);
+	fog_factor = clamp(fog_factor, 0.0, 1.0);*/
 
 	if (isOpaque) {
 		float ao = clamp(frag_ao, 0.0, 1.0);
 		final *= smoothstep(0.0, 1.0, ao);
 
-		color = vec4(mix(fog_color, final, fog_factor).xyz, 1.0);
+		color = vec4(final.xyz, 1.0);
 	} else {
-		color = mix(fog_color, final, fog_factor);
+		color = final;
 	}
 
 	/*if (color == fog_color) {

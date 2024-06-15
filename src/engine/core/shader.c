@@ -115,3 +115,8 @@ void shader_setVec3(shader_t self, char* name, float x, float y, float z) {
 void shader_setVec2(shader_t self, char* name, float x, float y) {
   glUniform2f(glGetUniformLocation(self.ID, name), x, y);
 }
+
+void shader_setUniformBlock(shader_t self, char* name, int index) {
+  unsigned int uniformBlock = glGetUniformBlockIndex(self.ID, name);
+  glUniformBlockBinding(self.ID, uniformBlock, index);
+}

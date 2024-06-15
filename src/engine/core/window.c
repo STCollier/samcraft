@@ -109,7 +109,7 @@ void window_create(const char* title, int width, int height) {
 
     glfwGetFramebufferSize(window.self, &window.width, &window.height);
 
-    //glfwSwapInterval(1);
+    glfwSwapInterval(0);
 }
 
 void window_destroy() {

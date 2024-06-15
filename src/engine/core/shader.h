@@ -23,5 +23,6 @@ void shader_setMat4(shader_t self, char* name, const mat4 mat);
 void shader_setVec4(shader_t self, char* name, float x, float y, float z, float w);
 void shader_setVec3(shader_t self, char* name, float x, float y, float z);
 void shader_setVec2(shader_t self, char* name, float x, float y);
+void shader_setUniformBlock(shader_t self, char* name, int index);
 
 #endif
