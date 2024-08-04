@@ -7,6 +7,7 @@
 
 struct Globals {
     bool debug;
+    bool vsync;
     int FOV;
     struct PlayerSpeed playerSpeed;
     float reach;

@@ -1,5 +1,6 @@
 #include "camera.h"
 #include "window.h"
+#include "globals.h"
 
 struct Window window;
 
@@ -108,8 +109,6 @@ void window_create(const char* title, int width, int height) {
     glfwSetInputMode(window.self, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     glfwGetFramebufferSize(window.self, &window.width, &window.height);
-
-    //glfwSwapInterval(1);
 }
 
 void window_destroy() {
@@ -122,6 +121,8 @@ void window_update() {
     float currentFrame = glfwGetTime();
     window.dt = currentFrame - window.lastFrame;
     window.lastFrame = currentFrame;
+
+    glfwSwapInterval(globals.vsync);
 
     timer_update(&window.FPSTimer);
     

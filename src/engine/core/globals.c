@@ -18,6 +18,7 @@ void globals_init() {
 
     lua_getGlobal(L, "config", "The field 'config' is not a table in", CONFIG_FILENAME);
     globals.debug = lua_getBool(L, "debug", "The field 'debug' is invalid in", CONFIG_FILENAME);
+    globals.vsync = lua_getBool(L, "vsync", "The field 'debug' is invalid in", CONFIG_FILENAME);
     globals.FOV = lua_getInt(L, "fov", "The field 'fov' is invalid in", CONFIG_FILENAME);
 
     globals.reach = lua_getFloat(L, "reach", "The field 'reach' is invalid in", CONFIG_FILENAME);
