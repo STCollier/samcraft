@@ -6,6 +6,7 @@
 #include "globals.h"
 
 #include "../gfx/ui.h"
+#include "../gfx/light.h"
 #include "../../world/block.h"
 #include "../../world/chunk.h"
 #include "../../world/world.h"
@@ -21,6 +22,7 @@ void resources_load() {
     res.shaders.sky = shader_new("res/shaders/sky.vert", "res/shaders/sky.frag");
     res.shaders.sprite = shader_new("res/shaders/sprite.vert", "res/shaders/sprite.frag");
     res.shaders.text = shader_new("res/shaders/text.vert", "res/shaders/text.frag");
+    res.shaders.depth = shader_new("res/shaders/depth.vert", "res/shaders/depth.frag");
 
     mat4 projection2D;
     glm_ortho(0.0f, window.width, window.height, 0.0f, -1.0f, 1.0f, projection2D);
@@ -36,6 +38,7 @@ void resources_load() {
     blockdata_loadArrayTexture();
     world_init(globals.renderRadius);
     player_init();
+    light_init();
 
     res.text.FPS = ui_newText("FPS: 120", 50.0, 75.0, 0.4, (ivec4){0, 0, 0, 255});
     res.text.playerPosition = ui_newText("Position: (0, 0, 0)", 50.0, 200.0, 0.4, (ivec4){0, 0, 0, 255});
@@ -58,6 +61,7 @@ static char playerPositiont[128];
 void resources_update() {
     camera_use(res.shaders.main);
     player_update(res.shaders.blockOverlay);
+    world_update(res.thpool);
     res.cameraFrustum = updateCameraFrustum();
 
     timer_update(&res.timers.FPSTimer);
@@ -78,15 +82,32 @@ void resources_update() {
 }
 
 void resources_render() {
-    skybox_render(res.skybox, res.shaders.sky);
-    world_render(res.shaders.main, res.thpool, res.cameraFrustum);
+    light_beginPass(res.shaders.depth);
+
+    //skybox_render(res.skybox, res.shaders.sky);
+    world_render(res.shaders.depth, res.cameraFrustum);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, window.width, window.height);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    shader_use(res.shaders.main);
 
     // Set shader uniforms
+    shader_setInt(res.shaders.main, "shadowMap", 1);
+
+    shader_setMat4(res.shaders.main, "lightSpaceMatrix", light.spaceMatrix);
     shader_setVec3(res.shaders.main, "camera_position", camera.position[0], camera.position[1], camera.position[2]);
     shader_setVec3(res.shaders.main, "camera_direction", camera.front[0], camera.front[1], camera.front[2]);
 
     shader_setFloat(res.shaders.main, "fog_max", ((world.renderRadius - 1) * CHUNK_SIZE) - CHUNK_SIZE / 2);
     shader_setFloat(res.shaders.main, "fog_min", (world.renderRadius / 2) * CHUNK_SIZE);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, light.depthMap.map);
+
+    //skybox_render(res.skybox, res.shaders.sky);
+    world_render(res.shaders.main, res.cameraFrustum);
 
     // Draw UI
     glDisable(GL_DEPTH_TEST);

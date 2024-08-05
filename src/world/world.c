@@ -330,7 +330,7 @@ void world_init(int renderRadius) {
     LOG_IMSG("World loaded, Chunk count: ", c);
 }
 
-void world_render(shader_t shader, threadpool thpool, struct Frustum frustum) {
+void world_update(threadpool thpool) {
     if (player.exitedChunk) {
         world_loadNewChunks();
 
@@ -372,7 +372,9 @@ void world_render(shader_t shader, threadpool thpool, struct Frustum frustum) {
     }
 
     world.chunkQueue.queuesComplete = (world.chunkQueue.toGenerate.size == 0 && world.chunkQueue.toMesh.size == 0);
+}
 
+void world_render(shader_t shader, struct Frustum frustum) {
     // pass = 1 (opaque)
     // pass = 0 (transparent)
 

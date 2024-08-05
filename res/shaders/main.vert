@@ -5,6 +5,7 @@ layout (location = 0) in uvec2 data;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+uniform mat4 lightSpaceMatrix;
 
 out vec4 frag_viewspace;
 out vec3 frag_pos;
@@ -13,6 +14,8 @@ out vec2 frag_uv;
 out float frag_ao;
 flat out uint frag_opaque;
 flat out uint frag_type;
+
+out vec4 frag_pos_light_space;
 
 vec3 NORMALS[6] = vec3[6](
   vec3( 0, 1, 0 ),
@@ -37,12 +40,14 @@ void main() {
   
 	frag_ao = clamp(float(ao) / 3.0, 0.5, 1.0);
 
-	frag_pos = vec3(x, y, z);
-	frag_viewspace = view * model * vec4(frag_pos, 1);
+	frag_pos = vec3(model * vec4(x, y, z, 1.0));
+	frag_viewspace = view * vec4(frag_pos, 1);
 	frag_normal = NORMALS[norm];
 	frag_uv = vec2(u, v);
 	frag_opaque = opaque;
 	frag_type = type;
+
+	frag_pos_light_space = lightSpaceMatrix * vec4(frag_pos, 1.0);
 	
 	gl_Position = projection * frag_viewspace;
 }

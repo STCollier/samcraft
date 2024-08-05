@@ -10,6 +10,21 @@ in float frag_ao;
 flat in uint frag_type;
 flat in uint frag_opaque;
 
+in vec4 frag_pos_light_space;
+uniform sampler2D shadowMap;
+
+float calcShadow(vec4 fposLightSpace) {
+	// perform perspective divide
+    vec3 projCoords = fposLightSpace.xyz / fposLightSpace.w;
+	projCoords = projCoords * 0.5 + 0.5; 
+
+	float closestDepth = texture(shadowMap, projCoords.xy).r;
+	float currentDepth = projCoords.z;
+	float shadow = currentDepth > closestDepth ? 1.0 : 0.0;
+
+	return shadow;
+}
+
 uniform float fog_min;
 uniform float fog_max;
 
@@ -42,9 +57,8 @@ void main() {
 		color = mix(fog_color, final, fog_factor);
 	}
 
-	/*if (color == fog_color) {
-		discard;
-	} else {*/
-		frag_color = color;
-	//}m
+
+	float shadow = calcShadow(frag_pos_light_space);
+	frag_color = (1.0 - shadow) * color;
+
 }

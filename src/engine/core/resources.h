@@ -23,6 +23,7 @@ struct Resources {
         shader_t sky;
         shader_t sprite;
         shader_t text;
+        shader_t depth;
     } shaders;
 
     struct {
