@@ -84,8 +84,7 @@ void resources_update() {
 void resources_render() {
     light_beginPass(res.shaders.depth);
 
-    //skybox_render(res.skybox, res.shaders.sky);
-    world_render(res.shaders.depth, res.cameraFrustum);
+    world_render(res.shaders.depth, res.cameraFrustum, 0);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, window.width, window.height);
@@ -94,8 +93,6 @@ void resources_render() {
     shader_use(res.shaders.main);
 
     // Set shader uniforms
-    shader_setInt(res.shaders.main, "shadowMap", 1);
-
     shader_setMat4(res.shaders.main, "lightSpaceMatrix", light.spaceMatrix);
     shader_setVec3(res.shaders.main, "camera_position", camera.position[0], camera.position[1], camera.position[2]);
     shader_setVec3(res.shaders.main, "camera_direction", camera.front[0], camera.front[1], camera.front[2]);
@@ -107,7 +104,7 @@ void resources_render() {
     glBindTexture(GL_TEXTURE_2D, light.depthMap.map);
 
     //skybox_render(res.skybox, res.shaders.sky);
-    world_render(res.shaders.main, res.cameraFrustum);
+    world_render(res.shaders.main, res.cameraFrustum, 1);
 
     // Draw UI
     glDisable(GL_DEPTH_TEST);

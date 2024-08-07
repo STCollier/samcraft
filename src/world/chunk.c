@@ -186,6 +186,7 @@ void chunk_bind(struct Chunk *chunk) {
 void chunk_render(struct Chunk *chunk, shader_t shader, bool draw[6], bool pass) {
     shader_use(shader);
     shader_setInt(shader, "arrayTexture", 0);
+    shader_setInt(shader, "shadowMap", 1);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D_ARRAY, block_getArrayTexture());

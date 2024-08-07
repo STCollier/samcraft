@@ -374,58 +374,94 @@ void world_update(threadpool thpool) {
     world.chunkQueue.queuesComplete = (world.chunkQueue.toGenerate.size == 0 && world.chunkQueue.toMesh.size == 0);
 }
 
-void world_render(shader_t shader, struct Frustum frustum) {
+void world_render(shader_t shader, struct Frustum frustum, int pass) {
     // pass = 1 (opaque)
     // pass = 0 (transparent)
 
-    int passed = 0, total = 0, culled = 0;
-    for (int z = -world.renderRadius + player.chunkPosition[2]; z < world.renderRadius + player.chunkPosition[2]; z++) {
-        for (int y = -world.renderHeight + player.chunkPosition[1]; y < world.renderHeight + player.chunkPosition[1]; y++) {
-            for (int x = -world.renderRadius + player.chunkPosition[0]; x < world.renderRadius + player.chunkPosition[0]; x++) {
-                ivec2 origin = {player.chunkPosition[0], player.chunkPosition[2]};
-                ivec2 pos = {x, z};
+    if (pass == 1) {
+        int passed = 0, total = 0, culled = 0;
+        for (int z = -world.renderRadius + player.chunkPosition[2]; z < world.renderRadius + player.chunkPosition[2]; z++) {
+            for (int y = -world.renderHeight + player.chunkPosition[1]; y < world.renderHeight + player.chunkPosition[1]; y++) {
+                for (int x = -world.renderRadius + player.chunkPosition[0]; x < world.renderRadius + player.chunkPosition[0]; x++) {
+                    ivec2 origin = {player.chunkPosition[0], player.chunkPosition[2]};
+                    ivec2 pos = {x, z};
 
-                struct Chunk* chunk = world_getChunk((ivec3){x, y, z});
+                    struct Chunk* chunk = world_getChunk((ivec3){x, y, z});
 
-                if (idist2d(origin, pos) < world.renderRadius && chunk != NULL && chunk->state == BOUND) {
-                    if (boxInFrustum(frustum, *chunk)) {
-                        bool draw[6];
-                        for (int i = 0; i < 6; i++) {
-                            bool willRender = chunkPlaneIsVisible(i, chunk);
-                            draw[i] = willRender;
-                            if (willRender) culled++;
+                    if (idist2d(origin, pos) < world.renderRadius && chunk != NULL && chunk->state == BOUND) {
+                        if (boxInFrustum(frustum, *chunk)) {
+                            bool draw[6];
+                            for (int i = 0; i < 6; i++) {
+                                bool willRender = chunkPlaneIsVisible(i, chunk);
+                                draw[i] = willRender;
+                                if (willRender) culled++;
+                            }
+
+                            chunk_render(chunk, shader, draw, 1);
+                            passed++;
                         }
-
-                        chunk_render(chunk, shader, draw, 1);
-                        passed++;
+                        total++;
                     }
-                    total++;
                 }
             }
         }
-    }
-    
-    //printf("Rendered: %d/%d   Culled: %d/%d chunk faces\n", passed, total, culled, passed*6);
+        
+        //printf("Rendered: %d/%d   Culled: %d/%d chunk faces\n", passed, total, culled, passed*6);
 
-    for (int z = -world.renderRadius + player.chunkPosition[2]; z < world.renderRadius + player.chunkPosition[2]; z++) {
-        for (int y = -world.renderHeight + player.chunkPosition[1]; y < world.renderHeight + player.chunkPosition[1]; y++) {
-            for (int x = -world.renderRadius + player.chunkPosition[0]; x < world.renderRadius + player.chunkPosition[0]; x++) {
-                ivec2 origin = {player.chunkPosition[0], player.chunkPosition[2]};
-                ivec2 pos = {x, z};
+        for (int z = -world.renderRadius + player.chunkPosition[2]; z < world.renderRadius + player.chunkPosition[2]; z++) {
+            for (int y = -world.renderHeight + player.chunkPosition[1]; y < world.renderHeight + player.chunkPosition[1]; y++) {
+                for (int x = -world.renderRadius + player.chunkPosition[0]; x < world.renderRadius + player.chunkPosition[0]; x++) {
+                    ivec2 origin = {player.chunkPosition[0], player.chunkPosition[2]};
+                    ivec2 pos = {x, z};
 
-                struct Chunk* chunk = world_getChunk((ivec3){x, y, z});
+                    struct Chunk* chunk = world_getChunk((ivec3){x, y, z});
 
-                if (idist2d(origin, pos) < world.renderRadius && chunk != NULL && chunk->state == BOUND) {
-                    if (boxInFrustum(frustum, *chunk)) {
-                        bool draw[6];
-                        for (int i = 0; i < 6; i++) {
-                            draw[i] = chunkPlaneIsVisible(i, chunk);
+                    if (idist2d(origin, pos) < world.renderRadius && chunk != NULL && chunk->state == BOUND) {
+                        if (boxInFrustum(frustum, *chunk)) {
+                            bool draw[6];
+                            for (int i = 0; i < 6; i++) {
+                                draw[i] = chunkPlaneIsVisible(i, chunk);
+                            }
+
+                            chunk_render(chunk, shader, draw, 0);
                         }
+                    }
+                }
+            }
+        }
+    } else {
+        glCullFace(GL_FRONT);
+        for (int z = -world.renderRadius + player.chunkPosition[2]; z < world.renderRadius + player.chunkPosition[2]; z++) {
+            for (int y = -world.renderHeight + player.chunkPosition[1]; y < world.renderHeight + player.chunkPosition[1]; y++) {
+                for (int x = -world.renderRadius + player.chunkPosition[0]; x < world.renderRadius + player.chunkPosition[0]; x++) {
+                    ivec2 origin = {player.chunkPosition[0], player.chunkPosition[2]};
+                    ivec2 pos = {x, z};
 
+                    struct Chunk* chunk = world_getChunk((ivec3){x, y, z});
+
+                    if (idist2d(origin, pos) < world.renderRadius && chunk != NULL && chunk->state == BOUND) {
+                        bool draw[6] = {1, 1, 1, 1, 1, 1};
+                        chunk_render(chunk, shader, draw, 1);
+                    }
+                }
+            }
+        }
+
+        for (int z = -world.renderRadius + player.chunkPosition[2]; z < world.renderRadius + player.chunkPosition[2]; z++) {
+            for (int y = -world.renderHeight + player.chunkPosition[1]; y < world.renderHeight + player.chunkPosition[1]; y++) {
+                for (int x = -world.renderRadius + player.chunkPosition[0]; x < world.renderRadius + player.chunkPosition[0]; x++) {
+                    ivec2 origin = {player.chunkPosition[0], player.chunkPosition[2]};
+                    ivec2 pos = {x, z};
+
+                    struct Chunk* chunk = world_getChunk((ivec3){x, y, z});
+
+                    if (idist2d(origin, pos) < world.renderRadius && chunk != NULL && chunk->state == BOUND) {
+                        bool draw[6] = {1, 1, 1, 1, 1, 1};
                         chunk_render(chunk, shader, draw, 0);
                     }
                 }
             }
         }
     }
+    glCullFace(GL_BACK);
 }

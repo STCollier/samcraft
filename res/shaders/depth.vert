@@ -11,4 +11,4 @@ void main() {
 	float z = float((data.x >> 16) & 255u);
 
     gl_Position = lightSpaceMatrix * model * vec4(x, y, z, 1.0);
-}  
+}

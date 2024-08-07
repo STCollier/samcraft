@@ -37,7 +37,7 @@ void world_remeshChunk(ivec3 position);
 
 void world_init(int renderRadius);
 void world_update(threadpool thpool);
-void world_render(shader_t shader, struct Frustum frustum);
+void world_render(shader_t shader, struct Frustum frustum, int pass);
 
 extern struct World world;
 
