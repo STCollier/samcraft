@@ -1,25 +1,40 @@
 #version 410 core
 
+uniform sampler2DArray textureArray;
+uniform sampler2DArray normalArray;
+uniform sampler2D shadowMap;
+
+uniform float fog_min;
+uniform float fog_max;
+
 out vec4 frag_color;
 
-in vec4 frag_viewspace;
-in vec3 frag_pos;
-in vec3 frag_normal;
-in vec2 frag_uv;
-in float frag_ao;
-flat in uint frag_type;
-flat in uint frag_opaque;
+struct TangentPos {
+	vec3 light, view, frag;
+};
 
-in vec4 frag_pos_light_space;
-uniform sampler2D shadowMap;
+in VS_OUT {
+	vec4 frag_viewspace;
+	vec4 frag_light_space;
+	vec3 frag_pos;
+	vec3 frag_normal;
+	vec2 frag_uv;
+	flat uint frag_opaque;
+	flat uint frag_type;
+	float frag_ao;
+
+	vec3 sun_position;
+	vec3 camera_position;
+
+	TangentPos tangent_pos;
+} fs_in;
+
 
 float PCF(vec3 projCoords, float currentDepth, float bias) {
 	float shadow = 0.0;
     vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
-    for(int x = -1; x <= 1; ++x)
-    {
-        for(int y = -1; y <= 1; ++y)
-        {
+    for (int x = -1; x <= 1; x++) {
+        for (int y = -1; y <= 1; y++) {
             float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
             shadow += currentDepth - bias > pcfDepth  ? 1.0 : 0.0;        
         }    
@@ -29,15 +44,14 @@ float PCF(vec3 projCoords, float currentDepth, float bias) {
 	return shadow;
 }
 
-float calcShadow(vec4 fposLightSpace) {
-	// perform perspective divide
-    vec3 projCoords = fposLightSpace.xyz / fposLightSpace.w;
+float calcShadow(vec4 fragLightSpace) {
+    vec3 projCoords = fragLightSpace.xyz / fragLightSpace.w;
 	projCoords = projCoords * 0.5 + 0.5; 
 
 	float closestDepth = texture(shadowMap, projCoords.xy).r;
 	float currentDepth = projCoords.z;
 
-	float bias = max(0.000001 * (1.0 - dot(frag_normal, vec3(200.0, 200.0, 200.0))), 0.0000001);
+	float bias = max(0.000001 * (1.0 - dot(fs_in.frag_normal, vec3(200.0, 200.0, 200.0))), 0.0000001);
 	float shadow = PCF(projCoords, currentDepth, bias);
     
     if (projCoords.z > 1.0) shadow = 0.0;
@@ -45,43 +59,41 @@ float calcShadow(vec4 fposLightSpace) {
 	return shadow;
 }
 
-uniform float fog_min;
-uniform float fog_max;
-
-uniform sampler2DArray arrayTexture;
-uniform vec3 camera_position;
-uniform vec3 camera_direction;
-
-vec4 fog_color = vec4(0.588, 0.784, 1.0, 1.0);
-
 vec4 layer(vec4 foreground, vec4 background) {
 	return foreground * foreground.a + background * (1.0 - foreground.a);
 }
 
 void main() {
-	bool isOpaque = bool(frag_opaque);
-	vec4 final = texture(arrayTexture, vec3(frag_uv, frag_type));
+	bool isOpaque = bool(fs_in.frag_opaque);
+	vec4 final = texture(textureArray, vec3(fs_in.frag_uv, fs_in.frag_type));
 	vec4 color;
 
-	// Calculate fog
-	/*float dist = length(frag_viewspace.xyz);
-	float fog_factor = (fog_max - dist) / (fog_max - fog_min);
-	fog_factor = clamp(fog_factor, 0.0, 1.0);*/
+	/*vec3 normal = texture(normalArray, vec3(fs_in.frag_uv, 0)).rgb;
+	normal = normalize(normal * 2.0 - 1.0);*/
 
 	if (isOpaque) {
-		float ao = clamp(frag_ao, 0.0, 1.0);
+		float ao = clamp(fs_in.frag_ao, 0.0, 1.0);
 		final *= smoothstep(0.0, 1.0, ao);
-
-		//color = vec4(mix(fog_color, final, fog_factor).xyz, 1.0);
 		color = vec4(final.xyz, 1.0);
 	} else {
-		//color = mix(fog_color, final, fog_factor);
 		color = final;
 	}
 
-	float ambient = 0.3;
+	float ambientStrength = 0.15, specularStrength = 0.5;
 
-	float shadow = calcShadow(frag_pos_light_space);
-	frag_color = vec4(color.xyz * (ambient + (1.0 - shadow)), color.a);
+	vec3 lightColor = vec3(1.0, 1.0, 0.785);
+	vec3 ambient = ambientStrength * lightColor;
+	float shadow = calcShadow(fs_in.frag_light_space);
+	vec3 lightDir = normalize(fs_in.sun_position - fs_in.frag_pos);
+	vec3 diffuse = max(dot(fs_in.frag_normal, lightDir), 0.0) * lightColor;
+
+    /*vec3 viewDir = normalize(camera_position - fs_in.frag_pos);
+    vec3 reflectDir = reflect(-lightDir, fs_in.frag_normal);  
+    vec3 specular = specularStrength * pow(max(dot(viewDir, reflectDir), 0.0), 64) * lightColor;*/
+
+	vec3 lighting = (ambient + (1.0 - shadow) * (diffuse/* + specular*/));
+
+
+	frag_color = vec4(color.xyz * lighting, color.a);
 
 }

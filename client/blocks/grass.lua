@@ -1,6 +1,7 @@
 block = {
     name = "grass",
     hardness = 0.3,
+    normal = "default.png",
     textures = {
         right = "grass_side.png",
         left = "grass_side.png",

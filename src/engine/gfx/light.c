@@ -10,6 +10,7 @@ void light_init() {
     glGenFramebuffers(1, &light.depthMap.FBO);
 
     light.depthMap.resolution = 16384;
+    glm_vec3_copy((vec3){0.0f, 200.0f, 0.0f}, light.sunPosition);
 
     glGenTextures(1, &light.depthMap.map);
     glBindTexture(GL_TEXTURE_2D, light.depthMap.map);
@@ -33,7 +34,7 @@ void light_beginPass(shader_t shader) {
 
     glm_ortho(-250.0f, 250.0f, -250.0f, 250.0f, camera.near, camera.far, lightProjection);
     glm_lookat(
-        (vec3){200.0f, 200.0f, 200.0f},
+        light.sunPosition,
         (vec3){0.0f, 0.0f, 0.0},
         (vec3){0.0f, 1.0f, 0.0f},
     lightView);

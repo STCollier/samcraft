@@ -1,6 +1,7 @@
 block = {
     name = "log",
     hardness = 1.0,
+    normal = "default.png",
     textures = {
         right = "bark.png",
         left = "bark.png",

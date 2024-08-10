@@ -8,6 +8,7 @@
 #include "../engine/util/util.h"
 #include "../engine/util/types.h"
 #include "../engine/func/mesher.h"
+#include "../engine/gfx/light.h"
 
 #include "worldgen.h"
 #include "block.h"
@@ -185,11 +186,18 @@ void chunk_bind(struct Chunk *chunk) {
 
 void chunk_render(struct Chunk *chunk, shader_t shader, bool draw[6], bool pass) {
     shader_use(shader);
-    shader_setInt(shader, "arrayTexture", 0);
-    shader_setInt(shader, "shadowMap", 1);
+    shader_setInt(shader, "textureArray", 0);
+    shader_setInt(shader, "normalArray", 1);
+    shader_setInt(shader, "shadowMap", 2);
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, block_getArrayTexture());
+    glBindTexture(GL_TEXTURE_2D_ARRAY, block_getDiffuseArrayTexture());
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, block_getNormalArrayTexture());
+
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, light.depthMap.map);
 
     vec3 chunkTranslation;
     glm_vec3_copy((vec3){
@@ -198,9 +206,7 @@ void chunk_render(struct Chunk *chunk, shader_t shader, bool draw[6], bool pass)
         chunk->position[2] * (CHUNK_SIZE)
     }, chunkTranslation);
 
-    glm_mat4_identity(camera.model);
-    glm_translate(camera.model, chunkTranslation);
-    shader_setMat4(shader, "model", camera.model);
+    shader_setVec3(shader, "chunk_translation", chunkTranslation[0], chunkTranslation[1], chunkTranslation[2]);
 
     for (int i = 0; i < 6; i++) {
         bool toRender = draw[i];
@@ -210,9 +216,7 @@ void chunk_render(struct Chunk *chunk, shader_t shader, bool draw[6], bool pass)
                 glBindVertexArray(chunk->VAO[i]);
                 glDrawElements(GL_TRIANGLES, chunk->mesh.opaque.meshes[i].indices.length, GL_UNSIGNED_INT, 0);
             } else {
-                glm_mat4_identity(camera.model);
-                glm_translate(camera.model, (vec3){chunkTranslation[i], chunkTranslation[1] - 0.25, chunkTranslation[2]});
-                shader_setMat4(shader, "model", camera.model);
+                shader_setVec3(shader, "chunk_translation", chunkTranslation[0], chunkTranslation[1] - 0.25, chunkTranslation[2]);
 
                 glBindVertexArray(chunk->tVAO[i]);
                 glDrawElements(GL_TRIANGLES, chunk->mesh.transparent.meshes[i].indices.length, GL_UNSIGNED_INT, 0);

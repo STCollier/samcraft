@@ -92,16 +92,23 @@ void resources_render() {
 
     shader_use(res.shaders.main);
 
+    if (glfwGetKey(window.self, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+        light.sunPosition[0]++;
+        light.sunPosition[2]++;
+    }
+    if (glfwGetKey(window.self, GLFW_KEY_LEFT) == GLFW_PRESS) {
+        light.sunPosition[0]--;
+        light.sunPosition[2]--;
+    }
+
+
     // Set shader uniforms
-    shader_setMat4(res.shaders.main, "lightSpaceMatrix", light.spaceMatrix);
+    shader_setMat4(res.shaders.main, "light_space_matrix", light.spaceMatrix);
+    shader_setVec3(res.shaders.main, "sun_position", light.sunPosition[0], light.sunPosition[1], light.sunPosition[2]);
     shader_setVec3(res.shaders.main, "camera_position", camera.position[0], camera.position[1], camera.position[2]);
-    shader_setVec3(res.shaders.main, "camera_direction", camera.front[0], camera.front[1], camera.front[2]);
 
     shader_setFloat(res.shaders.main, "fog_max", ((world.renderRadius - 1) * CHUNK_SIZE) - CHUNK_SIZE / 2);
     shader_setFloat(res.shaders.main, "fog_min", (world.renderRadius / 2) * CHUNK_SIZE);
-
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, light.depthMap.map);
 
     //skybox_render(res.skybox, res.shaders.sky);
     world_render(res.shaders.main, res.cameraFrustum, 1);

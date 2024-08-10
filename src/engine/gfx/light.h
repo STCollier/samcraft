@@ -10,6 +10,7 @@ struct DepthMap {
 struct Light {
     struct DepthMap depthMap;
     mat4 spaceMatrix;
+    vec3 sunPosition;
 };
 
 void light_init();

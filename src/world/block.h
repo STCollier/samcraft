@@ -15,13 +15,15 @@ struct BlockData {
     int id;
     const char* name;
     const char* textures[6];
+    const char* normal;
     float hardness;
 };
 
 void blockdata_loadLuaData();
 void blockdata_loadArrayTexture();
 
-unsigned int block_getArrayTexture();
+unsigned int block_getDiffuseArrayTexture();
+unsigned int block_getNormalArrayTexture();
 unsigned int block_getBreakArrayTexture();
 int block_getID(const char* name);
 int block_getTextureIndex(int id, Direction dir);
