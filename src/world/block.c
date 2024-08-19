@@ -11,22 +11,24 @@
 
 #include "block.h"
 
-struct BlockData blockData[256];
+static struct BlockData blockData[256];
 
-const char* faces[6] = {"right", "left", "front", "back", "top", "bottom"};
-char texturePaths[256*6][300] = {0};
-char textureNames[256*6][300] = {0};
-char normalPaths[256*6][300] = {0};
-char normalNames[256*6][300] = {0};
-unsigned int textureArray, normalArray, blockBreakArray;
-int numTextures = 0, numNormals = 0;
-int blockID = 2; // 0 and 1 are taken up by BLOCK_AIR and BLOCK_NULL, the rest are free
+static const char* faces[6] = {"top", "bottom", "right", "left", "front", "back"};
+
+static char diffuseNames[256*6][256];
+static char normalNames[256*6][256];
+
+static unsigned int diffuseArray, normalArray, blockBreakArray;
+static int diffuseCount = 0, normalCount = 0;
+
+static int blockID = 2; // 0 and 1 are taken up by BLOCK_AIR and BLOCK_NULL, the rest are free
 
 static void loadLuaFile(const char* filename) {
     lua_State *L = luaL_newstate();
     luaL_openlibs(L);
 
     const char* blockTextures[6] = {0};
+    const char* blockNormals[6] = {0};
 
     if (luaL_dofile(L, filename)) {
         ERROR_MSG("Error loading Lua block file:", lua_tostring(L, -1));
@@ -39,9 +41,10 @@ static void loadLuaFile(const char* filename) {
     lua_getGlobal(L, "block", "The field 'block' is not a table at", filename);
     const char* blockName = lua_getString(L, "name", "The field 'name' is invalid at", filename);
     float blockHardness = lua_getFloat(L, "hardness", "The field 'hardness' is invalid at", filename);
-    const char* normal = lua_getString(L, "normal", "The field 'normal' is invalid at", filename);
-    lua_getField(L, "textures", "The field 'textures' is not a table at", filename);
 
+    lua_getField(L, "textures", "The field 'textures' is not a table at", filename);
+    lua_getField(L, "diffuse", "The field 'diffuse' is not a table at", filename);
+    
     lua_getfield(L, -1, "all");
     if (!lua_isnil(L, -1)) {
         for (int i = 0; i < 6; i++) {
@@ -56,13 +59,31 @@ static void loadLuaFile(const char* filename) {
         }
     }
 
+    lua_pop(L, 1);
+
+    lua_getField(L, "normal", "The field 'normal' is not a table at", filename);
+    
+    lua_getfield(L, -1, "all");
+    if (!lua_isnil(L, -1)) {
+        for (int i = 0; i < 6; i++) {
+            blockNormals[i] = lua_tostring(L, -1);
+        }
+        lua_pop(L, 1);
+    } else {
+        lua_pop(L, 1);
+        for (int i = 0; i < 6; i++) {
+            const char* textures = lua_getString(L, faces[i], "Malformed normal specifier at", filename);
+            blockNormals[i] = textures;
+        }
+    }
+
     if (blockData[blockID].id == -1) {
         blockData[blockID].id = blockID;
         blockData[blockID].name = blockName;
         blockData[blockID].hardness = blockHardness;
-        blockData[blockID].normal = normal;
         for (int i = 0; i < 6; i++ ) {
-            blockData[blockID].textures[i] = blockTextures[i];
+            blockData[blockID].textures.diffuse[i] = blockTextures[i];
+            blockData[blockID].textures.normal[i] = blockNormals[i];
         }
 
         blockID++;
@@ -74,6 +95,7 @@ static void loadLuaFile(const char* filename) {
 }
 
 void blockdata_loadLuaData() {
+
     // Set all block data to be -1 (no data)
     for (int i = 0; i < 256; i++) {
         blockData[i].id = -1;
@@ -99,14 +121,18 @@ void blockdata_loadLuaData() {
     blockData[BLOCK_NULL].name = "null";
     blockData[BLOCK_NULL].hardness = 1.0;
     for (int i = 0; i < 6; i++) {
-        blockData[BLOCK_NULL].textures[i] = "null.png";
+        blockData[BLOCK_NULL].textures.diffuse[i] = "null.png";
+        blockData[BLOCK_NULL].textures.normal[i] = NULL;
     }
 }
 
 
-void blockdata_loadArrayTexture() {
-    glGenTextures(1, &textureArray);
-    glBindTexture(GL_TEXTURE_2D_ARRAY, textureArray);
+void blockdata_loadMaterials(shader_t shader) {
+    char diffusePaths[256*6][256];
+    char normalPaths[256*6][256];
+
+    glGenTextures(1, &diffuseArray);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, diffuseArray);
 
     DIR *d;
     struct dirent *dir;
@@ -115,9 +141,9 @@ void blockdata_loadArrayTexture() {
         while ((dir = readdir(d)) != NULL) {
             if (dir->d_type == DT_DIR || strcmp(strrchr(dir->d_name, '.') + 1, "png") != 0) continue;
     
-            snprintf(textureNames[numTextures], sizeof(textureNames[numTextures]), "%s", dir->d_name);
-            snprintf(texturePaths[numTextures], sizeof(texturePaths[numTextures]), "res/textures/block/diffuse/%s", dir->d_name);
-            numTextures++;
+            snprintf(diffuseNames[diffuseCount], sizeof(diffuseNames[diffuseCount]), "%s", dir->d_name);
+            snprintf(diffusePaths[diffuseCount], sizeof(diffusePaths[diffuseCount]), "res/textures/block/diffuse/%s", dir->d_name);
+            diffuseCount++;
         }
     }
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);    
@@ -127,17 +153,17 @@ void blockdata_loadArrayTexture() {
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     // Allocate texture storage with GL_RGBA8 internal format
-    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_SRGB8_ALPHA8, 16, 16, numTextures, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_SRGB8_ALPHA8, 16, 16, diffuseCount, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
     int width, height, channels;
-    for (int i = 0; i < numTextures; i++) {
-        unsigned char* texture = stbi_load(texturePaths[i], &width, &height, &channels, 4);
+    for (int i = 0; i < diffuseCount; i++) {
+        unsigned char* texture = stbi_load(diffusePaths[i], &width, &height, &channels, 4);
 
         if (!texture) {
-            ERROR_MSG("Failed to load texture at path", texturePaths[i]);
+            ERROR_MSG("Failed to load texture at path", diffusePaths[i]);
             exit(EXIT_FAILURE);
         } else {
-            LOG_MSG("Loaded block texture", texturePaths[i]);
+            LOG_MSG("Loaded block texture", diffusePaths[i]);
         }
 
         // Upload each image as a 16x16x1 slice of the array
@@ -159,9 +185,9 @@ void blockdata_loadArrayTexture() {
         while ((dirn = readdir(dn)) != NULL) {
             if (dirn->d_type == DT_DIR || strcmp(strrchr(dirn->d_name, '.') + 1, "png") != 0) continue;
     
-            snprintf(normalNames[numNormals], sizeof(normalNames[numNormals]), "%s", dirn->d_name);
-            snprintf(normalPaths[numNormals], sizeof(normalPaths[numNormals]), "res/textures/block/normal/%s", dirn->d_name);
-            numNormals++;
+            snprintf(normalNames[normalCount], sizeof(normalNames[normalCount]), "%s", dirn->d_name);
+            snprintf(normalPaths[normalCount], sizeof(normalPaths[normalCount]), "res/textures/block/normal/%s", dirn->d_name);
+            normalCount++;
         }
     }
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);    
@@ -171,10 +197,10 @@ void blockdata_loadArrayTexture() {
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     // Allocate texture storage with GL_RGBA8 internal format
-    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_SRGB8_ALPHA8, 160, 160, numNormals, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_SRGB8_ALPHA8, 160, 160, normalCount, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
     int nwidth, nheight, nchannels;
-    for (int i = 0; i < numNormals; i++) {
+    for (int i = 0; i < normalCount; i++) {
         unsigned char* texture = stbi_load(normalPaths[i], &nwidth, &nheight, &nchannels, 4);
 
         if (!texture) {
@@ -225,10 +251,35 @@ void blockdata_loadArrayTexture() {
     }
 
     glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+
+    struct MaterialIndices* materialIndices = malloc(sizeof(struct MaterialIndices) * 256 * 6);
+
+    for (int i = 0; i < 256; i++) {
+        for (int j = 0; j < 6; j++) {
+            materialIndices[6 * i + j].diffuseIndex = block_getDiffuseIndex(i, j);
+            materialIndices[6 * i + j].normalIndex = block_getNormalIndex(i, j);
+        }
+    }
+
+    glUniformBlockBinding(shader.ID, glGetUniformBlockIndex(shader.ID, "BlockData"), 0);
+
+    unsigned int blockMaterialUBO;
+    glGenBuffers(1, &blockMaterialUBO);
+    glBindBuffer(GL_UNIFORM_BUFFER, blockMaterialUBO);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(struct MaterialIndices) * 256 * 6, NULL, GL_STATIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    glBindBufferRange(GL_UNIFORM_BUFFER, 0, blockMaterialUBO, 0, sizeof(struct MaterialIndices) * 256 * 6);
+
+    glBindBuffer(GL_UNIFORM_BUFFER, blockMaterialUBO);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(struct MaterialIndices) * 256 * 6, materialIndices);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    free(materialIndices);
 }
 
 unsigned int block_getDiffuseArrayTexture() {
-    return textureArray;
+    return diffuseArray;
 }
 
 unsigned int block_getNormalArrayTexture() {
@@ -239,7 +290,6 @@ unsigned int block_getBreakArrayTexture() {
     return blockBreakArray;
 }
 
-static bool noBlockErr[256];
 int block_getID(const char* name) {
     // Starting at i = 2 because block ID slots 0 and 1 are taken up by BLOCK_AIR and BLOCK_NULL
     for (int i = 2; i < blockID; i++) {
@@ -250,30 +300,33 @@ int block_getID(const char* name) {
         }
     }
 
-    if (!noBlockErr[hash8(name)]) {
-        WARN_MSG2("Failed to find block under name", name, "Using null block replacement");
-        noBlockErr[hash8(name)] = true;
-    }
-
     return BLOCK_NULL;
 }
 
-static bool noTextureErr[256];
-int block_getTextureIndex(int blockID, Direction dir) {
-    for (int i = 0; i < numTextures; i++) {
-        if (strcmp(blockData[blockID].textures[dir], textureNames[i]) == 0) {
+int block_getDiffuseIndex(int ID, Direction dir) {
+    if (ID == 0 || ID == 1 || ID > blockID - 1) return -1;
+
+    for (int i = 0; i < diffuseCount; i++) {
+        if (strcmp(blockData[ID].textures.diffuse[dir], diffuseNames[i]) == 0) {
             return i;
         }
     }
-    
-    if (!noTextureErr[blockID]) {
-        fprintf(stdout, "\x1B[0m%s:%d: \x1B[0;35m[WARNING]\x1B[0m Failed to locate %s texture in %s.lua (%s). Using null texture as replacement\n", __FILE__, __LINE__, faces[blockID], blockData[blockID].name, blockData[blockID].textures[dir]);
-        noTextureErr[blockID] = true;
-    }
 
-    return block_getTextureIndex(BLOCK_NULL, 0); // Setting to 0 because it doesn't matter; can be any arbitrary value due to all null textures being the same
+    return block_getDiffuseIndex(BLOCK_NULL, 0);
 }
 
-float block_getHardnessValue(int blockID) {
-    return blockData[blockID].hardness;
+int block_getNormalIndex(int ID, Direction dir) {
+    if (ID == 0 || ID == 1 || ID > blockID - 1) return -1;
+
+    for (int i = 0; i < normalCount; i++) {
+        if (strcmp(blockData[ID].textures.normal[dir], normalNames[i]) == 0) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+float block_getHardnessValue(int ID) {
+    return blockData[ID].hardness;
 }

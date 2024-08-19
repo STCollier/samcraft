@@ -9,10 +9,6 @@ uniform float fog_max;
 
 out vec4 frag_color;
 
-struct TangentPos {
-	vec3 light, view, frag;
-};
-
 in VS_OUT {
 	vec4 frag_viewspace;
 	vec4 frag_light_space;
@@ -26,7 +22,10 @@ in VS_OUT {
 	vec3 sun_position;
 	vec3 camera_position;
 
-	TangentPos tangent_pos;
+	flat uint diffuse_index;
+	flat uint normal_index;
+
+	mat3 TBN;
 } fs_in;
 
 
@@ -44,14 +43,14 @@ float PCF(vec3 projCoords, float currentDepth, float bias) {
 	return shadow;
 }
 
-float calcShadow(vec4 fragLightSpace) {
+float calcShadow(vec4 fragLightSpace, vec3 normal) {
     vec3 projCoords = fragLightSpace.xyz / fragLightSpace.w;
 	projCoords = projCoords * 0.5 + 0.5; 
 
 	float closestDepth = texture(shadowMap, projCoords.xy).r;
 	float currentDepth = projCoords.z;
 
-	float bias = max(0.000001 * (1.0 - dot(fs_in.frag_normal, vec3(200.0, 200.0, 200.0))), 0.0000001);
+	float bias = max(0.000001 * (1.0 - dot(normal, vec3(200.0, 200.0, 200.0))), 0.0000001);
 	float shadow = PCF(projCoords, currentDepth, bias);
     
     if (projCoords.z > 1.0) shadow = 0.0;
@@ -65,11 +64,10 @@ vec4 layer(vec4 foreground, vec4 background) {
 
 void main() {
 	bool isOpaque = bool(fs_in.frag_opaque);
-	vec4 final = texture(textureArray, vec3(fs_in.frag_uv, fs_in.frag_type));
+	vec4 final = texture(textureArray, vec3(fs_in.frag_uv, fs_in.diffuse_index));
 	vec4 color;
 
-	/*vec3 normal = texture(normalArray, vec3(fs_in.frag_uv, 0)).rgb;
-	normal = normalize(normal * 2.0 - 1.0);*/
+	vec3 normal = fs_in.TBN * normalize((texture(normalArray, vec3(fs_in.frag_uv, fs_in.normal_index)).rgb * 2.0 - 1.0));
 
 	if (isOpaque) {
 		float ao = clamp(fs_in.frag_ao, 0.0, 1.0);
@@ -83,12 +81,12 @@ void main() {
 
 	vec3 lightColor = vec3(1.0, 1.0, 0.785);
 	vec3 ambient = ambientStrength * lightColor;
-	float shadow = calcShadow(fs_in.frag_light_space);
+	float shadow = calcShadow(fs_in.frag_light_space, fs_in.frag_normal);
 	vec3 lightDir = normalize(fs_in.sun_position - fs_in.frag_pos);
-	vec3 diffuse = max(dot(fs_in.frag_normal, lightDir), 0.0) * lightColor;
+	vec3 diffuse = max(dot(normal, lightDir), 0.0) * lightColor;
 
     /*vec3 viewDir = normalize(camera_position - fs_in.frag_pos);
-    vec3 reflectDir = reflect(-lightDir, fs_in.frag_normal);  
+    vec3 reflectDir = reflect(-lightDir, fs_in.frag_normal);
     vec3 specular = specularStrength * pow(max(dot(viewDir, reflectDir), 0.0), 64) * lightColor;*/
 
 	vec3 lighting = (ambient + (1.0 - shadow) * (diffuse/* + specular*/));

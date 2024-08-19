@@ -35,7 +35,7 @@ void resources_load() {
     stbi_set_flip_vertically_on_load(true);
     ui_init();
     blockdata_loadLuaData();
-    blockdata_loadArrayTexture();
+    blockdata_loadMaterials(res.shaders.main);
     world_init(globals.renderRadius);
     player_init();
     light_init();

@@ -122,7 +122,7 @@ bool lua_getBool(lua_State *L, const char* field, const char* err, const char* m
 
 const char* lua_getString(lua_State *L, const char* field, const char* err, const char* msg) {
     lua_getfield(L, -1, field);
-    if (!lua_isstring(L, -1)) {
+    if (!lua_isstring(L, -1) && !lua_isnil(L, -1)) {
         ERROR_MSG(err, msg);
         lua_close(L);
         exit(EXIT_FAILURE);

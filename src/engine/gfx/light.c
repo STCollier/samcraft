@@ -32,7 +32,7 @@ void light_init() {
 void light_beginPass(shader_t shader) {
     mat4 lightProjection, lightView;
 
-    glm_ortho(-250.0f, 250.0f, -250.0f, 250.0f, camera.near, camera.far, lightProjection);
+    glm_ortho(-100.0f, 100.0f, -100.0f, 100.0f, camera.near, camera.far, lightProjection);
     glm_lookat(
         light.sunPosition,
         (vec3){0.0f, 0.0f, 0.0},

@@ -1,8 +1,12 @@
 block = {
     name = "cobblestone",
     hardness = 2.0,
-    normal = "default.png",
     textures = {
-        all = "cobblestone.png"
+        diffuse = {
+            all = "cobblestone.png"
+        },
+        normal = {
+            all = "default.png"
+        }
     } 
 }
