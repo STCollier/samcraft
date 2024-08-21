@@ -7,6 +7,7 @@
 
 #include "../gfx/ui.h"
 #include "../gfx/light.h"
+#include "../gfx/postprocess.h"
 #include "../../world/block.h"
 #include "../../world/chunk.h"
 #include "../../world/world.h"
@@ -23,6 +24,7 @@ void resources_load() {
     res.shaders.sprite = shader_new("res/shaders/sprite.vert", "res/shaders/sprite.frag");
     res.shaders.text = shader_new("res/shaders/text.vert", "res/shaders/text.frag");
     res.shaders.depth = shader_new("res/shaders/depth.vert", "res/shaders/depth.frag");
+    res.shaders.hdr = shader_new("res/shaders/hdr.vert", "res/shaders/hdr.frag");
 
     mat4 projection2D;
     glm_ortho(0.0f, window.width, window.height, 0.0f, -1.0f, 1.0f, projection2D);
@@ -39,6 +41,7 @@ void resources_load() {
     world_init(globals.renderRadius);
     player_init();
     light_init();
+    HDR_init();
 
     res.text.FPS = ui_newText("FPS: 120", 50.0, 75.0, 0.4, (ivec4){0, 0, 0, 255});
     res.text.playerPosition = ui_newText("Position: (0, 0, 0)", 50.0, 200.0, 0.4, (ivec4){0, 0, 0, 255});
@@ -88,8 +91,9 @@ void resources_render() {
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, window.width, window.height);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    HDR_set();
     shader_use(res.shaders.main);
 
     if (glfwGetKey(window.self, GLFW_KEY_RIGHT) == GLFW_PRESS) {
@@ -101,7 +105,6 @@ void resources_render() {
         light.sunPosition[2]--;
     }
 
-
     // Set shader uniforms
     shader_setMat4(res.shaders.main, "light_space_matrix", light.spaceMatrix);
     shader_setVec3(res.shaders.main, "sun_position", light.sunPosition[0], light.sunPosition[1], light.sunPosition[2]);
@@ -112,7 +115,9 @@ void resources_render() {
 
     //skybox_render(res.skybox, res.shaders.sky);
     world_render(res.shaders.main, res.cameraFrustum, 1);
-
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    HDR_use(res.shaders.hdr);
+    
     // Draw UI
     glDisable(GL_DEPTH_TEST);
 

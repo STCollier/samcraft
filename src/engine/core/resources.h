@@ -24,6 +24,7 @@ struct Resources {
         shader_t sprite;
         shader_t text;
         shader_t depth;
+        shader_t hdr;
     } shaders;
 
     struct {

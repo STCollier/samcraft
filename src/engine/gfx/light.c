@@ -35,7 +35,7 @@ void light_beginPass(shader_t shader) {
     glm_ortho(-100.0f, 100.0f, -100.0f, 100.0f, camera.near, camera.far, lightProjection);
     glm_lookat(
         light.sunPosition,
-        (vec3){0.0f, 0.0f, 0.0},
+        (vec3){50.0f, 0.0f, 50.0},
         (vec3){0.0f, 1.0f, 0.0f},
     lightView);
     glm_mat4_mul(lightProjection, lightView, light.spaceMatrix);    

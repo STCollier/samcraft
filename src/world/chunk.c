@@ -26,6 +26,7 @@ void chunk_init(struct Chunk *chunk, ivec3 pos) {
     chunk->voxels = malloc(CS_P3);
     memset(chunk->voxels, 0, CS_P3);
 
+    chunk->empty = false;
     chunk->state = ADDED;
     chunk->addedToMeshQueue = false;
 }
@@ -50,7 +51,7 @@ void chunk_generate(struct Chunk *chunk) {
                     chunk->voxels[blockIndex(x, y, z)] = BLOCK_AIR;
                 }
 
-                if (!b) b += chunk->voxels[blockIndex(x, y, z)];
+                b += chunk->voxels[blockIndex(x, y, z)];
             }
         }
     }
@@ -164,7 +165,7 @@ void chunk_bind(struct Chunk *chunk) {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
 
-        glGenVertexArrays(1, &chunk->tVAO[i]);
+        /*glGenVertexArrays(1, &chunk->tVAO[i]);
         glGenBuffers(1, &chunk->tVBO[i]);
         glGenBuffers(1, &chunk->tEBO[i]);
 
@@ -178,11 +179,11 @@ void chunk_bind(struct Chunk *chunk) {
         glVertexAttribIPointer(0, 2, GL_UNSIGNED_INT, 0, (void*)0);
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindVertexArray(0);
-    }
+        glBindVertexArray(0);*/
+        }
 
-    chunk->state = BOUND;
-}
+        chunk->state = BOUND;
+    }
 
 void chunk_render(struct Chunk *chunk, shader_t shader, bool draw[6], bool pass) {
     shader_use(shader);
@@ -212,15 +213,8 @@ void chunk_render(struct Chunk *chunk, shader_t shader, bool draw[6], bool pass)
         bool toRender = draw[i];
 
         if (toRender) {
-            if (pass) {
-                glBindVertexArray(chunk->VAO[i]);
-                glDrawElements(GL_TRIANGLES, chunk->mesh.opaque.meshes[i].indices.length, GL_UNSIGNED_INT, 0);
-            } else {
-                shader_setVec3(shader, "chunk_translation", chunkTranslation[0], chunkTranslation[1] - 0.25, chunkTranslation[2]);
-
-                glBindVertexArray(chunk->tVAO[i]);
-                glDrawElements(GL_TRIANGLES, chunk->mesh.transparent.meshes[i].indices.length, GL_UNSIGNED_INT, 0);
-            }
+            glBindVertexArray(chunk->VAO[i]);
+            glDrawElements(GL_TRIANGLES, chunk->mesh.opaque.meshes[i].indices.length, GL_UNSIGNED_INT, 0);
         }
     }
 }
