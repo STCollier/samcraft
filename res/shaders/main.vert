@@ -74,17 +74,32 @@ const mat3 TBNS[6] = mat3[6](
 );
 
 void main() {
-	float x = float(data.x & 255u);
-	float y = float((data.x >> 8) & 255u);
-	float z = float((data.x >> 16) & 255u);
-	uint u = (data.x >> 24) & 255u;
+	/*float x = float(bitfieldExtract(data.x, 0, 6));
+	float y = float(bitfieldExtract(data.x, 6, 6));
+	float z = float(bitfieldExtract(data.x, 12, 6));
+	uint u = bitfieldExtract(data.x, 18, 6);
+	uint v = bitfieldExtract(data.x, 24, 6);
+	uint ao = bitfieldExtract(data.x, 30, 2);
 
-	uint type = data.y & 262143u;
-	uint v = (data.y >> 18) & 255u;
-	uint face = (data.y >> 26) & 7u;
-	uint ao = (data.y >> 29) & 3u;
-	uint opaque = (data.y >> 31) & 1u;
-  
+	uint face = bitfieldExtract(data.y, 0, 3); 
+	uint rotation = bitfieldExtract(data.y, 3, 5);
+	uint opaque = bitfieldExtract(data.y, 8, 1);
+	uint light = bitfieldExtract(data.y, 9, 5);
+	uint type = bitfieldExtract(data.y, 14, 18);*/
+
+    float x = float(data.x & 63u);
+    float y = float((data.x >> 6) & 63u);
+    float z = float((data.x >> 12) & 63u);
+	uint u = (data.x >> 18) & 63u;
+	uint v = (data.x >> 24) & 63u; 
+	uint ao = (data.x >> 30) & 3u;
+
+	uint face = data.y & 7u; 
+	uint rotation = (data.y >> 3) & 31u;
+	uint opaque = (data.y >> 8) & 1u;
+	uint light = (data.y >> 9) & 31u;
+	uint type = (data.y >> 14) & 262143u;
+
 	vs_out.frag_ao = clamp(float(ao) / 3.0, 0.5, 1.0);
 	vs_out.frag_pos = vec3(chunk_translation + vec3(x, y, z));
 	vs_out.frag_viewspace = view * vec4(vs_out.frag_pos, 1);

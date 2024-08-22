@@ -1,6 +1,6 @@
 #include "postprocess.h"
 
-static unsigned int hdrFBO, colorBuffer, hdrQuadVBO;
+static unsigned int hdrFBO, colorBuffer, hdrQuadVBO, hdrQuadVAO;
 
 static float quadVertices[] = {
     -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
@@ -30,6 +30,16 @@ void HDR_init() {
         ERROR("HDR Framebuffer not complete!")
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glGenVertexArrays(1, &hdrQuadVAO);
+    glGenBuffers(1, &hdrQuadVBO);
+    glBindVertexArray(hdrQuadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, hdrQuadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 }
 
 void HDR_set() {
@@ -61,17 +71,7 @@ void HDR_use(shader_t shader) {
 
     shader_setFloat(shader, "exposure", exposure);
 
-    glGenVertexArrays(1, &hdrQuadVBO);
-    glGenBuffers(1, &hdrQuadVBO);
-    glBindVertexArray(hdrQuadVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, hdrQuadVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-
-    glBindVertexArray(hdrQuadVBO);
+    glBindVertexArray(hdrQuadVAO);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glBindVertexArray(0);
 }

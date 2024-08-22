@@ -91,7 +91,6 @@ void resources_render() {
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, window.width, window.height);
-    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     HDR_set();
     shader_use(res.shaders.main);

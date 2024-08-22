@@ -213,8 +213,10 @@ void chunk_render(struct Chunk *chunk, shader_t shader, bool draw[6], bool pass)
         bool toRender = draw[i];
 
         if (toRender) {
-            glBindVertexArray(chunk->VAO[i]);
-            glDrawElements(GL_TRIANGLES, chunk->mesh.opaque.meshes[i].indices.length, GL_UNSIGNED_INT, 0);
+            if (chunk->mesh.opaque.meshes[i].indices.length > 0) {
+                glBindVertexArray(chunk->VAO[i]);
+                glDrawElements(GL_TRIANGLES, chunk->mesh.opaque.meshes[i].indices.length, GL_UNSIGNED_INT, 0);
+            }
         }
     }
 }
