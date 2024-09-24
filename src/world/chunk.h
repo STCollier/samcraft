@@ -4,6 +4,7 @@
 #include "../engine/core/shader.h"
 #include "../engine/util/common.h"
 #include "../engine/func/mesher.h"
+#include "../engine/gfx/light.h"
 #include "uthash/uthash.h"
 
 #define CHUNK_SIZE 50
@@ -15,6 +16,29 @@ typedef struct {
     int y;
     int z;
 } chunk_key_t;
+
+struct LightMap {
+    ivec3 position;
+    uint16_t* torchlightMap; // SSSS RRRR GGGG BBBB
+    unsigned int texture;
+};
+
+struct LightNode {
+    struct Chunk* chunk;
+    ivec3 position;
+};
+
+struct LightRemovalNode {
+    struct Chunk* chunk;
+    ivec3 position;
+    int value;
+};
+
+typedef struct LightNode light_node_t;
+typedef struct LightRemovalNode light_removal_node_t;
+
+DEFINE_ARRAY_IMPL(light_node_t);
+DEFINE_ARRAY_IMPL(light_removal_node_t);
 
 enum ChunkPipelineState {
     ADDED,
@@ -35,20 +59,21 @@ struct Chunk {
     UT_hash_handle hh; // Makes this structure hashable
 
     struct ChunkMesh mesh;
+    struct LightMap lightMap;
     enum ChunkPipelineState state;
-    bool addedToMeshQueue;
-    bool empty;
+    bool addedToMeshQueue, empty;
 
     unsigned int arrayTexture;
-    unsigned int VBO[6], VAO[6], EBO[6], tVBO[6], tVAO[6], tEBO[6];
+    unsigned int VBO[6], VAO[6], EBO[6];
 };
 
 int blockIndex(int x, int y, int z);
 
+void chunkmanager_init();
 void chunk_init(struct Chunk *chunk, ivec3 pos);
 void chunk_generate(struct Chunk *chunk);
 void chunk_mesh(struct Chunk *chunk);
-void chunk_remesh(struct Chunk *chunk, struct Chunk* cn_right, struct Chunk* cn_left, struct Chunk* cn_front, struct Chunk* cn_back, struct Chunk* cn_top, struct Chunk* cn_bottom);
+void chunk_remesh(struct Chunk *chunk, struct Chunk* cn_right, struct Chunk* cn_left, struct Chunk* cn_top, struct Chunk* cn_bottom, struct Chunk* cn_front, struct Chunk* cn_back);
 void chunk_bind(struct Chunk *chunk);
 void chunk_render(struct Chunk *chunk, shader_t shader, bool draw[6], bool pass);
 

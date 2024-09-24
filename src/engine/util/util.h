@@ -70,6 +70,10 @@ void ivec2s_to_ivec2(ivec2s in, ivec2 out);
         arr->length++; \
     } \
 \
+    static type CONCAT(CONCAT(type, _arr), _pop)(CONCAT(arr_, type)* arr) { \
+        return arr->data[arr->length---1]; \
+    } \
+\
     static void CONCAT(CONCAT(type, _arr), _delete)(CONCAT(arr_, type) *arr) { \
         arr->length = 0;\
         arr->capacity = 0;\

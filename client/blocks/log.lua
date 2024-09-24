@@ -1,6 +1,7 @@
 block = {
     name = "log",
     hardness = 1.0,
+    light = 0,
     textures = {
         diffuse = {
             right = "bark.png",

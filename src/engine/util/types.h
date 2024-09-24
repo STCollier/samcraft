@@ -23,10 +23,10 @@ typedef struct {
 typedef enum {
     RIGHT,
     LEFT,
-    FRONT,
-    BACK,
     TOP,
-    BOTTOM
+    BOTTOM,
+    FRONT,
+    BACK
 } Direction;
 
 typedef enum {

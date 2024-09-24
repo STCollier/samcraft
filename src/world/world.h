@@ -32,6 +32,8 @@ uint8_t getBlockFromWorldPosition(int x, int y, int z);
 
 void world_addChunk(ivec3 position);
 struct Chunk *world_getChunk(ivec3 position);
+struct Chunk* world_getChunkFromBlock(int x, int y, int z);
+ivec3s world_getWorldSpaceToLocalChunkSpace(int x, int y, int z);
 void world_meshChunk(ivec3 position);
 void world_remeshChunk(ivec3 position);
 

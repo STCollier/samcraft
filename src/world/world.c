@@ -89,6 +89,58 @@ struct Chunk *world_getChunk(ivec3 position) {
     return chunk;
 }
 
+struct Chunk* world_getChunkFromBlock(int x, int y, int z) {
+    ivec3 chunkPos;
+    glm_ivec3_copy((ivec3) {
+        x / CHUNK_SIZE,
+        y / CHUNK_SIZE,
+        z / CHUNK_SIZE},
+    chunkPos);
+
+    // +1 to account for voxel padding
+    ivec3 blockPos;
+    glm_ivec3_copy((ivec3) {
+        (x % CHUNK_SIZE) + 1,
+        (y % CHUNK_SIZE) + 1,
+        (z % CHUNK_SIZE) + 1},
+    blockPos);
+
+    for (int i = 0; i < 3; i++) {
+        if (blockPos[i] < 1) {
+            blockPos[i] += CHUNK_SIZE;
+            chunkPos[i] -= 1;
+        }
+    }
+
+    return world_getChunk(chunkPos);
+}
+
+ivec3s world_getWorldSpaceToLocalChunkSpace(int x, int y, int z) {
+    ivec3 chunkPos;
+    glm_ivec3_copy((ivec3) {
+        x / CHUNK_SIZE,
+        y / CHUNK_SIZE,
+        z / CHUNK_SIZE},
+    chunkPos);
+
+    // +1 to account for voxel padding
+    ivec3 blockPos;
+    glm_ivec3_copy((ivec3) {
+        (x % CHUNK_SIZE) + 1,
+        (y % CHUNK_SIZE) + 1,
+        (z % CHUNK_SIZE) + 1},
+    blockPos);
+
+    for (int i = 0; i < 3; i++) {
+        if (blockPos[i] < 1) {
+            blockPos[i] += CHUNK_SIZE;
+            chunkPos[i] -= 1;
+        }
+    }
+
+    return (ivec3s){blockPos[0], blockPos[1], blockPos[2]};
+}
+
 uint8_t getBlockFromWorldPosition(int x, int y, int z) {
     ivec3 worldPosition, chunkPosition, blockPosition;
     glm_ivec3_copy((ivec3){x, y, z}, worldPosition);
@@ -144,19 +196,19 @@ void world_remeshChunk(ivec3 position) {
         ivec3 positions[6] = {
             {position[0] + 1, position[1], position[2]}, // Right
             {position[0] - 1, position[1], position[2]}, // Left
-            {position[0], position[1], position[2] - 1}, // Front
-            {position[0], position[1], position[2] + 1}, // Back
             {position[0], position[1] + 1, position[2]}, // Top
             {position[0], position[1] - 1, position[2]}, // Bottom
+            {position[0], position[1], position[2] + 1}, // Front
+            {position[0], position[1], position[2] - 1}, // Back
         };
 
         chunk_remesh(world_getChunk(position), 
             world_getChunk(positions[RIGHT]),
             world_getChunk(positions[LEFT]),
-            world_getChunk(positions[FRONT]),
-            world_getChunk(positions[BACK]),
             world_getChunk(positions[TOP]),
-            world_getChunk(positions[BOTTOM])
+            world_getChunk(positions[BOTTOM]),
+            world_getChunk(positions[FRONT]),
+            world_getChunk(positions[BACK])
         );
 
         chunk_bind(chunk);
@@ -166,19 +218,19 @@ void world_remeshChunk(ivec3 position) {
         ivec3 positions[6] = {
             {position[0] + 1, position[1], position[2]}, // Right
             {position[0] - 1, position[1], position[2]}, // Left
-            {position[0], position[1], position[2] - 1}, // Front
-            {position[0], position[1], position[2] + 1}, // Back
             {position[0], position[1] + 1, position[2]}, // Top
             {position[0], position[1] - 1, position[2]}, // Bottom
+            {position[0], position[1], position[2] + 1}, // Front
+            {position[0], position[1], position[2] - 1}, // Back
         };
 
         chunk_remesh(world_getChunk(position), 
             world_getChunk(positions[RIGHT]),
             world_getChunk(positions[LEFT]),
-            world_getChunk(positions[FRONT]),
-            world_getChunk(positions[BACK]),
             world_getChunk(positions[TOP]),
-            world_getChunk(positions[BOTTOM])
+            world_getChunk(positions[BOTTOM]),
+            world_getChunk(positions[FRONT]),
+            world_getChunk(positions[BACK])
         );
 
         chunk_bind(chunk);
@@ -279,6 +331,8 @@ void world_init(int renderRadius) {
     world.renderHeight = 3;
     world.loaded = false;
 
+    chunkmanager_init();
+
     world.chunkQueue.passesPerFrame = 1;
     world.chunkQueue.queuesComplete = false;
 
@@ -299,9 +353,9 @@ void world_init(int renderRadius) {
     worldgenInit(123);
 
     int c = 0;
-    for (int z = -world.renderRadius; z < world.renderRadius; z++) {
-        for (int y = -world.renderHeight; y < world.renderHeight; y++) {
-            for (int x = -world.renderRadius; x < world.renderRadius; x++) {
+    for (int z = -3; z < 3; z++) {
+        for (int y = -3; y < 3; y++) {
+            for (int x = -3; x < 3; x++) {
                 ivec2 origin = {0, 0};
                 ivec2 pos = {x, z};
 
@@ -314,9 +368,9 @@ void world_init(int renderRadius) {
         }
     }
 
-    for (int z = -world.renderRadius; z < world.renderRadius; z++) {
-        for (int y = -world.renderHeight; y < world.renderHeight; y++) {
-            for (int x = -world.renderRadius; x < world.renderRadius; x++) {
+    for (int z = -3; z < 3; z++) {
+        for (int y = -3; y < 3; y++) {
+            for (int x = -3; x < 3; x++) {
                 ivec2 origin = {0, 0};
                 ivec2 pos = {x, z};
                 if (idist2d(origin, pos) < world.renderRadius && !world_getChunk((ivec3){x, y, z})->empty) {
@@ -375,9 +429,6 @@ void world_update(threadpool thpool) {
 }
 
 void world_render(shader_t shader, struct Frustum frustum, int pass) {
-    // pass = 1 (opaque)
-    // pass = 0 (transparent)
-
     if (pass == 1) {
         int passed = 0, total = 0, culled = 0;
         for (int z = -world.renderRadius + player.chunkPosition[2]; z < world.renderRadius + player.chunkPosition[2]; z++) {

@@ -30,6 +30,7 @@ struct BlockData {
     struct MaterialIndices materialIndices[6];
     const char* normal;
     float hardness;
+    unsigned int light;
 };
 
 void blockdata_loadLuaData();
@@ -42,5 +43,6 @@ int block_getID(const char* name);
 int block_getDiffuseIndex(int ID, Direction dir);
 int block_getNormalIndex(int ID, Direction dir);
 float block_getHardnessValue(int ID);
+unsigned int block_getLightLevel(int ID);
 
 #endif

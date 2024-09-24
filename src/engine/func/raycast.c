@@ -78,8 +78,8 @@ struct Ray ray_cast(vec3 startPosition, vec3 rayDirection, float maxDistance) {
                 if (rayDirection[axis] > 0) ray.placedDirection = BOTTOM;
                 else ray.placedDirection = TOP;
             } else if (axis == 2) {
-                if (rayDirection[axis] > 0) ray.placedDirection = FRONT;
-                else ray.placedDirection = BACK;
+                if (rayDirection[axis] > 0) ray.placedDirection = BACK;
+                else ray.placedDirection = FRONT;
             }
 
             glm_ivec3_copy((ivec3){blockPos[0], blockPos[1], blockPos[2]}, ray.blockFoundPosition);

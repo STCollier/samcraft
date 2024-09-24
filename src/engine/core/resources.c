@@ -96,12 +96,12 @@ void resources_render() {
     shader_use(res.shaders.main);
 
     if (glfwGetKey(window.self, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-        light.sunPosition[0]++;
-        light.sunPosition[2]++;
+        light.sunPosition[0] += window.dt * 250;
+        light.sunPosition[2] += window.dt * 250;
     }
     if (glfwGetKey(window.self, GLFW_KEY_LEFT) == GLFW_PRESS) {
-        light.sunPosition[0]--;
-        light.sunPosition[2]--;
+        light.sunPosition[0] -= window.dt * 250;
+        light.sunPosition[2] -= window.dt * 250;
     }
 
     // Set shader uniforms

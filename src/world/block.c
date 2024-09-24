@@ -41,6 +41,7 @@ static void loadLuaFile(const char* filename) {
     lua_getGlobal(L, "block", "The field 'block' is not a table at", filename);
     const char* blockName = lua_getString(L, "name", "The field 'name' is invalid at", filename);
     float blockHardness = lua_getFloat(L, "hardness", "The field 'hardness' is invalid at", filename);
+    int blockLight = lua_getInt(L, "light", "The field 'light' is invalid at", filename);
 
     lua_getField(L, "textures", "The field 'textures' is not a table at", filename);
     lua_getField(L, "diffuse", "The field 'diffuse' is not a table at", filename);
@@ -81,6 +82,7 @@ static void loadLuaFile(const char* filename) {
         blockData[blockID].id = blockID;
         blockData[blockID].name = blockName;
         blockData[blockID].hardness = blockHardness;
+        blockData[blockID].light = blockLight;
         for (int i = 0; i < 6; i++ ) {
             blockData[blockID].textures.diffuse[i] = blockTextures[i];
             blockData[blockID].textures.normal[i] = blockNormals[i];
@@ -120,6 +122,7 @@ void blockdata_loadLuaData() {
     blockData[BLOCK_NULL].id = BLOCK_NULL;
     blockData[BLOCK_NULL].name = "null";
     blockData[BLOCK_NULL].hardness = 1.0;
+    blockData[BLOCK_NULL].light = 0;
     for (int i = 0; i < 6; i++) {
         blockData[BLOCK_NULL].textures.diffuse[i] = "null.png";
         blockData[BLOCK_NULL].textures.normal[i] = NULL;
@@ -329,4 +332,8 @@ int block_getNormalIndex(int ID, Direction dir) {
 
 float block_getHardnessValue(int ID) {
     return blockData[ID].hardness;
+}
+
+unsigned int block_getLightLevel(int ID) {
+    return blockData[ID].light;
 }

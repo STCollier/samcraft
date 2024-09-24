@@ -56,6 +56,7 @@ void HDR_use(shader_t shader) {
     shader_use(shader);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, colorBuffer);
+    
     shader_setInt(shader, "hdr", useHdr);
     shader_setInt(shader, "hdrBuffer", 0);
 

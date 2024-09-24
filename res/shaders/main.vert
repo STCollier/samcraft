@@ -22,6 +22,7 @@ out VS_OUT {
 	vec4 frag_viewspace;
 	vec4 frag_light_space;
 	vec3 frag_pos;
+	vec3 chunk_pos;
 	vec3 frag_normal;
 	vec2 frag_uv;
 	flat uint frag_opaque;
@@ -87,14 +88,14 @@ void main() {
 	uint light = bitfieldExtract(data.y, 9, 5);
 	uint type = bitfieldExtract(data.y, 14, 18);*/
 
-    float x = float(data.x & 63u);
-    float y = float((data.x >> 6) & 63u);
-    float z = float((data.x >> 12) & 63u);
+	uint x = (data.x & 63u);
+	uint y = ((data.x >> 6) & 63u);
+	uint z = ((data.x >> 12) & 63u);
 	uint u = (data.x >> 18) & 63u;
 	uint v = (data.x >> 24) & 63u; 
 	uint ao = (data.x >> 30) & 3u;
 
-	uint face = data.y & 7u; 
+	uint face = data.y & 7u;
 	uint rotation = (data.y >> 3) & 31u;
 	uint opaque = (data.y >> 8) & 1u;
 	uint light = (data.y >> 9) & 31u;
@@ -102,6 +103,7 @@ void main() {
 
 	vs_out.frag_ao = clamp(float(ao) / 3.0, 0.5, 1.0);
 	vs_out.frag_pos = vec3(chunk_translation + vec3(x, y, z));
+	vs_out.chunk_pos = (vec3(x, y, z)) / 52.0;
 	vs_out.frag_viewspace = view * vec4(vs_out.frag_pos, 1);
 	vs_out.frag_normal = NORMALS[face];
 	vs_out.frag_uv = vec2(u, v);

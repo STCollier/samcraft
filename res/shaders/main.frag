@@ -3,6 +3,7 @@
 uniform sampler2DArray textureArray;
 uniform sampler2DArray normalArray;
 uniform sampler2D shadowMap;
+uniform usampler3D lightMap;
 
 uniform float fog_min;
 uniform float fog_max;
@@ -13,6 +14,7 @@ in VS_OUT {
 	vec4 frag_viewspace;
 	vec4 frag_light_space;
 	vec3 frag_pos;
+	vec3 chunk_pos;
 	vec3 frag_normal;
 	vec2 frag_uv;
 	flat uint frag_opaque;
@@ -91,7 +93,9 @@ void main() {
 
 	vec3 lighting = (ambient + (1.0 - shadow) * (diffuse/* + specular*/));
 
+	uint lightMapTexture = texture(lightMap, fs_in.chunk_pos).r;
+	vec3 voxelLight = vec3(lightMapTexture / 15.0);
 
-	frag_color = vec4(color.xyz * lighting, color.a);
+	frag_color = vec4(color.xyz * voxelLight * lighting, color.a);
 
-}
+} 

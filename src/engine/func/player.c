@@ -22,7 +22,7 @@ void player_init() {
     player.FOV = globals.FOV;
     player.currentFOV = globals.FOV;
 
-    glm_vec3_copy((vec3){-5.0f, 150.0f, 33.0f}, camera.position);
+    glm_vec3_copy((vec3){55.0f, 100.0f, 55.0f}, camera.position);
     glm_vec3_copy((vec3){0.6, 1.8, 0.6}, player.dimensions);
     glm_ivec3_copy((ivec3){camera.position[0] / CHUNK_SIZE, camera.position[1] / CHUNK_SIZE, camera.position[2] / CHUNK_SIZE}, player.chunkPosition);
     glm_ivec3_copy((ivec3){0, 0, 0}, player.previousPosition);
@@ -264,18 +264,6 @@ void player_update(shader_t blockOverlayShader) {
         player.selectedBlock = block_getID("planks");
     } else if (window.keyPressed[GLFW_KEY_4]) {
         player.selectedBlock = block_getID("log");
-    } else if (window.keyPressed[GLFW_KEY_5]) {
-        player.selectedBlock = block_getID("stone");
-    } else if (window.keyPressed[GLFW_KEY_6]) {
-        player.selectedBlock = block_getID("sand");
-    } else if (window.keyPressed[GLFW_KEY_7]) {
-        player.selectedBlock = block_getID("cobblestone");
-    } else if (window.keyPressed[GLFW_KEY_8]) {
-        player.selectedBlock = block_getID("S");
-    } else if (window.keyPressed[GLFW_KEY_9]) {
-        player.selectedBlock = block_getID("A");
-    } else if (window.keyPressed[GLFW_KEY_0]) {
-        player.selectedBlock = block_getID("M");
     }
 }
 
@@ -291,10 +279,10 @@ void player_placeBlock() {
 
         switch (player.ray.placedDirection) {
             case FRONT:
-                glm_ivec3_copy((ivec3){player.ray.blockFoundPosition[0], player.ray.blockFoundPosition[1], player.ray.blockFoundPosition[2] - 1}, blockPlaceLocation);
+                glm_ivec3_copy((ivec3){player.ray.blockFoundPosition[0], player.ray.blockFoundPosition[1], player.ray.blockFoundPosition[2] + 1}, blockPlaceLocation);
                 break;
             case BACK:
-                glm_ivec3_copy((ivec3){player.ray.blockFoundPosition[0], player.ray.blockFoundPosition[1], player.ray.blockFoundPosition[2] + 1}, blockPlaceLocation);
+                glm_ivec3_copy((ivec3){player.ray.blockFoundPosition[0], player.ray.blockFoundPosition[1], player.ray.blockFoundPosition[2] - 1}, blockPlaceLocation);
                 break;
             case BOTTOM:
                 glm_ivec3_copy((ivec3){player.ray.blockFoundPosition[0], player.ray.blockFoundPosition[1] - 1, player.ray.blockFoundPosition[2]}, blockPlaceLocation);
