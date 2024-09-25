@@ -31,8 +31,6 @@ static bool chunkPlaneIsVisible(size_t index, struct Chunk* chunk) {
     } else if (index == 5) {
         return player.chunkPosition[2] <= chunk->position[2];
     }
-
-    puts("h");
     
     return 1;
 }
@@ -87,58 +85,6 @@ struct Chunk *world_getChunk(ivec3 position) {
     }
 
     return chunk;
-}
-
-struct Chunk* world_getChunkFromBlock(int x, int y, int z) {
-    ivec3 chunkPos;
-    glm_ivec3_copy((ivec3) {
-        x / CHUNK_SIZE,
-        y / CHUNK_SIZE,
-        z / CHUNK_SIZE},
-    chunkPos);
-
-    // +1 to account for voxel padding
-    ivec3 blockPos;
-    glm_ivec3_copy((ivec3) {
-        (x % CHUNK_SIZE) + 1,
-        (y % CHUNK_SIZE) + 1,
-        (z % CHUNK_SIZE) + 1},
-    blockPos);
-
-    for (int i = 0; i < 3; i++) {
-        if (blockPos[i] < 1) {
-            blockPos[i] += CHUNK_SIZE;
-            chunkPos[i] -= 1;
-        }
-    }
-
-    return world_getChunk(chunkPos);
-}
-
-ivec3s world_getWorldSpaceToLocalChunkSpace(int x, int y, int z) {
-    ivec3 chunkPos;
-    glm_ivec3_copy((ivec3) {
-        x / CHUNK_SIZE,
-        y / CHUNK_SIZE,
-        z / CHUNK_SIZE},
-    chunkPos);
-
-    // +1 to account for voxel padding
-    ivec3 blockPos;
-    glm_ivec3_copy((ivec3) {
-        (x % CHUNK_SIZE) + 1,
-        (y % CHUNK_SIZE) + 1,
-        (z % CHUNK_SIZE) + 1},
-    blockPos);
-
-    for (int i = 0; i < 3; i++) {
-        if (blockPos[i] < 1) {
-            blockPos[i] += CHUNK_SIZE;
-            chunkPos[i] -= 1;
-        }
-    }
-
-    return (ivec3s){blockPos[0], blockPos[1], blockPos[2]};
 }
 
 uint8_t getBlockFromWorldPosition(int x, int y, int z) {
@@ -330,8 +276,6 @@ void world_init(int renderRadius) {
     world.renderRadius = renderRadius;
     world.renderHeight = 3;
     world.loaded = false;
-
-    chunkmanager_init();
 
     world.chunkQueue.passesPerFrame = 1;
     world.chunkQueue.queuesComplete = false;

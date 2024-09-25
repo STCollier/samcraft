@@ -17,29 +17,6 @@ typedef struct {
     int z;
 } chunk_key_t;
 
-struct LightMap {
-    ivec3 position;
-    uint16_t* torchlightMap; // SSSS RRRR GGGG BBBB
-    unsigned int texture;
-};
-
-struct LightNode {
-    struct Chunk* chunk;
-    ivec3 position;
-};
-
-struct LightRemovalNode {
-    struct Chunk* chunk;
-    ivec3 position;
-    int value;
-};
-
-typedef struct LightNode light_node_t;
-typedef struct LightRemovalNode light_removal_node_t;
-
-DEFINE_ARRAY_IMPL(light_node_t);
-DEFINE_ARRAY_IMPL(light_removal_node_t);
-
 enum ChunkPipelineState {
     ADDED,
     GENERATED,
@@ -59,7 +36,6 @@ struct Chunk {
     UT_hash_handle hh; // Makes this structure hashable
 
     struct ChunkMesh mesh;
-    struct LightMap lightMap;
     enum ChunkPipelineState state;
     bool addedToMeshQueue, empty;
 
@@ -69,7 +45,6 @@ struct Chunk {
 
 int blockIndex(int x, int y, int z);
 
-void chunkmanager_init();
 void chunk_init(struct Chunk *chunk, ivec3 pos);
 void chunk_generate(struct Chunk *chunk);
 void chunk_mesh(struct Chunk *chunk);

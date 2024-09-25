@@ -63,7 +63,6 @@ static char FPSt[64];
 static char playerPositiont[128];
 void resources_update() {
     camera_use(res.shaders.main);
-    player_update(res.shaders.blockOverlay);
     world_update(res.thpool);
     res.cameraFrustum = updateCameraFrustum();
 
@@ -112,8 +111,9 @@ void resources_render() {
     shader_setFloat(res.shaders.main, "fog_max", ((world.renderRadius - 1) * CHUNK_SIZE) - CHUNK_SIZE / 2);
     shader_setFloat(res.shaders.main, "fog_min", (world.renderRadius / 2) * CHUNK_SIZE);
 
-    //skybox_render(res.skybox, res.shaders.sky);
+    skybox_render(res.skybox, res.shaders.sky);
     world_render(res.shaders.main, res.cameraFrustum, 1);
+    player_update(res.shaders.blockOverlay);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     HDR_use(res.shaders.hdr);
     

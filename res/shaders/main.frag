@@ -3,7 +3,6 @@
 uniform sampler2DArray textureArray;
 uniform sampler2DArray normalArray;
 uniform sampler2D shadowMap;
-uniform usampler3D lightMap;
 
 uniform float fog_min;
 uniform float fog_max;
@@ -72,8 +71,8 @@ void main() {
 	vec3 normal = fs_in.TBN * normalize((texture(normalArray, vec3(fs_in.frag_uv, fs_in.normal_index)).rgb * 2.0 - 1.0));
 
 	if (isOpaque) {
-		float ao = clamp(fs_in.frag_ao, 0.0, 1.0);
-		final *= smoothstep(0.0, 1.0, ao);
+		float ao = clamp(fs_in.frag_ao, 0.0, 2.0);
+		final *= smoothstep(0.0, 2.0, ao);
 		color = vec4(final.xyz, 1.0);
 	} else {
 		color = final;
@@ -87,15 +86,8 @@ void main() {
 	vec3 lightDir = normalize(fs_in.sun_position - fs_in.frag_pos);
 	vec3 diffuse = max(dot(normal, lightDir), 0.0) * lightColor;
 
-    /*vec3 viewDir = normalize(camera_position - fs_in.frag_pos);
-    vec3 reflectDir = reflect(-lightDir, fs_in.frag_normal);
-    vec3 specular = specularStrength * pow(max(dot(viewDir, reflectDir), 0.0), 64) * lightColor;*/
+	vec3 lighting = (ambient + (1.0 - shadow) * (diffuse));
 
-	vec3 lighting = (ambient + (1.0 - shadow) * (diffuse/* + specular*/));
-
-	uint lightMapTexture = texture(lightMap, fs_in.chunk_pos).r;
-	vec3 voxelLight = vec3(lightMapTexture / 15.0);
-
-	frag_color = vec4(color.xyz * voxelLight * lighting, color.a);
+	frag_color = vec4(color.xyz * lighting, color.a);
 
 } 
