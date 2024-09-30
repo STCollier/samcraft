@@ -20,6 +20,7 @@ A voxel engine built with OpenGL and C
 - E to sprint
 - SPACE to jump
 - UP and DOWN arrow to control HDR exposure
+- RIGHT and LEFT arrow to move sun position
 - ESC to remove cursor grab
 - TAB to view wireframe
 - Q to quit
